@@ -8,6 +8,9 @@ Flow-to-testcase mapping is tracked in:
 qa-ai-workflow/automation/smoke-flow.md
 qa-ai-workflow/automation/auth-account-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
+qa-ai-workflow/automation/home-flow.md
+qa-ai-workflow/automation/workspace-account-flow.md
+qa-ai-workflow/automation/source-flow.md
 ```
 
 ## Current Smoke Scope
@@ -22,6 +25,35 @@ The first smoke flow covers:
 | `TC-SOURCE-007` | Source connection entry point opens when present. |
 | `TC-AUTH-004` | Sign out blocks protected route again. |
 | `TC-PUBLIC-009` | Published public site loads when `PUBLIC_SITE_URL` is provided. |
+
+## Current Source Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-SOURCE-013` | YouTube source form accepts `@namnguyen11993` and starts Google owner verification. |
+| `TC-SOURCE-014` | Existing connected YouTube channel is active in Auto mode with crawl controls. |
+
+## Current Home Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-CONSOLE-003` | Home dashboard links reach main creator workflows and return Home. |
+| `TC-CONSOLE-009` | Top-level console sections remain identifiable after refresh. |
+| `TC-CONSOLE-023` | Home Overview summary modules show Sources, Riffs, Articles, and Site workspace status. |
+| `TC-CONSOLE-024` | Home Overview summary modules navigate to Sources, Content, Content, and Sites. |
+| `TC-CONSOLE-025` | Home Next step CTA routes to the recommended Sources workflow. |
+| `TC-CONSOLE-026` | Home How it works sequence explains connect, extract, and publish. |
+| `TC-A11Y-005` | Dashboard screens have one visible `h1` and ordered headings. |
+| `TC-ONBOARD-007` | First authenticated Home visit asks whether the user is new. |
+
+## Current Workspace/Account Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-AUTH-049` | Home workspace menu lists workspace rows plus `Create workspace` and `Account settings`. |
+| `TC-AUTH-050` | Account Settings opens from the Home workspace menu and shows sign-in methods. |
+| `TC-AUTH-051` | Create workspace modal validates blank input, auto-generates slug, rejects invalid slug, and cancels cleanly. |
+| `TC-AUTH-052` | Created workspace becomes active, persists after sign-out/sign-in, and is selectable from setup organization. |
 
 ## Setup
 
@@ -52,6 +84,8 @@ AUTH_STORAGE_STATE
 PUBLIC_SITE_URL
 TENANT_EXPECTED_TEXT
 SOURCE_EXPECTED_CHOICES
+SOURCE_YOUTUBE_URL
+SOURCE_YOUTUBE_HANDLE
 ```
 
 The sign-in page also has a `Continue with Google` option, but this smoke suite prioritizes the direct email/password form submit. If a future account is routed through Google OAuth, Playwright may be blocked by Google's browser automation protections. In that case the authenticated smoke tests are skipped with an explicit reason. To run that OAuth variant, provide one of these:
@@ -81,7 +115,7 @@ npm test
 Latest full staging check:
 
 ```text
-11 passed
+25 passed
 1 skipped
 ```
 
@@ -115,6 +149,22 @@ Latest auth account staging check:
 ```
 
 The auth account suite covers `TC-AUTH-023`, `TC-AUTH-024`, `TC-AUTH-025`, and setup-organization cases `TC-AUTH-044` through `TC-AUTH-048`. Password reset/change completion cases are split into `TC-AUTH-026` through `TC-AUTH-043` and require mailbox or reset-link capture before they can be automated.
+
+Latest workspace/account staging check:
+
+```text
+4 tests passed
+```
+
+The workspace/account suite covers `TC-AUTH-049` through `TC-AUTH-052`. It creates a real staging workspace for `TC-AUTH-052`, so use a dedicated QA account for repeatable runs.
+
+Latest source staging check:
+
+```text
+2 tests passed
+```
+
+The source suite covers `TC-SOURCE-013` and `TC-SOURCE-014`. Full YouTube channel creation (`TC-SOURCE-002`/`TC-SOURCE-008`) requires Google owner OAuth consent or a staging bypass.
 
 Headed mode:
 

@@ -9,6 +9,7 @@
     "test:smoke:headed": "playwright test automation/tests/smoke --headed",
     "test:auth": "playwright test automation/tests/auth --workers=1",
     "test:auth:headed": "playwright test automation/tests/auth --headed --workers=1",
+    "test:sources": "playwright test automation/tests/sources --workers=1",
     "test:debug": "playwright test automation/tests/smoke --debug",
     "report": "playwright show-report"
   },
