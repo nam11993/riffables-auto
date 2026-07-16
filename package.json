@@ -1,0 +1,19 @@
+{
+  "name": "riffables-auto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "QA automation for Riffables smoke and regression flows.",
+  "scripts": {
+    "test": "playwright test --workers=1",
+    "test:smoke": "playwright test automation/tests/smoke",
+    "test:smoke:headed": "playwright test automation/tests/smoke --headed",
+    "test:auth": "playwright test automation/tests/auth --workers=1",
+    "test:auth:headed": "playwright test automation/tests/auth --headed --workers=1",
+    "test:debug": "playwright test automation/tests/smoke --debug",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "typescript": "^5.5.0"
+  }
+}
