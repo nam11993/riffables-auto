@@ -1,0 +1,238 @@
+feature: "search-public-site"
+source_prd:
+  title: "Hybrid Discovery Engine and Public Audience Site"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/8"
+  version_or_commit: "github-issues-read-2026-07-16"
+  last_reviewed_at: "2026-07-16"
+  related_issues:
+    - id: "#8"
+      title: "Vision: Hybrid Discovery Engine"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/8"
+    - id: "#4"
+      title: "Epic: Hybrid pgvector & RRF Discovery"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/4"
+    - id: "#16"
+      title: "Vision: Public Audience Site"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/16"
+    - id: "#14"
+      title: "Epic: Public Audience Site"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/14"
+    - id: "#17"
+      title: "Task: Fix Published Public Site"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/17"
+    - id: "#59"
+      title: "Task: Replace the synthetic guest/show labels on the audience site"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/59"
+
+requirements:
+  - id: "REQ-SEARCH-001"
+    title: "Audience search supports keyword and semantic concept queries"
+    description: "The audience search experience must support both traditional keyword matching and semantic concept matching over the creator's content library."
+    prd_section: "Issue #8 Mechanic; Issue #4 Mechanic"
+    source_issues:
+      - "#8"
+      - "#4"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A keyword query returns relevant content containing or matching the query terms."
+      - "A semantic concept query can return relevant content even when exact words differ."
+      - "The result list includes insight cards and supporting verbatim quotes."
+      - "Search runs only against the current creator's library."
+    assumptions:
+      - "Hybrid search combines full-text and vector search."
+    open_questions:
+      - "What golden dataset should QA use to judge semantic relevance?"
+    related_requirements:
+      - "REQ-SEARCH-002"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-SEARCH-002"
+    title: "Exact quoted searches prioritize exact wording"
+    description: "When an audience query is enclosed in quotes or otherwise marked as exact, exact wording matches must be prioritized."
+    prd_section: "Issue #4 Acceptance Criteria"
+    source_issues:
+      - "#4"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Quoted exact searches prioritize exact text matches."
+      - "Exact matches rank ahead of weaker semantic-only matches."
+      - "If no exact match exists, the system handles the empty or fallback result state clearly."
+    assumptions: []
+    open_questions:
+      - "Should exact quoted search still include semantic fallback results?"
+    related_requirements:
+      - "REQ-SEARCH-001"
+
+  - id: "REQ-SEARCH-003"
+    title: "Hybrid search results are fused and limited"
+    description: "Hybrid search must merge keyword and semantic results into a ranked list and respect the configured maximum result count."
+    prd_section: "Issue #4 Acceptance Criteria; Issue #4 Locked Constants"
+    source_issues:
+      - "#4"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Keyword and semantic results are merged into one ranked result list."
+      - "Ranking uses the intended fused ranking approach."
+      - "The result count does not exceed the configured maximum."
+      - "Results load within the expected responsive threshold."
+    assumptions:
+      - "MAX_SEARCH_RESULTS is 10 for widget search unless changed."
+    open_questions:
+      - "Is RRF the locked ranking method for V1 test expectations?"
+    related_requirements:
+      - "REQ-SEARCH-001"
+
+  - id: "REQ-PUBLIC-001"
+    title: "Published public site loads for a creator tenant"
+    description: "A creator's published public site URL must load the audience interface successfully."
+    prd_section: "Issue #16 Purpose; Issue #17 Goal"
+    source_issues:
+      - "#16"
+      - "#17"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Navigating to a published tenant site URL loads the public audience site."
+      - "The page does not show a browser connection or unreachable error."
+      - "The public site renders the creator's audience interface."
+      - "The published site uses the correct tenant context."
+    assumptions:
+      - "Tenant public site domain behavior may depend on environment configuration."
+    open_questions:
+      - "What is the canonical QA domain pattern for published sites?"
+    related_requirements:
+      - "REQ-PUBLIC-002"
+
+  - id: "REQ-PUBLIC-002"
+    title: "Public site shows searchable creator insight library"
+    description: "The public audience site must let visitors browse and search the creator's library of insight cards."
+    prd_section: "Issue #16 User Flow; Issue #14 Mechanic"
+    source_issues:
+      - "#16"
+      - "#14"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The site displays a searchable library of creator insights."
+      - "The search input updates results according to the submitted query."
+      - "Category filters or pills filter results when available."
+      - "Insight cards display key details such as title, snippet, and category badge."
+    assumptions: []
+    open_questions:
+      - "Which card fields are mandatory in the current public site UI?"
+    related_requirements:
+      - "REQ-SEARCH-001"
+
+  - id: "REQ-PUBLIC-003"
+    title: "Audience account access supports gated member experiences"
+    description: "The public audience site must support audience member sign-up or login when gated member features are included in scope."
+    prd_section: "Issue #14 Acceptance Criteria; Issue #16 User Flow"
+    source_issues:
+      - "#14"
+      - "#16"
+    priority: "should"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Visitors can open the public site authentication flow."
+      - "Audience member account actions are handled through the central auth system."
+      - "Member-only detailed content is gated from unauthenticated users when applicable."
+      - "Logged-in members can access gated audience features according to their tier."
+    assumptions:
+      - "Paid member tier gating may depend on product scope for the release."
+    open_questions:
+      - "Is paid member tier gating required for the current release?"
+    related_requirements:
+      - "REQ-PUBLIC-002"
+
+  - id: "REQ-PUBLIC-004"
+    title: "Public citation actions open source media at the cited moment"
+    description: "Audience users must be able to open source media from an insight citation and land at the exact cited timestamp."
+    prd_section: "Issue #14 Acceptance Criteria; Issue #16 Insight Cards Grid"
+    source_issues:
+      - "#14"
+      - "#16"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Citation badges or Play Source actions are visible on supported insight cards."
+      - "Clicking a citation opens the source media player."
+      - "The media starts at or seeks to the cited timestamp."
+      - "The citation action works for supported video or audio sources."
+    assumptions: []
+    open_questions:
+      - "What timestamp tolerance is acceptable for QA validation?"
+    related_requirements:
+      - "REQ-AI-003"
+
+  - id: "REQ-PUBLIC-005"
+    title: "Public site uses real creator or tenant labels instead of synthetic placeholders"
+    description: "The public audience site must not show hardcoded guest, show, or bio labels that look like creator data when the backend has no real value for them."
+    prd_section: "Issue #59 Findings; Issue #59 Acceptance criteria"
+    source_issues:
+      - "#59"
+    priority: "must"
+    type: "data-integrity"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Guest, show, and bio labels shown to visitors are derived from real creator or tenant data."
+      - "If the backend model does not provide a label, the public site omits the label or uses a clearly non-data UI pattern rather than a fabricated creator value."
+      - "The site no longer shows hardcoded labels such as generic Published Riffables or synthetic show descriptions as creator-provided data."
+      - "Changing tenant context changes labels to the correct tenant data and does not leak another tenant's label."
+      - "Search, card rendering, citations, thumbnails, and tags continue to use real backend data."
+    assumptions:
+      - "Audience chat real-agent behavior from issue #59 remains separately trackable unless Product confirms it belongs in the same release pass."
+    open_questions:
+      - "Which exact tenant or creator profile fields should populate public labels in QA?"
+      - "Is audience chat stub replacement part of the same executable scope as label replacement?"
+    related_requirements:
+      - "REQ-PUBLIC-001"
+      - "REQ-PUBLIC-002"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-PUBLIC-006"
+    title: "Audience chat returns real creator-content responses instead of canned echo replies"
+    description: "The public audience chat must respond through the real agent path trained or grounded on the creator's content rather than returning canned echo responses."
+    prd_section: "Issue #59 Findings; Issue #59 Acceptance criteria"
+    source_issues:
+      - "#59"
+    priority: "must"
+    type: "functional"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Submitting a chat message returns a real agent response grounded in the creator's content path."
+      - "The response is not the canned Echo-style stub for ordinary audience questions."
+      - "Returned chat responses preserve tenant scope and do not reference another creator's content."
+      - "Unsupported, empty, or rate-limited prompts return safe UI states instead of fake success."
+      - "Citation chips or source references are included when the response makes source-backed claims and the current product design supports citations."
+    assumptions:
+      - "If the real agent path is not ready in QA, this requirement remains a blocked regression item rather than being removed from scope."
+    open_questions:
+      - "What is the expected QA oracle for a real chat response: source citation, non-Echo response shape, backend endpoint, or approved golden prompt set?"
+      - "Should audience chat be part of current release execution or tracked as a separate follow-up from #59?"
+    related_requirements:
+      - "REQ-PUBLIC-002"
+      - "REQ-AI-003"
+      - "REQ-TENANT-001"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm golden search dataset and relevance threshold."
+    - "Confirm public site domain pattern."
+    - "Confirm audience auth and gating scope."
+    - "Confirm public-site label source fields and the QA oracle for audience chat real-agent responses."

@@ -1,0 +1,1026 @@
+﻿[
+    {
+        "number":  22,
+        "title":  "Epic: Crawl progress, cancellation, and fair processing",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/22",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:19:13Z",
+        "updated_at":  "2026-07-10T07:26:57Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Vision\n\nVision: Controlled ingestion for large channels (#18)\n\n## Milestone\n\nV1.1 _(candidate V1 patch — the cross-creator starvation it fixes affects shipped V1; see the Vision\u0027s Open decisions)_\n\n## Mechanic\n\nEvery ingest — auto teaser, whole-channel backfill, or catalog selection — runs as a sequence of small bounded batches instead of one long job. Batch boundaries make progress visible live, let a run be canceled mid-flight, and let fresh, interactive work overtake a large backlog so one creator\u0027s full-channel history never blocks another creator\u0027s new video.\n\n```\nIngest starts → batch 1 → batch 2 → … (bounded size each)\n   progress advances per batch · Cancel stops within one batch\n   ordering: interactive Run \u003e scheduled \u003e catalog selection \u003e whole-channel backfill\n```\n\n## Progress \u0026 control\n\n| Surface | Behavior |\n|---|---|\n| Progress | Videos done / total, advancing live without reload |\n| Cancel | Stops the run within one batch; no further videos picked up |\n| Per-source lock | Only the source being crawled is busy; other sources stay actionable |\n\n## Fairness (behavior)\n\n| Situation | Guarantee |\n|---|---|\n| One channel\u0027s 1,000-video backfill is running | Another creator\u0027s freshly added video still starts processing, not stuck behind it |\n| A service restart mid-backfill | The backfill resumes from where it was, not from zero |\n| Re-running an ingest | Already-riffed videos are never re-processed |\n\n## Acceptance criteria\n\n- [ ] While a crawl runs, the creator sees videos-done / total advancing without reloading the page.\n- [ ] The creator can cancel a running crawl; it stops within one processing batch and picks up no further videos.\n- [ ] Videos that were canceled before processing return to \"not ingested\" and can be selected again later.\n- [ ] A newly added/selected video for one creator begins processing without waiting for another creator\u0027s whole-channel backfill to finish.\n- [ ] A large backfill completes incrementally and, after a service restart, resumes rather than starting over.\n- [ ] Re-running an ingest never produces duplicate Riffables for videos already riffed.\n- [ ] The control that started a crawl is disabled only for that source until the crawl ends — other sources remain usable.\n\n## Locked constants\n\n- Default processing batch size: **10 videos**.\n- A crawl idle beyond **30 minutes** is treated as abandoned and no longer blocks new runs on that source.\n- Processing order (highest first): **interactive Run → scheduled → catalog selection → whole-channel backfill**.\n\n## Backend dependencies\n\n- Shared transcription / extraction processing queues — this Epic governs how work is ordered and paced across them.\n\n## Out of scope\n\n- Per-plan / SLA-tier priority — Future.\n- Reducing per-video transcription or extraction cost.\n- The catalog UI (Channel video catalog Epic) and the mode gate (Ingest mode Epic) themselves.\n\n## Source\n\n- **Parent Vision**: #18\n- **PRD**: PRD.md § Pillar A — Pluggable Ingestion Pipeline\n",
+        "body_hash":  "5ec81a32c720acb98601b59acb4798c2ddf5bf9fcff98864c6640278952c6eaf",
+        "content_hash":  "6b1265ef2e8fd977de3e020eba36750605e9da6a8d92dd7c7df2b2e6445d3564"
+    },
+    {
+        "number":  21,
+        "title":  "Task: Fix Sources Page Crawl Feedback UI",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/21",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:18:01Z",
+        "updated_at":  "2026-07-09T04:18:01Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Task: Fix Sources Page Crawl Feedback UI\n\n## Source\n- Parent: [Vision: Creator Console Dashboard](vision_6_creator_console.md) (Issue #15)\n\n## Goal\nFix the missing and incomplete UI feedback on the Sources page during and after a content crawl, and ensure the \"Last run\" and \"Last error\" data points render correctly.\n\n## Why\nWhen a creator triggers a feed crawl, the visual feedback is currently broken. Without clear indicators showing the result of a finished crawl, and with historical run data missing, creators are left guessing whether their sources are successfully syncing or failing silently.\n\n## Example of done\n- When a crawl is actively running, the UI visually indicates the \"running\" state.\n- When a crawl finishes, the UI immediately updates to show the result (e.g., a success message or summary).\n- The \"Last run\" timestamp and \"Last error\" message correctly populate with data from the backend.\n\n## Scope exclusions\n- Modifying the underlying backend crawling logic, job queues, or transcription workers.\n- Designing entirely new pages for analytics.\n",
+        "body_hash":  "9cd0cfca7feedd3ecb27c4c02103782bd1e80ef1d82612d746e7ac46897d5ffc",
+        "content_hash":  "421b9334130ca7a4e4158a232e1770b241a638a4a26c40a373a5c3836619a130"
+    },
+    {
+        "number":  24,
+        "title":  "Task: Manual-mode channel refuses every automatic ingest",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/24",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:17Z",
+        "updated_at":  "2026-07-10T07:26:06Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Ingest mode selection (auto vs manual) (#19)\n\n## Goal\n\nA manual-mode channel ingests nothing except an explicit catalog selection — no teaser crawl, no Run, no Backfill, no scheduled crawl.\n\n## Why\n\n\"Manual\" is only trustworthy if it holds at every place ingestion can start, including a schedule firing at 3am or a stray API call. A single unguarded path would silently spend budget the creator chose to withhold, breaking the core promise of the mode.\n\n## Example of done\n\nA manual-mode channel shows no Run/Backfill controls. A direct attempt to Run, Backfill, or a scheduled trigger is refused with a clear message pointing the creator to select videos from the catalog instead. Connecting the channel fired no crawl. Switching it back to Auto restores all of those.\n\n## Out of scope\n\n- The catalog selection path that manual mode redirects to (Channel catalog Epic).\n- The UI mode switch itself (separate Task).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Task 11b — enforce fail-closed at the single ingest funnel (not per-caller), mirroring the existing ownership gate. Catalog selection deliberately bypasses the gate.\n\n## Source\n\n- **Parent Epic**: #19\n",
+        "body_hash":  "00af5090bc1b54226c2a5584f1cae0eab10397ea92451f0112fa637bbd6210ea",
+        "content_hash":  "36b3c45b400b3e4bc7a5e3763d76beb6420e0f82f2934f3ebefe4ce18ccba484"
+    },
+    {
+        "number":  23,
+        "title":  "Task: Creator picks ingest mode when connecting a channel",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/23",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:14Z",
+        "updated_at":  "2026-07-10T07:26:04Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Ingest mode selection (auto vs manual) (#19)\n\n## Goal\n\nA creator connecting a YouTube channel chooses Auto or Manual ingest before the connection completes.\n\n## Why\n\nThe mode has to be captured at connect time because a channel\u0027s very first crawl fires the moment it connects — if the creator can\u0027t say \"don\u0027t auto-ingest\" before that, a manual choice comes too late for a large channel. This is the entry point that makes every downstream \"manual means no surprise spend\" guarantee possible.\n\n## Example of done\n\nOn the connect-a-channel form the creator sees an Auto / Manual choice with a one-line description of each; Auto is preselected. Connecting with Manual selected results in a channel that ingests nothing until the creator later selects videos. Connecting with Auto behaves exactly as today.\n\n## Out of scope\n\n- Switching mode after connect (separate Task).\n- Enforcing the manual gate on Run/Backfill/schedules (separate Task).\n\n## Agent instructions\n\nDetailed plan: `plan-channel-catalog.md` Task 11b (mode threaded through the OAuth connect flow) + Task 13 create-form picker. Default `auto` at every layer so existing clients are unchanged.\n\n## Source\n\n- **Parent Epic**: #19\n",
+        "body_hash":  "a6e9abab31d6b587f7f645769e026d562407825c14e9d5520596a7cf70ac371d",
+        "content_hash":  "07da0c93fafe5635ae75b5e2237374fde77850c2543693abab17f49c782dccd2"
+    },
+    {
+        "number":  18,
+        "title":  "Vision: Controlled ingestion for large channels",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/18",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:12:30Z",
+        "updated_at":  "2026-07-10T07:26:58Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Purpose\n\nA creator connects a channel with hundreds or thousands of videos and decides how much of it becomes Riffables — instead of the system blindly trying to ingest everything. They choose auto or manual up front, curate from a browsable catalog of their own videos, and trust that a big back-catalog never stalls the platform for everyone else.\n\n\u003e \"For a channel with many videos, you can\u0027t automatically crawl every video — the solution has to protect user UX and keep the system balanced.\"\n\u003e — Hoc, product framing, 2026-07-08\n\n## Mechanic\n\nIngestion splits into cheap **discovery** (list a channel\u0027s videos, metadata only) and expensive **processing** (fetch → transcribe → extract). A creator picks an **ingest mode** when connecting: *auto* keeps today\u0027s behavior (latest and new videos flow in automatically), *manual* ingests nothing until they select from the catalog. Either way the channel\u0027s videos appear in a browsable, searchable catalog showing each video\u0027s ingest state. Selected or automatic work runs as bounded batches so progress is live, a run can be canceled mid-flight, and a whole-channel backfill yields to a fresh upload rather than blocking it.\n\n```\nConnect channel  →  pick mode (auto | manual)  →  catalog fills (metadata only, no spend)\n   auto   → latest videos ingest now; new uploads picked up on refresh\n   manual → nothing ingests until the creator selects videos from the catalog\nSelected / automatic videos  →  processed in bounded batches\n   → live progress · cancelable · large backfills never block another channel\u0027s fresh video\n```\n\n## Surfaces affected\n\nAt connect, the creator sees a **crawl-mode choice** (auto vs manual) with a one-line explanation of each. Every connected channel gains a **video catalog** — a searchable list of its videos with publish dates and a per-video status (not ingested / queued / processing / riffed / failed). Creators **select** videos and start ingest for exactly those, **watch progress** advance live (videos done / total), and **cancel** a run in progress. A manual-mode channel hides the auto Run/Backfill controls; the catalog is its only ingest path. Mode is **switchable** later from the source card. Across the platform, one creator\u0027s large backfill no longer makes another creator\u0027s new video wait.\n\n## V1 / V1.1 / Future\n\n### V1 (shipped)\n- Connect a YouTube channel via ownership-verified Google OAuth\n- Auto-crawl the latest N videos on connect; manual Run / Backfill; ownership re-verify\n- Poll a crawl\u0027s status to completion\n\n### V1.1 (this Vision)\n- Auto vs manual ingest mode, chosen at connect and switchable later\n- Browsable, searchable per-channel video catalog with per-video ingest state (metadata only, no spend to browse)\n- Curate: select specific videos and ingest just those\n- Live incremental crawl progress; cancel a running crawl\n- Fair processing: a whole-channel backfill runs in bounded batches and never blocks another channel\u0027s fresh video\n\n### Future\n- Sort / filter the catalog by views and duration; show an estimated cost/time before ingesting a large selection\n- Automatic ingest policy for newly published videos beyond latest-N\n- Per-plan priority tiers for processing\n- Catalogs for non-YouTube sources (Spotify shows, blogs)\n- Detect videos that became private/deleted since they were cataloged\n\n## Open decisions\n\n- **Milestone of the fairness work.** One channel\u0027s backfill starving every other creator\u0027s fresh video is a defect in the shipped V1, not just a V1.1 nicety — the \"fair processing\" Epic may warrant pulling into a V1 patch rather than waiting for V1.1.\n- **Default mode at connect** — Auto (instant value, current behavior) vs Manual (control-first). Positioning call.\n- **Does manual mode still offer a \"backfill everything\" shortcut**, or must the creator always select from the catalog (even select-all)?\n- **Catalog ceiling** — how many of the newest videos to enumerate before the catalog is shown as \"partial\".\n\n## Out of scope\n\n- Making full-channel ingestion *cheaper* — this Vision spreads the cost over time and puts it behind explicit consent; it does not reduce per-video transcription/extraction cost.\n- Transcript quality / spoken-language selection — a separate ingestion concern.\n- Curation catalogs for non-YouTube sources — YouTube channels only in V1.1.\n\n## Refinement notes\n\n_(lead engineer fills during decomposition)_ — Spawned Epics: Ingest mode selection (V1.1) · Channel video catalog \u0026 curation (V1.1) · Crawl progress, cancellation \u0026 fair processing (V1.1, candidate V1 patch).\n\n## Source\n\n- **PRD**: PRD.md § Pillar A — Pluggable Ingestion Pipeline\n- **Implementation plan**: `plan-channel-catalog.md` (riffables-monorepo, branch `feat/channel-catalog-crawl`)\n",
+        "body_hash":  "e3ba5fefa13e5876181d64cc4108f5f872220bdc8fd0d3230896a7d2f49e32f1",
+        "content_hash":  "d4ff6254bb40bdfa217676560e633d78d59487d8e3f4704404168c46a041c9a3"
+    },
+    {
+        "number":  17,
+        "title":  "Task: Fix Published Public Site",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/17",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T11:10:24Z",
+        "updated_at":  "2026-07-13T02:14:29Z",
+        "closed_at":  "2026-07-13T02:14:29Z",
+        "author":  "lhts1810",
+        "body":  "# Task: Fix Published Public Site\n\n## Source\n- Parent: [Vision: Public Audience Site](vision_7_audience_site.md) (Issue #16)\n- Assignee: @sunday19x3\n\n## Goal\nFix the issue where the published public site function is not working. Navigating to a creator\u0027s published site URL (e.g., `https://s.riffables.com`) fails to load the page and returns a browser error.\n\n## Why\nWhen creators hit \"Publish\" and attempt to visit their live public site, the browser cannot reach the page. This completely blocks the core audience discovery loop, as visitors cannot view the creator\u0027s published content library.\n\n## Example of done\n- Navigating to a published site URL like `https://s.riffables.com` successfully loads the audience interface.\n- The page renders correctly without throwing any connection or unreachable errors.\n\n## Scope exclusions\n- Modifying the public site UI or search functionality.\n- Implementing custom domain setups (e.g., `creator.com`) for creators.\n",
+        "body_hash":  "457e4176cfa117b8d4ad9a883a214610f7a09ff5563817260271b1b384c130ea",
+        "content_hash":  "9b88aa1e2fadc5471f070474af19bc839004a0999fc998da5c13d81c637b4c9f"
+    },
+    {
+        "number":  20,
+        "title":  "Epic: Channel video catalog \u0026 curation",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/20",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:14:28Z",
+        "updated_at":  "2026-07-10T07:26:55Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Vision\n\nVision: Controlled ingestion for large channels (#18)\n\n## Milestone\n\nV1.1\n\n## Mechanic\n\nEvery connected channel gains a **catalog**: a list of its videos discovered cheaply (metadata only — title, publish date, thumbnail — with no downloading or transcription). The creator browses and searches it, sees each video\u0027s ingest state, selects the videos worth turning into Riffables, and ingests exactly those. Browsing costs nothing; only an explicit selection spends processing budget.\n\n```\nChannel connected → catalog fills with the channel\u0027s videos (metadata only)\nCreator → search / page → sees per-video state → ticks not-yet-ingested videos → Ingest selected\nRefresh → new uploads appear; already-riffed videos are shown but not re-selectable\n```\n\n## Catalog row\n\n| Field | Shown |\n|---|---|\n| Title | Video title (search matches this) |\n| Published | Publish date |\n| State | not ingested · queued · processing · riffed · failed |\n\n## Per-video state\n\n| State | Meaning | Selectable |\n|---|---|---|\n| Not ingested | Never processed | Yes |\n| Queued / Processing | In the pipeline now | No |\n| Riffed | Already turned into Riffables | No |\n| Failed | Last attempt failed | Yes (retry) |\n\n## Actions\n\n| Action | Result |\n|---|---|\n| Refresh | Re-reads the channel; adds new uploads, keeps existing ones |\n| Search | Filters the catalog by title |\n| Select + Ingest | Starts ingest for exactly the ticked videos |\n\n## Acceptance criteria\n\n- [ ] Connecting a channel populates a catalog of its videos (title + publish date) within a short time, without ingesting any of them.\n- [ ] The catalog shows a total video count and indicates when it is partial (for very large channels).\n- [ ] Each video displays its ingest state: not ingested / queued / processing / riffed / failed.\n- [ ] The creator can search the catalog by title and page through the results.\n- [ ] The creator can select one or more not-yet-ingested videos and start ingest for exactly those.\n- [ ] Already-riffed videos appear in the catalog but cannot be re-selected (no duplicate spend).\n- [ ] A refresh adds newly published videos to the catalog without re-ingesting ones already known.\n- [ ] Attempting to ingest videos that do not belong to the channel is refused.\n\n## Locked constants\n\n- Catalog enumerates up to the **~2,000 newest** videos; beyond that it is shown as partial.\n- Browsing the catalog performs **no** downloading or transcription — metadata only.\n- A single selection is capped at **500 videos** per request (the run itself is still processed in batches).\n\n## Backend dependencies\n\n- The channel\u0027s existing ownership grant is reused to read its video list (no new creator action).\n\n## Out of scope\n\n- Sorting / filtering by views or duration, and cost/time estimates before ingest — Future.\n- Auto vs manual mode — Ingest mode selection Epic.\n- Progress, cancel, and batch fairness of the ingest a selection triggers — Crawl progress Epic.\n\n## Source\n\n- **Parent Vision**: #18\n- **PRD**: PRD.md § Pillar A — Pluggable Ingestion Pipeline\n",
+        "body_hash":  "60d0aaec8b264bcf8fe611a6bf29d9d88fe5e07dae79c8087b1eec9d669483f6",
+        "content_hash":  "245ad329e18f854a1cd353c836a5eb2243ad271091adc04d90df963534659f6c"
+    },
+    {
+        "number":  19,
+        "title":  "Epic: Ingest mode selection (auto vs manual)",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/19",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:14:24Z",
+        "updated_at":  "2026-07-10T07:26:54Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Vision\n\nVision: Controlled ingestion for large channels (#18)\n\n## Milestone\n\nV1.1\n\n## Mechanic\n\nWhen connecting a channel the creator chooses how it ingests: **auto** (the platform pulls the latest videos now and new uploads later) or **manual** (nothing ingests until the creator selects videos from the catalog). The choice is enforced everywhere ingestion can start, so a manual channel can never spend transcription/extraction budget without an explicit selection. The mode is switchable later, and switching is a pure setting change — it neither starts nor stops any ingest.\n\n```\nConnect channel → [ Auto ]  latest videos ingest now; schedules + Run/Backfill active\n                → [ Manual ] nothing ingests; catalog selection is the only path\nSource card → switch Auto ⇄ Manual anytime (no ingest starts or stops on switch)\n```\n\n## Modes\n\n| Mode | On connect | Run / Backfill / schedules | New uploads |\n|---|---|---|---|\n| Auto (default) | Latest videos ingest automatically | Available | Picked up automatically |\n| Manual | Nothing ingests | Hidden / refused | Only when the creator selects them |\n\n## Where chosen\n\n| Surface | Control |\n|---|---|\n| Connect-a-channel form | Auto / Manual picker with a one-line description of each |\n| Source card | Mode badge + a switch action |\n\n## Acceptance criteria\n\n- [ ] At connect the creator picks Auto or Manual; when they don\u0027t touch it, the channel is Auto.\n- [ ] A manual-mode channel ingests nothing on connect — no Riffs appear until a selection is made.\n- [ ] On a manual-mode channel the auto Run and Backfill controls are not shown; triggering them directly is refused with a clear, human-readable message.\n- [ ] An auto-mode channel behaves exactly as before this Epic (latest videos ingest on connect; Run/Backfill/schedules work).\n- [ ] The creator can switch a channel between Auto and Manual from the source card, and the new mode is reflected immediately.\n- [ ] Switching mode never starts or stops an ingest by itself: any in-flight crawl keeps running, and nothing new auto-fires.\n- [ ] Manual mode is offered only for channel sources; requesting it for a non-channel source is refused with a clear message.\n\n## Locked constants\n\n- Default mode: **Auto** (keeps existing creators/clients unchanged).\n- Manual mode is available for **YouTube channels only** (it is catalog-backed).\n- A mode switch takes effect at the **next** ingest decision; in-flight work is unaffected.\n\n## Backend dependencies\n\n- Existing ownership-verified channel connect (Google OAuth) — no new external dependency.\n\n## Out of scope\n\n- The catalog browser and selection flow — Channel video catalog \u0026 curation Epic.\n- Live progress and cancel — Crawl progress, cancellation \u0026 fair processing Epic.\n- Auto-confirm dialogs on switch (e.g. \"cancel the running crawl too?\") — deferred UX polish.\n\n## Source\n\n- **Parent Vision**: #18\n- **PRD**: PRD.md § Pillar A — Pluggable Ingestion Pipeline\n",
+        "body_hash":  "ae8092359b913d77b8a122899a924c63d0249bebef15906a5c9b824a27cd162b",
+        "content_hash":  "b618b5851c1a245c203d76dc3cb2303fb448893779ec81f9fa9c2343ab7cbeeb"
+    },
+    {
+        "number":  30,
+        "title":  "Task: Live progress for a running crawl",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/30",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:40Z",
+        "updated_at":  "2026-07-10T07:26:17Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Crawl progress, cancellation, and fair processing (#22)\n\n## Goal\n\nWhile a crawl runs, the creator sees videos-done / total advancing live.\n\n## Why\n\nA crawl of a large channel can take a long time; a silent spinner reads as \"stuck\". Showing incremental progress turns a multi-hour job into something the creator can trust and walk away from — Pillar A\u0027s promise of a real-time progress view, now real for big channels.\n\n## Example of done\n\nStarting a crawl of, say, 40 videos, the creator watches the done count climb (0 → 40) without reloading, and the total reflects how many videos the run will process. When it finishes, the surface shows it completed.\n\n## Out of scope\n\n- Cancel (separate Task).\n- The batch/fairness mechanism that makes progress advance smoothly (separate Task).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Tasks 2 \u0026 13 — progress counts advance per batch (the existing job counters, surfaced in the catalog dialog). Fix the pre-existing count-vs-discovered discrepancy so \"done / total\" is honest.\n\n## Source\n\n- **Parent Epic**: #22\n",
+        "body_hash":  "4a1650fb629ec1fd6008d467fad9ee24d1e9e4a45e75e2ab3c13a5bc915590b2",
+        "content_hash":  "dd773e47c2b7e1469e620d981a5d3c12facdfd0b4bec0eb55a462daa0ae4f3d7"
+    },
+    {
+        "number":  29,
+        "title":  "Task: Refreshing the catalog picks up new uploads",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/29",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:36Z",
+        "updated_at":  "2026-07-10T07:26:15Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Channel video catalog \u0026 curation (#20)\n\n## Goal\n\nA catalog refresh adds newly published videos to the list without touching or re-ingesting ones already known.\n\n## Why\n\nChannels keep publishing. A creator who curated last month should be able to refresh and see only the new videos to consider, cheaply, without the platform re-reading and re-processing the entire back-catalog each time.\n\n## Example of done\n\nAfter new uploads, the creator hits Refresh and the new videos appear at the top with correct dates; existing entries and their ingest states are unchanged; nothing gets re-ingested by the refresh. On an already-fully-read channel the refresh is fast (stops once it reaches videos it already knows).\n\n## Out of scope\n\n- Automatically ingesting the new uploads (that\u0027s a mode/selection decision, not the refresh).\n- Detecting videos that became private/deleted (Future).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Task 10 (incremental early-stop refresh) — metadata only, newest-first, stop at the first fully-known page once the catalog has been walked in full.\n\n## Source\n\n- **Parent Epic**: #20\n",
+        "body_hash":  "cc7fce369a095f933b7526dedcd0d898ddaf6162df67e861d877a181e06fabf8",
+        "content_hash":  "f732a4d735fc58ace0d84764867d161b850903809a4d578fcf4f07eac42a6f3c"
+    },
+    {
+        "number":  32,
+        "title":  "Task: Large backfill runs in bounded batches without blocking fresh videos",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/32",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:47Z",
+        "updated_at":  "2026-07-10T07:26:20Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Crawl progress, cancellation, and fair processing (#22)\n\n## Goal\n\nA whole-channel backfill processes in bounded batches, ordered so a fresh video for another creator never waits behind it.\n\n## Why\n\nToday a single large backfill can monopolize shared transcription/extraction and stall every other creator\u0027s new upload — a cross-tenant fairness defect. Bounding each run into batches and ordering interactive/fresh work ahead of bulk history is what keeps the platform responsive under one creator\u0027s 1,000-video history.\n\n## Example of done\n\nWhile creator A\u0027s 1,000-video backfill runs, creator B connects a channel (or a schedule fires) and B\u0027s new video starts processing without waiting for A\u0027s backfill to finish. A\u0027s backfill still completes, incrementally, and after a service restart it resumes rather than starting from zero. No video is processed twice.\n\n## Out of scope\n\n- Per-plan SLA tiers (Future).\n- The cancel and progress surfaces (separate Tasks).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Tasks 1–6 — one crawl = many bounded batches; priority propagates through the whole pipeline (interactive \u003e scheduled \u003e selection \u003e backfill); heartbeat-based liveness. Deploy order: API before workers (see the plan\u0027s Backward compatibility section).\n\n## Source\n\n- **Parent Epic**: #22\n",
+        "body_hash":  "dc6c9f1e9e57354614ee6aa428271c67e4086031d9bc986859f6cb3bbbb3611d",
+        "content_hash":  "215da3165876c4ba818cf529acf43bd3508a9ac2c198b3a570e3684ea4122287"
+    },
+    {
+        "number":  31,
+        "title":  "Task: Creator cancels a running crawl",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/31",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:43Z",
+        "updated_at":  "2026-07-10T07:26:18Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Crawl progress, cancellation, and fair processing (#22)\n\n## Goal\n\nA creator stops a running crawl, and it halts promptly without leaving videos stuck.\n\n## Why\n\nStarted the wrong backfill, or changed their mind mid-run — the creator needs an exit that doesn\u0027t force them to wait out a thousand videos. Crucially, videos that hadn\u0027t been processed yet must become selectable again, so cancel-then-recurate is a clean loop (the core manual-mode workflow).\n\n## Example of done\n\nWith a crawl running, the creator hits Cancel; it stops within one processing batch and picks up no more videos. Videos already done stay done; videos not yet processed return to \"not ingested\" and can be selected again. The source\u0027s Run control re-enables once the crawl ends.\n\n## Out of scope\n\n- Auto-canceling on a mode switch (deferred; switch is a separate, side-effect-free action).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Tasks 2–4 — cancel flips the job AND its un-started videos back to a re-selectable state (otherwise they show \"Queued\" forever); the in-flight batch drains.\n\n## Source\n\n- **Parent Epic**: #22\n",
+        "body_hash":  "f05a5bd97d4c6ef8a1c343949e993fc0c584a2604a96fa9499bf3028e2b8296f",
+        "content_hash":  "544b141caf7ba14beaff94d7d31c1fddcb35ff13ed317490c176d0bba9142d21"
+    },
+    {
+        "number":  26,
+        "title":  "Task: Connecting a channel builds a browsable video catalog",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/26",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:25Z",
+        "updated_at":  "2026-07-10T07:26:10Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Channel video catalog \u0026 curation (#20)\n\n## Goal\n\nConnecting a channel produces a searchable catalog of its videos (title + publish date) without ingesting any of them.\n\n## Why\n\nCuration needs something to curate from. The list has to be cheap — metadata only, no downloading or transcription — so a creator can see all 1,000 videos of a channel seconds after connecting, at zero processing cost, and decide what\u0027s worth ingesting.\n\n## Example of done\n\nShortly after connecting, the creator opens the channel and sees its videos listed with titles and publish dates, a total count, and a \"partial\" indicator for very large channels. No Riffs were created by building the catalog. The creator can search by title and page through the list.\n\n## Out of scope\n\n- Per-video ingest state badges (separate Task).\n- Selecting and ingesting videos (separate Task).\n- Sort/filter by views or duration (Future).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Tasks 7–10 (catalog table + metadata enumeration via the channel\u0027s existing OAuth grant, background refresh, browse endpoint). Enumeration is metadata-only; cap and \"partial\" flag per the Epic\u0027s locked constants.\n\n## Source\n\n- **Parent Epic**: #20\n",
+        "body_hash":  "e0fbeb58a60099e114e80aa597f0691bf274a5fff2ccc8b88240b40c257399c3",
+        "content_hash":  "8b249b0cfb17fabf692f8e009ccfe8eae1ec3119c7172f5abc2ab4664f3a7a3a"
+    },
+    {
+        "number":  25,
+        "title":  "Task: Creator switches a channel between auto and manual",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/25",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:22Z",
+        "updated_at":  "2026-07-10T07:26:08Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Ingest mode selection (auto vs manual) (#19)\n\n## Goal\n\nA creator flips a connected channel between Auto and Manual from the source card, at any time.\n\n## Why\n\nCreators change their mind: start hands-off (Auto), then switch to Manual to curate; or start Manual and open the floodgates. The switch must be a safe, reversible setting change — never a hidden trigger that starts spending or throws away an in-flight crawl.\n\n## Example of done\n\nThe source card shows the current mode and a switch action. Switching to Manual hides Run/Backfill and stops future auto crawls; switching to Auto restores them. Neither direction starts or cancels any ingest on its own — a crawl already running keeps going, and nothing new auto-fires. Switching a non-channel source to Manual is refused with a clear message.\n\n## Out of scope\n\n- A confirmation dialog offering to cancel an in-flight crawl on switch (deferred polish).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Task 11b (`POST /sources/:id/mode`, youtube-channel-only guard) + Task 13 switch button. Switch takes effect at the next ingest decision.\n\n## Source\n\n- **Parent Epic**: #19\n",
+        "body_hash":  "885dc6d842b6837788d3cf61c8fb0877e4ac36d21dd02aef11137c5528a077ce",
+        "content_hash":  "efc994017c506e8a82a4afc54233c9e53663d4f2737a738a4b09ffd465128c77"
+    },
+    {
+        "number":  28,
+        "title":  "Task: Creator selects catalog videos and ingests just those",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/28",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:32Z",
+        "updated_at":  "2026-07-10T07:26:13Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Channel video catalog \u0026 curation (#20)\n\n## Goal\n\nA creator ticks one or more not-yet-ingested videos in the catalog and starts ingest for exactly that set.\n\n## Why\n\nThis is the payoff of the whole Vision for manual mode — turning a curated pick, not the whole channel, into Riffables. It has to spend budget on only the chosen videos and refuse anything outside the channel so the spend surface stays bounded to what the creator can actually see.\n\n## Example of done\n\nThe creator ticks three untouched videos, hits Ingest, and those three (and only those) enter the pipeline; already-riffed videos couldn\u0027t be ticked. Selecting a video id that isn\u0027t in this channel\u0027s catalog is refused. The started run reports back so the creator knows how many were queued.\n\n## Out of scope\n\n- Live progress and cancel of the started run (Crawl progress Epic).\n- Batch pacing / fairness of processing (Crawl progress Epic).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Task 11 (selection endpoint, validate ids against the catalog) + Task 3 (`startSelection`). Selection runs at a lower priority than interactive Run — see the Crawl progress Epic.\n\n## Source\n\n- **Parent Epic**: #20\n",
+        "body_hash":  "8a395ba6bbfd81554496c6af563b4af5879b3d9a1cb61f443b1f15cbc8a6402c",
+        "content_hash":  "18306b2f3a045f7358d583f32a4dd01d6a573fd93ed6b19f68e1b4518f8562aa"
+    },
+    {
+        "number":  27,
+        "title":  "Task: Catalog shows each video\u0027s ingest state",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/27",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T04:22:29Z",
+        "updated_at":  "2026-07-10T07:26:12Z",
+        "closed_at":  "",
+        "author":  "phanhoc",
+        "body":  "## Parent Epic\n\nEpic: Channel video catalog \u0026 curation (#20)\n\n## Goal\n\nEvery catalog row shows whether that video is not ingested, queued, processing, riffed, or failed.\n\n## Why\n\nWithout state, a creator can\u0027t tell what\u0027s left to do — they\u0027d re-select videos already riffed (wasting spend) or miss ones that failed. The state also drives selectability: only not-ingested and failed videos should be pickable.\n\n## Example of done\n\nA video already turned into Riffables shows \"Riffed\" and cannot be ticked; one mid-pipeline shows \"Processing\" and cannot be ticked; an untouched or previously failed one is selectable. The state is accurate right after a crawl finishes, with no manual refresh needed to clear a stale \"processing\".\n\n## Out of scope\n\n- Building the catalog list itself (separate Task).\n- The ingest action (separate Task).\n\n## Agent instructions\n\nPlan: `plan-channel-catalog.md` Tasks 9–10 — derive state at read time from existing riffs/ingestion records (do not persist a separate per-video state that can drift).\n\n## Source\n\n- **Parent Epic**: #20\n",
+        "body_hash":  "73ac3b2ed5b32d9d22595a87bef4fbf49df71bcfcf1acddfacf757b2cc3c708c",
+        "content_hash":  "04574df8154269767174626778a45527898222496c45e58347dd85daa612922a"
+    },
+    {
+        "number":  6,
+        "title":  "Vision: Pluggable Ingestion Pipeline",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/6",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:23Z",
+        "updated_at":  "2026-07-03T08:36:05Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Pluggable Ingestion Pipeline\r\n\r\n## Purpose\r\nProvide creators with a zero-friction way to sync, schedule, and monitor content imports from their active media channels (YouTube, Spotify, Blog RSS) without manual copy-pasting.\r\n\r\n## Mechanic\r\nThe system automatically monitors the creator\u0027s configured content channels. When a new podcast, video, or article is published, the platform fetches the media in the background, transcribes the audio, identifies individual speakers, and updates the creator\u0027s library.\r\n\r\n## Surfaces affected\r\n- **Console (Creator Dashboard)**: Channel import settings, sync frequency configurations, and real-time processing status indicators.\r\n\r\n## V1 / V1.1 / Future split\r\n- **V1**: Automatic syncing of YouTube Channels, Spotify Podcast feeds, and Blog RSS.\r\n- **V1.1**: Direct manual file uploads (MP3, MP4 audio/video files) for off-platform content.\r\n- **Future**: Real-time livestream stream synchronization and transcript generation.\r\n\r\n## Open decisions\r\n- Sync frequency and cost caps (e.g., limiting how many hours of content a creator can import monthly to keep server billing predictable).\r\n\r\n## Scope exclusions\r\n- Importing and indexing of non-media document types (such as PDFs, Slide decks, or Google Docs).\r\n",
+        "body_hash":  "c58392aec37e354dbc3162d836e4f086ddb674e4d583f6ed16bb23d43e0d12a4",
+        "content_hash":  "62f1f50223fb40bab23f08c9a20ca580f41c8d3434be3d608716306b478fdb4b"
+    },
+    {
+        "number":  5,
+        "title":  "Epic: Conversational Widget Theme Customizer",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/5",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:22Z",
+        "updated_at":  "2026-07-03T08:36:14Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Epic: Conversational Widget Theme Customizer\r\n\r\n## Parent Vision\r\n- [Vision 4: Conversational Customization](file:///d:/riffables-prd/specs/vision_4_conversational_customization.md)\r\n\r\n## Milestone\r\n- V1\r\n\r\n## Mechanic\r\nExposes widget design styling properties to a dashboard chat helper, enabling creators to customize layouts using natural language conversations.\r\n\r\n## Surface Tables\r\n| Surface | Action | Impact |\r\n|---|---|---|\r\n| Console | Chats with theme assistant | Generates real-time visual style changes in the preview widget |\r\n\r\n## Acceptance Criteria\r\n- [ ] Creators can describe theme requests (e.g. \"make the widget look like a modern dark theme\").\r\n- [ ] The widget preview simulator updates instantly with the new styles.\r\n- [ ] Styles are saved to the creator\u0027s profile when they click \"Save\".\r\n- [ ] The AI assistant refuses requests to add malicious script tags.\r\n\r\n## Locked Constants\r\n- `ALLOWED_CSS_VARIABLES = [\"primary-color\", \"bg-color\", \"border-radius\", \"font-family\"]`\r\n\r\n## Backend Dependencies\r\n- Widget Preview Simulator\r\n- AI Builder agent\r\n\r\n## Scope Exclusions\r\n- Uploading arbitrary style sheets or code snippets.\r\n",
+        "body_hash":  "3a7bba433c94323e5a630b9c14299fe5e083098137c606aaed85bc196ab9dead",
+        "content_hash":  "05db713090ce87b2136d547cc96cbb3682af5ac6e6ad55da82d58c6dbd32d010"
+    },
+    {
+        "number":  8,
+        "title":  "Vision: Hybrid Discovery Engine",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/8",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:25Z",
+        "updated_at":  "2026-07-03T08:35:54Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Hybrid Discovery Engine\r\n\r\n## Purpose\r\nMake search intuitive for the audience, ensuring they find the exact information they need whether they type a specific keyword or search for a general concept.\r\n\r\n## Mechanic\r\nThe search bar runs queries through two parallel paths: a traditional keyword matcher for exact terms and a conceptual matcher for contextual meaning. The engine merges these results to display the most relevant quotes, stories, and insights.\r\n\r\n## Surfaces affected\r\n- **Embedded Widget**: Search bar input, search results layout, and topic filter tags.\r\n\r\n## V1 / V1.1 / Future split\r\n- **V1**: Combined keyword and conceptual search over the creator\u0027s video and podcast library.\r\n- **V1.1**: Language auto-translation (e.g. matching English queries with Vietnamese transcripts).\r\n- **Future**: Tailored recommendation streams suggesting related insights based on audience reading history.\r\n\r\n## Open decisions\r\n- Optimal length of transcript snippets shown in search result previews.\r\n\r\n## Scope exclusions\r\n- Querying search indexes outside of the creator\u0027s own library.\r\n",
+        "body_hash":  "af69953da21998cf1a91c289601b3192b5c30d85ccbf2eb290b0775c2d20cda6",
+        "content_hash":  "d3da355c5a56e44d92a9afe79aa98409137902b4b1d1154eaeee69eee59933fa"
+    },
+    {
+        "number":  7,
+        "title":  "Vision: Verifiable AI Extraction",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/7",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:24Z",
+        "updated_at":  "2026-07-03T08:36:00Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Verifiable AI Extraction\r\n\r\n## Purpose\r\nProtect the creator\u0027s reputation by eliminating AI hallucinations, guaranteeing that every quote card or insight is 100% accurate and traceable back to the source media.\r\n\r\n## Mechanic\r\nWhen the AI extracts key takeaways and quotes, a validation engine cross-references the quote word-for-word against the source transcript. If it passes verification, a deep link to the exact video/audio timestamp is created. Hallucinated or incorrect quotes are automatically rejected.\r\n\r\n## Surfaces affected\r\n- **Console (Curation feed)**: Creator approval lists showing verbatim source highlights and mismatch warnings.\r\n- **Embedded Widget**: Audience citation badges that link directly to the source media.\r\n\r\n## V1 / V1.1 / Future split\r\n- **V1**: Verifying quote cards and key insights derived from a single episode context.\r\n- **V1.1**: AI self-correction prompts to automatically rewrite insights that fail verification.\r\n- **Future**: Synthesized insights that merge topics across multiple episodes.\r\n\r\n## Open decisions\r\n- How strict to make the automated matching algorithm (balancing small filler word variations vs. absolute verbatim correctness).\r\n\r\n## Scope exclusions\r\n- Allowing creators to create custom quote cards that cannot be verified in the transcript.\r\n",
+        "body_hash":  "1e22537109a5aa7428aafa1403a6458f28cfd52dc78ff09d4d050c15bc8e73ee",
+        "content_hash":  "08af277ed2e3cabdd4d003702377c34f777fc4f355c917345fd2b72998024645"
+    },
+    {
+        "number":  2,
+        "title":  "Epic: Verifiable Citation \u0026 Traceback Validation",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/2",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:19Z",
+        "updated_at":  "2026-07-03T08:36:46Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Epic: Verifiable Citation \u0026 Traceback Validation\r\n\r\n## Parent Vision\r\n- [Vision 2: Verifiable AI Extraction](file:///d:/riffables-prd/specs/vision_2_verifiable_extraction.md)\r\n\r\n## Milestone\r\n- V1\r\n\r\n## Mechanic\r\nImplements automated verification checks comparing AI-generated insights and quotes against the original transcript to ensure accuracy.\r\n\r\n## Surface Tables\r\n| Surface | Action | Impact |\r\n|---|---|---|\r\n| Console | Reviews extracted insights | Highlights matched transcript sections and flags mismatch errors |\r\n| Widget | Clicks citation link | Jumps to the exact playback moment in the video or audio |\r\n\r\n## Acceptance Criteria\r\n- [ ] Quotes must match the original transcript verbatim to pass verification.\r\n- [ ] Any AI-invented or hallucinated statements are immediately flagged and rejected.\r\n- [ ] Clicking a citation badge opens the video player at the exact timestamp.\r\n- [ ] Links are generated by the server to ensure they are always valid.\r\n- [ ] Citation data is stored efficiently to keep page load times fast.\r\n\r\n## Locked Constants\r\n- `LCS_TOKEN_MATCH_THRESHOLD = 0.9`\r\n\r\n## Backend Dependencies\r\n- Citation Verifier Service\r\n- Video and Audio player widgets\r\n\r\n## Scope Exclusions\r\n- Creating synthesized quote summaries that combine multiple sources without direct verbatim quotes.\r\n",
+        "body_hash":  "f7c51404a78527f6024ed4396846d131eb3ab3200389cec9447d2af27d1dc929",
+        "content_hash":  "c0e592dab55721834530cfba4ad71501f8226b3c3a8001c144ea86b7c6f9c3bb"
+    },
+    {
+        "number":  1,
+        "title":  "Epic: Automatic Feed Sync \u0026 Ingestion",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/1",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:19Z",
+        "updated_at":  "2026-07-03T08:36:41Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Epic: Automatic Feed Sync \u0026 Ingestion\r\n\r\n## Parent Vision\r\n- [Vision 1: Pluggable Ingestion Pipeline](file:///d:/riffables-prd/specs/vision_1_ingestion_pipeline.md)\r\n\r\n## Milestone\r\n- V1\r\n\r\n## Mechanic\r\nImplements the automatic scanning, fetching, and transcribing of new media when creators add YouTube channels or podcast feeds.\r\n\r\n## Surface Tables\r\n| Surface | Action | Impact |\r\n|---|---|---|\r\n| Console | Pastes RSS or YouTube URL | Registers feed and schedules automatic import jobs |\r\n| Console | Views Content list | Displays progress states (Queued, Processing, Ready) and speaker lists |\r\n\r\n## Acceptance Criteria\r\n- [ ] Creator can paste a YouTube channel link and see a list of recent videos import.\r\n- [ ] Large audio files are processed without crashing or timing out.\r\n- [ ] Raw transcriptions correctly separate speakers (e.g. host from guest).\r\n- [ ] Failed imports retry automatically and display error messages in the Console dashboard.\r\n- [ ] Ingestion jobs run in the background without affecting Console dashboard responsiveness.\r\n\r\n## Locked Constants\r\n- `MAX_IMPORT_DURATION_MINUTES = 180`\r\n- `SYNC_FREQUENCY_LIMIT_HOURS = 1`\r\n\r\n## Backend Dependencies\r\n- Content ingestion adapters\r\n- Background transcription processor\r\n- Media asset storage\r\n\r\n## Scope Exclusions\r\n- Local uploading of video files from user devices.\r\n",
+        "body_hash":  "f6b3017dc766a3330cdda1d47144335a9d3db020a3dbb1eb7ce160997f5e879a",
+        "content_hash":  "af3e36cc538533ba2649361d49787aef02885f88fcf1010c15c745f4aa5c4857"
+    },
+    {
+        "number":  4,
+        "title":  "Epic: Hybrid pgvector \u0026 RRF Discovery",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/4",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:21Z",
+        "updated_at":  "2026-07-03T08:36:25Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Epic: Hybrid pgvector \u0026 RRF Discovery\r\n\r\n## Parent Vision\r\n- [Vision 3: Hybrid Discovery Engine](file:///d:/riffables-prd/specs/vision_3_hybrid_discovery.md)\r\n\r\n## Milestone\r\n- V1\r\n\r\n## Mechanic\r\nImplements a smart search bar combining exact text matching with semantic meaning queries to return relevant results.\r\n\r\n## Surface Tables\r\n| Surface | Action | Impact |\r\n|---|---|---|\r\n| Widget | Types a query in search box | Performs hybrid search and displays fused results |\r\n\r\n## Acceptance Criteria\r\n- [ ] Searches return relevant insights even if exact words do not match (concept search).\r\n- [ ] Exact match searches (enclosed in quotes) prioritize exact wording.\r\n- [ ] Results load in less than a second for a responsive audience experience.\r\n- [ ] Searches respect privacy and only return content belonging to the current creator.\r\n- [ ] Results list both the insight card and the verbatim quote.\r\n\r\n## Locked Constants\r\n- `MAX_SEARCH_RESULTS = 10`\r\n\r\n## Backend Dependencies\r\n- Search Index Service\r\n\r\n## Scope Exclusions\r\n- Cross-creator library searching.\r\n",
+        "body_hash":  "6fc549fd98d97dc1bd32570c64be9b7465957d1c4c37024b46e003c3412eed8f",
+        "content_hash":  "c3673b3c31308b8e208aadf1c6496ae63e636cadff915634702c55ffb1d8e80d"
+    },
+    {
+        "number":  3,
+        "title":  "Epic: Self-Serve Re-extraction Console Endpoint",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/3",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:20Z",
+        "updated_at":  "2026-07-03T08:36:30Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Epic: Self-Serve Re-extraction Console Endpoint\r\n\r\n## Parent Vision\r\n- [Vision 2: Verifiable AI Extraction](file:///d:/riffables-prd/specs/vision_2_verifiable_extraction.md)\r\n\r\n## Milestone\r\n- V1\r\n\r\n## Mechanic\r\nProvides self-serve options in the creator dashboard to trigger re-extraction of insights for specific episodes or contents manually.\r\n\r\n## Surface Tables\r\n| Surface | Action | Impact |\r\n|---|---|---|\r\n| Console | Clicks \"Re-extract\" on a Video | Cleans up existing insights and triggers a new AI extraction run |\r\n| Console | Clicks \"Re-extract Pending\" | Enqueues processing for all newly synchronized contents |\r\n\r\n## Acceptance Criteria\r\n- [ ] Creators can run manual extraction on a single content entry.\r\n- [ ] Re-extracting replaces previous insights to avoid duplicate quote cards.\r\n- [ ] Access is role-restricted so only authorized editors can trigger extractions.\r\n- [ ] Dashboard displays real-time status updates (e.g. \"Extracting insights...\").\r\n- [ ] Safeguards are in place to prevent creators from accidentally starting massive extraction runs.\r\n\r\n## Locked Constants\r\n- `BATCH_EXTRACT_LIMIT = 20`\r\n\r\n## Backend Dependencies\r\n- Extraction service\r\n- Console UI updates\r\n\r\n## Scope Exclusions\r\n- Automatic bulk re-extractions of the entire content history.\r\n",
+        "body_hash":  "c830034025a05bc12b8a520d41f54d74c2ead32feb32a75e80f30741f19af962",
+        "content_hash":  "6f006b0958aeffd921b58a30e51300eeb51d2b939730f93ee18bf52dfcb56bc3"
+    },
+    {
+        "number":  14,
+        "title":  "Epic: Public Audience Site",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/14",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T07:18:28Z",
+        "updated_at":  "2026-07-08T07:20:52Z",
+        "closed_at":  "2026-07-08T07:20:52Z",
+        "author":  "lhts1810",
+        "body":  "# Epic: Public Audience Site\n\n## Parent Vision\n- [Vision 3: Hybrid Discovery Engine](file:///d:/riffables-prd/specs/vision_3_hybrid_discovery.md)\n\n## Milestone\n- V1\n\n## Mechanic\nProvide a platform-hosted, per-tenant Next.js client-facing website for visitors to search, read, and discuss creator insights. It supersedes basic iframe widgets by providing a dedicated library page with audience member accounts, search logs, and reflections.\n\n## Surface Tables\n| Surface | Action | Impact |\n|---|---|---|\n| Public Site | Visit site URL | Views the creator\u0027s searchable library of cards. |\n| Public Site | Signs up as a Member | Accesses deep citations, reflections logs, and personalized chat. |\n| Public Site | Interacts with search bar | Performs hybrid search and views results list. |\n\n## Acceptance Criteria\n- [ ] Next.js app is compiled per-tenant with deploy-time static tenant_id constant.\n- [ ] Search input supports hybrid keyword + semantic kNN concept discovery.\n- [ ] Content search results load and render in under 500ms using edge caching.\n- [ ] Clicking citation badges plays video/audio exactly at the cited timestamp.\n- [ ] Site visitor can register an audience member account (auth managed centrally on our infra).\n- [ ] Paid member tier gates detailed framework details (essence vs depth).\n- [ ] Webhook triggers edge cache revalidation when new insights are published.\n\n## Locked Constants\n- `PUBLIC_SEARCH_LIMIT = 20`\n\n## Backend Dependencies\n- NestJS Public API (/api/public/* for content reads)\n- Central Postgres DB (audience member auth schema)\n\n## Scope Exclusions\n- Standalone payments checkout page (membership tiers are manually granted/invited).\n",
+        "body_hash":  "44b2be1f0f7e22f2c3efd131cfa6017e1954f5cb8ff8da2b09f7306eb57caca1",
+        "content_hash":  "c2c6867f1cb4a8a05ea48e42d764643bd3d7ed27fb7d6508df06f1fa7e356215"
+    },
+    {
+        "number":  13,
+        "title":  "Epic: Creator Console Dashboard",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/13",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T07:18:27Z",
+        "updated_at":  "2026-07-08T07:20:51Z",
+        "closed_at":  "2026-07-08T07:20:51Z",
+        "author":  "lhts1810",
+        "body":  "# Epic: Creator Console Dashboard\n\n## Parent Vision\n- [Vision 1: Pluggable Ingestion Pipeline](file:///d:/riffables-prd/specs/vision_1_ingestion_pipeline.md)\n- [Vision 4: Conversational Customization](file:///d:/riffables-prd/specs/vision_4_conversational_customization.md)\n\n## Milestone\n- V1\n\n## Mechanic\nDelivers a React-based Creator Dashboard Console (`apps/console`) that allows KOL operators to configure data sources, trigger backfills, schedule ingestion cron runs, review and approve AI-extracted Riffables, and converse with the builder agent to dynamically style their public widgets.\n\n## Surface Tables\n| Surface | Action | Impact |\n|---|---|---|\n| Console | View dashboard tabs | Access workspaces, sources, scheduling, curation feed, and styling setup. |\n| Console | Configures sources \u0026 schedules | Registers content endpoints and sets sync parameters. |\n| Console | Curates extracted insights | Edits, approves, or rejects generated quote cards. |\n\n## Acceptance Criteria\n- [ ] Creators can onboard, authenticate via BetterAuth, and establish a new isolated workspace tenant.\n- [ ] Creators can add YouTube/Spotify/RSS feed URLs and edit sync schedules.\n- [ ] Curation page displays lists of auto-extracted Riffables with category flags.\n- [ ] Creator can edit the title, takeaways, and citation verbatim text directly, then click \"Approve\" to publish.\n- [ ] Dashboard features a re-extract button on individual files/riffs to overwrite old insights.\n- [ ] Interactive layout chat allows styling widget colors, layouts, and font tokens with real-time updates.\n- [ ] Provides copyable embed script snippets (`embed.js` code block) for direct installation.\n\n## Locked Constants\n- `DEFAULT_THEME = \"light\"`\n\n## Backend Dependencies\n- NestJS Operator API (Cookie auth, Tenant RLS verification)\n- BetterAuth workspace manager\n\n## Scope Exclusions\n- Stripe payment portal integrations or billing management pages.\n",
+        "body_hash":  "d2a81bdb5b8c3084e5731e33e786a5906e457c0f18a14768358230788629c649",
+        "content_hash":  "8f2db420c17390b08a1352a8b5fe6ef7dc5b188c63c2a46cd6bf23fc1bf7d005"
+    },
+    {
+        "number":  16,
+        "title":  "Vision: Public Audience Site",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/16",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T07:35:20Z",
+        "updated_at":  "2026-07-08T07:35:20Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Public Audience Site\n\n## Purpose\nDeliver a fully hosted, high-performance web home (`{tenant}.riffables.app`) for the creator\u0027s audience to search, read, and converse with verified insights.\n\n## Mechanic\nPer-tenant Next.js deployments that utilize static tenant IDs for instant edge rendering. Search queries trigger hybrid pgvector + full-text lookups, and audience member profiles are managed via a centralized secure authentication database.\n\n## User Flow \u0026 UI Description\n### Audience User Flow\n\n```mermaid\ngraph TD\n    A[\"Landing (Home Page \u0026 Categories)\"] --\u003e B[\"Discovery (Hybrid Search Query)\"]\n    B --\u003e C[\"Reading Insights (Expand Card)\"]\n    C --\u003e D[\"Playback Verification (Click Citation)\"]\n    D --\u003e E[\"Video Overlay Autoplays\"]\n    C --\u003e F[\"Audience Chat (Ask AI clone)\"]\n    E --\u003e G[\"Membership (Sign Up to Save \u0026 Reflect)\"]\n    F --\u003e G\n```\n\n### UI Component Architecture \u0026 Interactions\n\n| Component | UI Elements | Interactions |\n|---|---|---|\n| **Global Header \u0026 Navigation** | Creator Logo, \"Log In / Sign Up\" button, Profile Avatar | Clicking the Login button opens a smooth Authentication Modal overlay. Scrolling down the page collapses the header into a sleek sticky navbar. |\n| **Hero Search Section** | Hybrid Search Input (frosted-glass), Category Pills | Clicking a Category Pill instantly filters the Grid below. Typing debounces keystrokes for autocomplete suggestions, and upon submit, immediately updates the Grid with semantic results. |\n| **Insight Cards Grid** | Cards with category badge, title, snippet, green shield, \"Play Source\" | Hovering scales the card up with a soft shadow glow. Clicking expands it inline. Clicking \"Play Source\" triggers the Floating Media Player. |\n| **Floating Media Player** | Slide-out sidebar or modal, Embedded video/audio iframe | Appears seamlessly over the current view, receives the precise timestamp, and immediately begins playing the media. Closing returns focus to the grid. |\n| **Audience Chat Interface** | Chat history window, Text input prompt area | Streams responses with embedded citation chips. Clicking a citation chip directly inside the chat bubble triggers the Floating Media Player for source verification. |\n\n## Surfaces affected\n- **Public Audience Site**: Public audience landing page, search forms, member profiles, and verification cards.\n\n## V1 / V1.1 / Future split\n- **V1**: Hybrid search, verified citation jumps, member signup, and essence vs depth tier-gating.\n- **V1.1**: Automated translation of transcripts for international visitors.\n- **Future**: Interactive journals and reflections sharing.\n\n## Open decisions\n- Latency optimization of data calls crossing between Vercel edge and internal services.\n\n## Scope exclusions\n- Direct payment gateways and checkouts.\n",
+        "body_hash":  "48e70b7782ef799365eb1597126b994707df5950f8529f01ed2135688bd6c194",
+        "content_hash":  "e97bd8a080adf472a5db9a36719fe1064a97add6dd21ab1c5e63293ea1a1cebe"
+    },
+    {
+        "number":  15,
+        "title":  "Vision: Creator Console Dashboard",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/15",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T07:35:19Z",
+        "updated_at":  "2026-07-08T07:35:19Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Creator Console Dashboard\n\n## Purpose\nProvide creators with a central dashboard console (`apps/console`) to configure, monitor, curate, and customize their content library and public sites.\n\n## Mechanic\nLeverages a React frontend communicating with NestJS operator APIs under tenant Row-Level Security. Ingestion controllers feed media feeds into transcription workers, curation controllers display generated insights for approval, and customizer endpoints translate layout configurations.\n\n## User Flow \u0026 UI Description\n### Creator User Flow\n\n```mermaid\ngraph TD\n    A[\"Onboarding (Register \u0026 Name Workspace)\"] --\u003e B[\"Channel Sync (Add Feed URL)\"]\n    B --\u003e C[\"Curation Feed (Inspect AI Insights)\"]\n    C --\u003e D{\"Action\"}\n    D --\u003e|\"Verify \u0026 Edit\"| E[\"Verification Split-Screen\"]\n    E --\u003e F[\"Approve \u0026 Publish\"]\n    D --\u003e|\"Skip\"| G[\"Next Insight\"]\n    F --\u003e H[\"Public Site Styling (Live Layout Customization)\"]\n```\n\n### UI Component Architecture \u0026 Interactions\n\n| Component | UI Elements | Interactions |\n|---|---|---|\n| **Global Sidebar Navigation** | Tabs for Sources, Curation, Site Setup | Clicking tabs instantly swaps the main workspace area via React Router without page reloads. Hovering triggers smooth glowing micro-animations. |\n| **Sources \u0026 Sync Manager** | Text input for URLs, Active Syncs Data Table | On submit, URL input triggers validation and adds the source. Each row features a \"Sync Now\" button, an \"Edit Schedule\" dropdown, and a live progress indicator ring. |\n| **Curation Feed List** | Filter/Sort Bar, Scrollable Insight List Items | Clicking a list item slides the view into the Verification Split-Screen Workspace for that specific insight. |\n| **Verification Workspace** | Left Pane (Insight Editor), Right Pane (Transcript Viewer) | The verbatim quote used in the Insight Editor is visually highlighted in the Transcript Viewer. Clicking the citation timestamp automatically scrolls the transcript. Clicking \u0027Approve\u0027 publishes the insight. |\n| **Public Site Customizer** | Left Pane (AI Styling Chat), Right Pane (Live Preview) | When the AI styling chat updates theme variables (colors, layout, fonts), the Live Preview Frame instantly re-renders using Fast Refresh to display the new aesthetics. |\n\n## Surfaces affected\n- **Console (Creator Dashboard)**: Workspace dashboard, feeds setup, curation lists, public site configuration chat, and domain settings.\n\n## V1 / V1.1 / Future split\n- **V1**: YouTube/Spotify channel syncing, scheduling, manual approval curation feed, and public site layout/theme customizer.\n- **V1.1**: Multi-workspace switcher and collaborative user invites.\n- **Future**: Automated curation recommendations and content suggestion filters.\n\n## Open decisions\n- Throttling heavy queue ingestion runs to control server costs.\n\n## Scope exclusions\n- Billing subscription setup screens and payment portal management.\n",
+        "body_hash":  "beb313fefd5dc2ad5c2b1ec01bee9e48a3bc4e133ba78de0970ca3e2e648f7c0",
+        "content_hash":  "45e46ffdb1341624bf6cb8e1c976bb763f507c1ae4983076d711ca092c123c24"
+    },
+    {
+        "number":  10,
+        "title":  "Vision: Multi-Tenant Isolation",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/10",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:26Z",
+        "updated_at":  "2026-07-03T08:35:48Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Multi-Tenant Isolation\r\n\r\n## Purpose\r\nEnsure total privacy and security of creator content, analytics data, and subscriber interactions, isolating each tenant\u0027s account details from others.\r\n\r\n## Mechanic\r\nA built-in data segregation layer enforces privacy rules on all database queries. The system automatically scopes searches and admin panels to the authenticated tenant\u0027s ID.\r\n\r\n## Surfaces affected\r\n- **Service API / Database**: Complete data isolation across the creator console and customer widget queries.\r\n\r\n## V1 / V1.1 / Future split\r\n- **V1**: Account isolation and basic team roles (Viewer, Editor, Admin).\r\n- **V1.1**: Granular sub-team folder permissions.\r\n- **Future**: Dedicated server clusters for enterprise clients.\r\n\r\n## Open decisions\r\n- Secure methods for system administrators to view logs without exposing individual tenant details.\r\n\r\n## Scope exclusions\r\n- Deploying isolated physical hardware/databases for starter tier accounts.\r\n",
+        "body_hash":  "024d5ee21aca21fd45210cbcdbb9b98f72560b4d21e99a919d10b99c917d104f",
+        "content_hash":  "05e731472e99251bda883dbf597b5f8f65434301d379b4a1e63a7c31826291cc"
+    },
+    {
+        "number":  9,
+        "title":  "Vision: Conversational Customization",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/9",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:26Z",
+        "updated_at":  "2026-07-03T08:35:35Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Conversational Customization\r\n\r\n## Purpose\r\nAllow creators to customize the look, feel, and features of their embedded widgets directly without needing developer assistance or custom CSS styling.\r\n\r\n## Mechanic\r\nCreators style their widget by chatting with an AI assistant in their console dashboard. As they request changes (e.g. \"change the primary color to match our warm orange branding\"), the assistant updates the widget parameters and updates the preview immediately.\r\n\r\n## Surfaces affected\r\n- **Console**: Widget layout chat channel and real-time widget preview simulator.\r\n\r\n## V1 / V1.1 / Future split\r\n- **V1**: Basic layout modes (chat focus vs. directory list focus), custom theme colors, greetings, and typography.\r\n- **V1.1**: Injecting custom layout parameters.\r\n- **Future**: Template design marketplaces for widgets.\r\n\r\n## Open decisions\r\n- Designing layout validation checks to prevent the AI builder from generating unreadable design configurations.\r\n\r\n## Scope exclusions\r\n- Allowing creators to inject custom JavaScript code that could compromise security.\r\n",
+        "body_hash":  "729e656557fde488af7a5806da7d35cb424e482b13f3cfacb1d547d86c135a23",
+        "content_hash":  "90a2bbe4058a5e391c5d29b4451c6b07906a945fd3c88852d650ac2f0a803bc5"
+    },
+    {
+        "number":  12,
+        "title":  "Vision: UI description",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/12",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-08T07:08:40Z",
+        "updated_at":  "2026-07-08T07:08:40Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# UI Description \u0026 Testing Specification\n\nThis document provides a structured matrix for verifying the user interface elements, divided by **Functional Modules** under each site surface: the **Creator\u0027s Console** (`apps/console`) and the **Audience Public Site** (`apps/public-site`).\n\n---\n\n## 1. Creator\u0027s Console (`https://apps.riffables.com/`)\n\n### 1.1 Module: Authentication \u0026 Tenant Onboarding\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Login Form** | Enter invalid credentials | Inline validation shows error badge: *\"Invalid email or password\"*. |\n| **Login Form** | Click Magic Link toggle | Hides the password field and switches the submit CTA to \"Send login link\". |\n| **Google OAuth Button** | Click button | Redirects to Google consent screen, then back to console dashboard. |\n| **Org Switcher** | Select org from dropdown | Active organization swaps; main content panel updates data instantly. |\n| **Subdomain Field** | Type slug (e.g. `rach`) | Checks API in real-time; displays green checkmark if free or red cross if taken. |\n| **Sidebar Menu** | Click user avatar | Opens dropdown menu containing options: \"Profile\" and \"Sign Out\". |\n\n### 1.2 Module: Ingestion Pipeline Manager\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Add Source Button** | Click button | Opens a modal containing a Source Type picker (YouTube, Spotify, Blog). |\n| **Source Type Picker** | Select type | Changes config inputs dynamically (YouTube Channel, Spotify RSS, Blog URL). |\n| **Schedule Configurator**| Select interval / cron | Restricts intervals to $\\ge$ 1 hour. Saving invalid cron shows a validation error. |\n| **Progress Monitor** | Trigger \"Run Now\" | Ingestion status shifts live (`queued` $\\rightarrow$ `fetching` $\\rightarrow$ `transcribing` $\\rightarrow$ `extracting` $\\rightarrow$ `done`) via SSE. |\n\n### 1.3 Module: Content Library \u0026 Curation\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Library Tabs** | Click Riffs / Riffables | Tab switches between raw processed transcripts and extracted insights grid. |\n| **Riffs Table** | Click Riff row | Opens detail view displaying player, segments timeline, and linked Riffables list. |\n| **Transcript Timeline** | Click timestamp segment | Media player (YouTube/audio) jumps playhead immediately to that exact timestamp. |\n| **Riffable Cards** | View cards | Insights render correct color-coded badge: `🤖 Auto`, `✍️ Edited`, `🚫 Rejected`, `👤 Manual`. |\n| **Bulk Action Bar** | Check multiple items | Floating action bar appears at the bottom allowing bulk Reject, Publish, or Unpublish. |\n\n### 1.4 Module: Manual Riffable Creator\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Split-Screen Panel** | Click \"Manual Create\" | Opens split view with Riff text reader/player (left) and form inputs (right). |\n| **Citation Capture** | Click \"Capture Moment\" | Pulls current video timestamp and highlighted text directly into the Citation form fields. |\n| **Save Action** | Click Save | Creates a new insight card stamped as `source_of_truth=\u0027manual\u0027` in the Riffables list. |\n\n### 1.5 Module: Studio \u0026 Theme Customizer\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Live Staging Iframe** | Edit styling configurations | The site preview in the right pane hot-reloads styling updates (CSS, layouts) within 3s. |\n| **Snippet Code Box** | Click Copy button | Clipboard stores the correct script loader template. |\n\n---\n\n## 2. Audience Public Site (`{slug}.speedrunlabs.ai`)\n\n### 2.1 Module: Session \u0026 Security Management\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Session Initializer** | Load page | Checks localStorage for session token; initiates handshake POST `/widget/session/init` if missing. |\n| **Rate Limiter** | Submit $\u003e30$ requests/min | Search is blocked. Displays warning banner: *\"Too many requests. Please wait.\"* |\n\n### 2.2 Module: Content Discovery Catalog\n| UI Component | Input / Action | Expected Behavior \u0026 Validation Criteria |\n|---|---|---|\n| **Greeting Header** | View header | Brand logo and welcoming string render according to the creator\u0027s config. |\n| **Seed Prompt Chips** | Click chip | Text query is submitted instantly and switches the site to search results view. |\n| **Search Bar** | Type keywords | Query triggers hybrid kNN + Full-Text Search. Insights populate the grid. |\n| **Quote Card** | View quote | Renders text inside large quotation marks. |\n| **Framework Card** | Click card | Expands list of structured steps, moral lessons, and takeaways. |\n| **Citation Link** | Click link in card footer | Opens source player in a modal and snaps playhead to the timestamp. |\n",
+        "body_hash":  "6240415e59070e4903f62bb3b1230c0d1913245c9c792c30a56348778347f447",
+        "content_hash":  "b8ea088d3eb93884d8b840de67c6f1b70b17d0e50dfb8bc7f5d556c9965318cf"
+    },
+    {
+        "number":  11,
+        "title":  "Vision: Overview",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/11",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-03T08:34:27Z",
+        "updated_at":  "2026-07-03T08:41:27Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Vision: Overview\n\n## Purpose\nProvide a single, comprehensive reference visualizing both the system architecture and the creator/audience journeys across the Riffables platform.\n\n## Mechanic\nMaps the connections between the platform\u0027s ingest processors, AI validators, database instances, and front-end surfaces alongside the step-by-step user experiences.\n\n## System Architecture Diagram\n```mermaid\nflowchart TD\n    subgraph Content Sources\n        YT[YouTube Channel]\n        SP[Spotify Podcast]\n        RSS[Blog RSS Feed]\n    end\n\n    subgraph \"Background Processing (service-workers)\"\n        Ingest[Ingestion Adapters]\n        Whisper[Whisper Transcription]\n        S3[(Media Storage: MinIO/R2)]\n    end\n\n    subgraph Database Layer\n        DB[(PostgreSQL + pgvector)]\n    end\n\n    subgraph \"Core Backend (service-api)\"\n        API[NestJS API Gateway]\n        Verify[Citation Verifier]\n        MCP[MCP Server]\n    end\n\n    subgraph Frontend Applications\n        Console[Creator Dashboard Console]\n        Widget[Embedded Audience Widget]\n        ExtSite[\"Creator\u0027s Website (Webflow, Substack, etc.)\"]\n    end\n\n    %% Media \u0026 Transcription Flow\n    YT --\u003e|Sync Feeds| Ingest\n    SP --\u003e|Sync Feeds| Ingest\n    RSS --\u003e|Sync Feeds| Ingest\n    Ingest --\u003e|Upload Audio| S3\n    Ingest --\u003e|Transcribe Audio| Whisper\n    Whisper --\u003e|Save Raw Transcripts| DB\n\n    %% AI Extraction \u0026 Verification Flow\n    DB --\u003e|Read Transcripts| MCP\n    MCP --\u003e|Check Verbatim Quotes| Verify\n    Verify --\u003e|Save Approved Insights| DB\n\n    %% User Interaction Flow\n    Console --\u003e|Review \u0026 Approve Insights| API\n    Console --\u003e|Configure Styling via chat| API\n    Widget --\u003e|Search \u0026 Conversational QA| API\n    API --\u003e|Query Insights \u0026 Embeddings| DB\n    ExtSite -.-\u003e|Embeds via iframe| Widget\n```\n\n## User Flow Diagram\n```mermaid\ngraph TD\n    subgraph Creator Journey\n        A[Register \u0026 Create Account] --\u003e B[Link Content Feeds]\n        B --\u003e C[\"Background Sync \u0026 AI Verification\"]\n        C --\u003e D[Curation Feed: Edit \u0026 Approve Insights]\n        D --\u003e E[Customize Widget Theme via Chat]\n        E --\u003e F[Copy Embed Script to Website]\n    end\n\n    subgraph Audience Journey\n        F --\u003e G[Visit Creator Site]\n        G --\u003e H[Search or Ask Questions in Widget]\n        H --\u003e I[Read Insight Cards \u0026 Verified Quotes]\n        I --\u003e J[Click Citation Link]\n        J --\u003e K[\"Play Video/Audio at Exact Moment\"]\n    end\n```\n\n## Surfaces affected\n- **Console (Creator Dashboard)**: All management views, setups, styling chats, and code export cards.\n- **Embedded Widget**: Audience interfaces, search forms, and verified quote citations.\n\n## V1 / V1.1 / Future split\n- **V1**: Self-serve registration, YouTube/podcast imports, manual review/edit, theme customizer, iframe widget, and keyword + concept searches.\n- **V1.1**: Direct file uploads, setup wizards, and multi-lingual translations.\n- **Future**: Live stream ingestion pipelines, layout marketplaces, and deep engagement analytics.\n\n## Open decisions\n- Optimizing initial creator setup experience before background data ingestion is complete.\n\n## Scope exclusions\n- Technical REST/GraphQL API schema specifications.\n",
+        "body_hash":  "c16af347d81a6d11d340f0af7ad11bf50c78d84b109e8f15d6b68ecdeae3935e",
+        "content_hash":  "0ef826b57444b0bf3ec967070e26d95c50bad88db88f269bc116c823fcc84693"
+    },
+    {
+        "number":  55,
+        "title":  "Task: Let operators edit articles",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/55",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:08Z",
+        "updated_at":  "2026-07-11T04:40:49Z",
+        "closed_at":  "2026-07-11T04:40:30Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nOperators can edit an article\u0027s content, not only publish or reject it.\n## Why\n`GET /articles/:id` and `PATCH /articles/:id` client functions already exist in the console but are dead — nothing calls them, and there\u0027s no edit form. Creators can publish or reject a generated article but can\u0027t fix a title, tweak a paragraph, or correct a citation before publishing.\n## Example of done\nOpening an article shows an editor that loads it via `GET /articles/:id` and saves edits via `PATCH /articles/:id`; the previously-dead client functions become live.\n## Out of scope\nArticle generation and publish/reject (already wired).\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "ae22c0f44744f8205462bf2651a405421582287f860b10212ba0bca77e4c45d9",
+        "content_hash":  "4598becc940635de242f28e622dd81bb15fa75d9a8258e30aa4547963a091800"
+    },
+    {
+        "number":  54,
+        "title":  "Task: Wire site unpublish, discard, and delete",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/54",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:06Z",
+        "updated_at":  "2026-07-11T03:54:28Z",
+        "closed_at":  "2026-07-11T03:54:06Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nOperators can unpublish, discard draft changes on, and delete a site.\n## Why\nThe backend supports `POST /sites/:id/unpublish`, `POST /sites/:id/discard`, and `DELETE /sites/:id` (the proxy route even handles them), but the console\u0027s site-client only wires `publish`. Once a site is live there\u0027s no UI to take it down, throw away unpublished edits, or delete it.\n## Example of done\nThe Sites screen / editor offers Unpublish (site goes offline), Discard changes (draft reverts to the live snapshot), and Delete (with confirmation), each calling the matching endpoint.\n## Out of scope\nPublish (already wired).\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "77ebc51102240cca9235cb3e7e5a60beb2b09ce9cd653584e8a8cf02d6c7e23f",
+        "content_hash":  "2ae6c4ae7e5a844efeba4fc510d10f3054427785b04b430f71fc76e8517a4354"
+    },
+    {
+        "number":  57,
+        "title":  "Task: Remove the orphan /sites/temp and /sites/configuration routes",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/57",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:14Z",
+        "updated_at":  "2026-07-10T09:14:47Z",
+        "closed_at":  "2026-07-10T09:14:47Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nRemove the orphan `/sites/temp` and `/sites/configuration` routes.\n## Why\nBoth are live routes that render a site-detail header with a **hardcoded fake site name** (\"temp\" / \"configuration\") as if it were a real site, then a generic get-started panel. They\u0027re leftover dev scaffolding — nothing links to them (every real site card links to `/sites/editor`) — but a user who lands on the URL sees a fake \"site\" that isn\u0027t theirs.\n## Example of done\nThe two routes (and their unused SiteDetailPage scaffolding, if nothing else uses it) are deleted; navigating there 404s instead of showing a fake site.\n## Out of scope\nThe real Sites flow.\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "34959b7e31e976ca07a1a0fee1fafd9ab87cd1b6477e3ff65c3f99ae555e2704",
+        "content_hash":  "edbc9f3a04a9f29b964053ddcc96f86cc1572844780a184e7f18c83e0ee89967"
+    },
+    {
+        "number":  56,
+        "title":  "Task: Surface job/queue status in the console",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/56",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:11Z",
+        "updated_at":  "2026-07-11T04:08:37Z",
+        "closed_at":  "2026-07-11T04:08:16Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nJob / queue status is visible in the console.\n## Why\n`GET /jobs/status` returns real BullMQ queue health, active jobs, and recent runs, but nothing in the console surfaces it. When a crawl/transcription/extraction is slow or stuck, the operator has no visibility into the pipeline.\n## Example of done\nSomewhere in the console (e.g. a status indicator or a small panel) shows live queue health and in-flight/recent jobs from `GET /jobs/status`.\n## Out of scope\nPer-source crawl progress (already wired via `GET /ingest/jobs/:id`).\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "b414b156754b8344429e72e656d9b55ccf41bbd36ad9b94fab27e9ecaaaf635f",
+        "content_hash":  "bd84dbdc8bb3c65ca6ca2733f04f8b3741ca0f44500da6af067df8b7a33c7a7d"
+    },
+    {
+        "number":  51,
+        "title":  "Epic: Console — wire the remaining backend APIs",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/51",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:43:25Z",
+        "updated_at":  "2026-07-11T04:41:02Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Vision\nVision: Creator Console Dashboard (#15)\n\n## Milestone\nV1.1\n\n## Mechanic\nA backend↔frontend audit (2026-07-10) cross-referenced every service-api endpoint against what the console actually calls. service-api is broadly implemented, but several working capabilities are **not wired into the console UI** — the operator can\u0027t reach them. This epic closes those gaps.\n\n## Gaps found (backend has it, console doesn\u0027t use it)\n| Capability | Backend | Console today |\n|---|---|---|\n| Hybrid search | `GET /search` (semantic + keyword + RRF) | Content search box filters client-side only (substring over loaded rows) |\n| Recurring schedules | full CRUD `/schedules` | not wired — creators can\u0027t set a crawl schedule (a stated V1 need) |\n| Site lifecycle | unpublish / discard-draft / delete | only `publish` is wired |\n| Article editing | `GET`/`PATCH /articles/:id` | client fns exist but dead — publish/reject only, no edit |\n| Job/queue status | `GET /jobs/status` | not wired — no ops visibility |\n\n## Acceptance criteria\n- [ ] Content search returns backend hybrid-search results, not a client-side substring filter.\n- [ ] An operator can create and edit recurring crawl schedules from the console.\n- [ ] An operator can unpublish, discard draft changes on, and delete a site.\n- [ ] An operator can edit an article\u0027s content, not only publish/reject it.\n- [ ] Job/queue status is visible somewhere in the console.\n- [ ] The orphan `/sites/temp` and `/sites/configuration` routes (hardcoded fake site names) are gone.\n\n## Open questions (product decisions, not tasks)\n- **Widget-config module** (`/widget`, `/widget/templates`, `/widget/bundle`, `/widget/preview`) is fully implemented in the backend but **entirely unwired** — the console ships the visual site builder instead. Formally deprecate/remove it, or keep for a future embed path? (Ties to the PRD v2 \"drop the widget\" direction.)\n- **Editor AI Assistant** (`POST /agent/chat` + SSE) is built end-to-end but hard-gated off (`ASSISTANT_ENABLED = false`). Ship it or remove it?\n\n## Out of scope\n- The audience-site data-honesty items (synthetic guest/show labels, chat stub) — tracked separately under Vision #16.\n\n## Source\n- **Parent Vision**: #15\n- Backend↔FE audit, 2026-07-10 (service-api endpoints vs console API clients).",
+        "body_hash":  "9907830966db26aa3c9f039510f5eaf2477e61a9d56bc24712b5843f71a1d74d",
+        "content_hash":  "7b0e3436136fa23d282fea4392b21bcba9a9fad2a564b7a135798a5c39268eeb"
+    },
+    {
+        "number":  50,
+        "title":  "Testcase",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/50",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T07:27:49Z",
+        "updated_at":  "2026-07-10T08:29:23Z",
+        "closed_at":  "",
+        "author":  "nam11993",
+        "body":  "[riffables-master.test-cases.md](https://github.com/user-attachments/files/29881745/riffables-master.test-cases.md)",
+        "body_hash":  "523a6bb6778056d5381479fe0526d565ecc95fc21d968c5577e7d9bd68709263",
+        "content_hash":  "b16fe3c0f96f0ae90bf60ee33b2608078e1c6478a339567c70a9bd3af346235a"
+    },
+    {
+        "number":  53,
+        "title":  "Task: Add a UI for recurring crawl schedules",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/53",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:03Z",
+        "updated_at":  "2026-07-11T04:29:24Z",
+        "closed_at":  "2026-07-11T04:29:02Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nOperators can create and manage recurring crawl schedules from the console.\n## Why\nThe backend has full `/schedules` CRUD (recurring scans, minimum 1 hour — a stated V1 creator requirement), but the console wires none of it. Creators can only crawl manually; there\u0027s no way to automate ongoing ingestion from the UI.\n## Example of done\nFrom Sources (or a Schedules area), an operator sets a source to scan on a recurring cadence, sees/edits/removes existing schedules, and new content is ingested automatically on that cadence.\n## Out of scope\nThe scheduler execution engine (already implemented backend-side).\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "dccb5dd41c837d3cf343ee5086a707bf41e5c5fe51d3fb5e50202a5a6cb52841",
+        "content_hash":  "237ee21bab99f4ca61a671ac773e8c50082d4c399d167c759007ed9fc1fa15ce"
+    },
+    {
+        "number":  52,
+        "title":  "Task: Use the backend hybrid search instead of client-side filtering",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/52",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:01Z",
+        "updated_at":  "2026-07-10T09:14:51Z",
+        "closed_at":  "2026-07-10T09:14:51Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n## Goal\nThe Content search box uses the backend hybrid search instead of a client-side substring filter.\n## Why\nservice-api exposes `GET /search` (semantic kNN + full-text, fused with RRF), but the console\u0027s Content panel searches with a local `filterRiffs` — a case-insensitive substring match over only the rows already loaded. So search is shallow (misses semantic matches and anything not yet fetched) and doesn\u0027t use the discovery engine that was built.\n## Example of done\nTyping in the Content search calls `GET /search` and shows ranked hybrid results across the tenant\u0027s content, not just substring matches on the current page.\n## Out of scope\nPublic-site audience search (already wired to `/public/search`).\n## Source\n- **Parent Epic**: #51",
+        "body_hash":  "98d46b31734ffd2e496e59d49734106ff87e2a2c42ffbdfb65f6d16297c28472",
+        "content_hash":  "944da3a03eb0ce19adec99794f1df591115233a67032fd3071bfb4038b4ebc2d"
+    },
+    {
+        "number":  63,
+        "title":  "Task: Implement Editor Cross-Panel Highlighting",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/63",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T09:37:39Z",
+        "updated_at":  "2026-07-11T03:16:21Z",
+        "closed_at":  "2026-07-11T03:15:46Z",
+        "author":  "lhts1810",
+        "body":  "# Task: Implement Editor Cross-Panel Highlighting\n\n## Source\n- Parent: [Vision: Creator Console Dashboard](vision_6_creator_console.md) (Issue #15)\n\n## Goal\nImplement synchronized cross-panel hover states in the site editor. Hovering over a component in a sidebar panel must visually highlight its corresponding element on the live Canvas (and vice versa).\n\n## Why\nCurrently, the editor panels operate independently without direct visual mapping. Creators struggle to understand which settings or structural items map to which visual blocks on the live site preview. Providing immediate hover-state feedback creates a tighter visual connection, making the editor much more intuitive and faster to navigate.\n\n## Example of done\n- Hovering over a component entry in a sidebar panel applies a visual highlight (e.g., a colored border, outline, or light overlay) to that exact component rendered on the center Canvas.\n- Conversely, hovering over a visual block directly on the center Canvas highlights its corresponding entry/settings in the sidebar panels.\n- The visual highlights apply instantly on hover without noticeable lag.\n\n## Scope exclusions\n- Building drag-and-drop structural reordering functionality (this task is strictly about visual hover mapping).\n- Changing the underlying CSS theme tokens or the HTML structure of the generated public site.\n",
+        "body_hash":  "da15666e56d3c3768e81d21ef6f691dd8cb5bfb2f5a9df5e10d3ceb689404c17",
+        "content_hash":  "75a273968568d421fb5fa0d0709785d3bfcbb6a198eb50c1e988ebc0f39db8cc"
+    },
+    {
+        "number":  62,
+        "title":  "Bug: backend semantic/hybrid search returns 500 (keyword works)",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/62",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T09:11:31Z",
+        "updated_at":  "2026-07-10T09:11:31Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console — wire the remaining backend APIs (#51)\n\n## Summary\n`GET /api/search` returns **500** for any non-empty query in `mode=semantic` and `mode=hybrid`. `mode=keyword` works. Since `hybrid` fuses semantic + keyword, the whole hybrid discovery engine is unusable until this is fixed.\n\n## Evidence (2026-07-10, against the deployed api.riffables.com)\n| mode | result |\n|---|---|\n| `keyword` | ✅ 200 — ranked full-text hits with highlighted snippets, correct `via: [\"keyword\"]` |\n| `semantic` | ❌ 500 `Internal server error` |\n| `hybrid` | ❌ 500 (inherits the semantic failure) |\n| empty `q` | ✅ 200 `[]` |\n\nSo the fault is in the **semantic path** (query embedding → pgvector kNN → RRF fusion), not the FTS path. Likely candidates: the query embedder (OpenAI call / deterministic-fake-embedding dimension vs the stored chunk embeddings), or the pgvector kNN query.\n\n## Impact\n- Audience/public discovery (Pillar C) and the console Content search only get keyword matching, no semantic relevance.\n- The console Content search (prd #52) already wired to prefer hybrid and auto-fall-back to keyword, so it works today — it will silently upgrade to semantic+keyword the moment this is fixed. No FE change needed after the fix.\n\n## Example of done\n`GET /api/search?q=…\u0026mode=hybrid` returns 200 with fused semantic+keyword hits (`via` may include `\"semantic\"`), for both ASCII and non-ASCII (e.g. Vietnamese) queries.\n\n## Source\n- **Parent Epic**: #51 (surfaced while wiring #52)\n- Discovery engine: docs / PRD Pillar C.",
+        "body_hash":  "f3f22dd229b4b3e222d339c69f987dca2f59d1a267fbec95de672856c5d62f02",
+        "content_hash":  "d763a1ec0d49d660f2894c48a67a1cd8acf774a4c12c8be62ec0252a94643ec0"
+    },
+    {
+        "number":  65,
+        "title":  "Task: Merge the Hero tagline + count line and align inspector defaults",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/65",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T10:10:39Z",
+        "updated_at":  "2026-07-11T02:40:38Z",
+        "closed_at":  "2026-07-11T02:40:38Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nInspector fields match the section\u0027s default render — one field per visible line, accurate placeholders.\n\n## Why\nTwo rough edges surfaced while wiring the field↔canvas highlight: (1) the Hero showed two fields (Tagline + Count line) for one rendered paragraph, so one line took two fields to edit; (2) several inspector placeholders didn\u0027t mirror what the section actually renders by default (e.g. the Site Footer description, and the Featured Riffable eyebrow/CTA had no default at all), which misleads the operator and breaks the highlight in the default state.\n\n## Example of done\nThe Hero exposes a single Tagline field carrying the whole paragraph (the Count line field is gone; sites saved before the merge still render their count line). Inspector placeholders match what the section renders by default, so an unedited field\u0027s placeholder equals its on-canvas text.\n\n## Out of scope\nCtaBand\u0027s per-variant defaults (a single manifest default can\u0027t mirror all three variants).\n\n## Source\n- **Parent Epic**: #35\n- Shipped in riffables-monorepo PR #34 (pending merge).",
+        "body_hash":  "072222ce3c29edf79b2c6761a0b4ae8526efde47db6a91b6bc46c8f36bfe3524",
+        "content_hash":  "594047d5e158133b59b1304bd6242bba9882db8437369c3cf9f0111e4786521a"
+    },
+    {
+        "number":  64,
+        "title":  "Task: Link inspector fields to their text on the canvas (hover/focus highlight)",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/64",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T10:10:37Z",
+        "updated_at":  "2026-07-11T02:40:36Z",
+        "closed_at":  "2026-07-11T02:40:36Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nHovering or focusing an inspector field highlights the text it controls on the canvas.\n\n## Why\nIn a fixed section with many inspector fields (Hero has eyebrow / headline / tagline / CTA labels / …), it\u0027s not obvious which field maps to which bit of the rendered page. A live field↔element link (like Webflow) removes the guesswork while editing.\n\n## Example of done\nHovering — or focusing — a text field in the inspector outlines the matching text in the selected section on the canvas; focus also scrolls it into view. It works without per-field template annotation (value/placeholder is matched against the section\u0027s rendered text), and URL/image fields that have no visible text simply don\u0027t highlight.\n\n## Out of scope\nHighlighting text that comes from live backend data (a section rendering a fetched riffable) — the field value won\u0027t match dynamic content.\n\n## Source\n- **Parent Epic**: #35\n- Shipped in riffables-monorepo PR #34 (pending merge).",
+        "body_hash":  "2f992a520e60e9a9582c83ae6d9c7c22fa738d66c78310772d2e3f4f33197dd3",
+        "content_hash":  "0fd30b4d02135dd9cb68a08d9b1e37af2ef7f9152eddcaa722b3453cea11cf7d"
+    },
+    {
+        "number":  59,
+        "title":  "Task: Replace the synthetic guest/show labels on the audience site",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/59",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:49Z",
+        "updated_at":  "2026-07-10T08:44:49Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Audience site — no placeholder identity or stubbed chat (#58)\n## Goal\nThe audience site never shows hardcoded guest/show identity labels.\n## Why\n`publicRiffablesToTemplateData()` fabricates a guest (\"Published Riffables\" / role \"Library\" / a canned bio) and a show (\"Riffables\" / a canned tagline \u0026 description) to satisfy the template\u0027s guest/show data shape. These constant strings render on the live visitor-facing site; a visitor could read \"Published Riffables / Library\" as a real author identity. The riff content itself is real.\n## Example of done\nGuest/show names, roles, and bios shown to visitors come from real creator/tenant data (or the sections are hidden when there\u0027s no real value) — no hardcoded identity strings reach the audience.\n## Out of scope\nThe synthesized \"RIFF 01\" episode labels (cosmetic sequential labels — fine).\n## Source\n- **Parent Epic**: #58",
+        "body_hash":  "3348546aa041d0aace921a18bee039bc0f749e63908c1ab223b14fd4ed67c7be",
+        "content_hash":  "3b7d065193dc55c5c2d24dd51b313973d8ed63d7b81937fa708dc2b0a8f3968b"
+    },
+    {
+        "number":  58,
+        "title":  "Epic: Audience site — no placeholder identity or stubbed chat",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/58",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:47Z",
+        "updated_at":  "2026-07-10T08:44:47Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Vision\nVision: Public Audience Site (#16)\n\n## Milestone\nV1.1\n\n## Mechanic\nThe same 2026-07-10 audit checked whether the audience-facing site shows real creator data or fabricates it. The verdict is good — riff titles, summaries, citations, thumbnails and tags are all real backend data. Two things a visitor sees are NOT creator data, and this epic fixes them.\n\n## Findings\n| Item | What a visitor sees | Reality |\n|---|---|---|\n| Guest/show labels | A guest \"Published Riffables / Library\" and a show \"Riffables — Published insights from this creator\" | Hardcoded constants synthesized to satisfy the template\u0027s guest/show shape; the riffables backend model doesn\u0027t provide them |\n| Audience chat | The chat replies | Backend `GET /widget/chat/stream` is a stub that returns a canned `Echo: \u003cmessage\u003e` — the service-agent proxy isn\u0027t wired |\n\n## Acceptance criteria\n- [ ] The audience site never shows a hardcoded guest/show name or bio — those labels are derived from real creator/tenant data or omitted.\n- [ ] The audience chat returns real agent responses trained on the creator\u0027s content, not the canned `Echo: …` stub.\n\n## Out of scope\n- Console-side backend-wiring gaps (tracked under Vision #15).\n\n## Source\n- **Parent Vision**: #16\n- Backend↔FE audit, 2026-07-10.",
+        "body_hash":  "08a80a4fbe503a09c1c60ae4c7cdc83c7c9f0bf75281a959cca076316cd54cdb",
+        "content_hash":  "05c88cc92679e75da5aec28a7eeef41dd815494e525d1ea80d7904fc1f109636"
+    },
+    {
+        "number":  61,
+        "title":  "Task: Operator takes a published site offline with a distinct \u0027unpublished\u0027 state",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/61",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:45:37Z",
+        "updated_at":  "2026-07-10T09:12:27Z",
+        "closed_at":  "2026-07-10T09:12:27Z",
+        "author":  "phanhoc",
+        "body":  "# Task: Operator takes a published site offline with a distinct \"unpublished\" state\n\n## Source\n- Parent: Vision: Public Audience Site (Issue #16)\n\n## Goal\nAn operator can take their published audience site offline, and the console shows it as **unpublished** — clearly distinct from a **draft** that was never published. Bringing the site back is one action (publish again) and restores exactly what was live before.\n\n## Why\nUnpublishing today silently reverts the site to \"draft\", so the site list cannot tell \"taken down, ready to re-launch\" apart from \"never launched\". Operators who temporarily pull a site (content fixes, rebranding, legal takedown) lose the signal that this site had a live audience and can be restored as-is. The distinction matters for the dashboard, for support, and for the operator\u0027s own confidence that nothing was lost.\n\n## Example of done\n- Unpublishing a published site flips its status to `unpublished`; visitors on its domain get \"site not found\" immediately.\n- The site keeps its content, pending edits, and domain while offline; the domain stays reserved (nobody else can claim it).\n- Publishing again restores the exact previous live version at the same domain.\n- Unpublishing a site that is not live does nothing (no error, no state change) — the action is safe to repeat.\n- A site can never be created directly in the `unpublished` state; the only way in is taking a published site down.\n- The console/site list shows the three states distinctly: draft, published, unpublished.\n\n## Scope exclusions\n- Filtering the site list by status.\n- Recording *when* a site was unpublished (audit timestamp).\n- Any change to how the audience site itself renders.\n\n## Agent instructions\nDesign spec (approved): `docs/superpowers/specs/2026-07-10-site-unpublished-status-design.md` in `riffables-monorepo` — state machine, decisions (transition-only status, idempotent unpublish, no DB migration needed), file-level change list, and test matrix live there.\n",
+        "body_hash":  "52fc6850a403fe3f91ca456d17cecfa2f9a0ea5a9aa8b4e85205161761318745",
+        "content_hash":  "2152b098ca1f5c2674797b856c35134bd7b69e62ef0ff118231e416ac0aa42fe"
+    },
+    {
+        "number":  60,
+        "title":  "Task: Wire the real audience chat (replace the Echo stub)",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/60",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T08:44:52Z",
+        "updated_at":  "2026-07-10T08:44:52Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Audience site — no placeholder identity or stubbed chat (#58)\n## Goal\nThe audience chat returns real agent responses, not a canned echo.\n## Why\n`GET /api/widget/chat/stream` (gateway/chat.controller.ts) is the one genuine backend stub: SSE transport and tenant gating are real, but the reply is a hardcoded `Echo: \u003cmessage\u003e` token stream — the service-agent proxy (the KOL\u0027s chat agent trained on their content, with voice fingerprints / token-cost tracking) isn\u0027t wired. Any audience chat surface is fake.\n## Example of done\nThe audience chat streams real responses from the creator\u0027s chat agent (service-agent), scoped to the tenant — not `Echo: …`.\n## Out of scope\nChat UI styling; the operator-side agent chat (`/agent/chat`, separate).\n## Source\n- **Parent Epic**: #58",
+        "body_hash":  "d3ff9c2477ffec6f854dde23f8ba44790f243de73b7b117664a1b19f2b298917",
+        "content_hash":  "5bc2e53d4a67329f3840b697ae1866b65f9ca1145bdce85456349be14b570a39"
+    },
+    {
+        "number":  39,
+        "title":  "Task: Guide creators to binding from the inspector\u0027s Data tab",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/39",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:47Z",
+        "updated_at":  "2026-07-09T07:16:09Z",
+        "closed_at":  "2026-07-09T07:16:09Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nThe inspector\u0027s Data tab explains how to bind and lists only genuinely bindable sources.\n\n## Why\nThe Data tab shipped a stale \"controls land here next\" placeholder, and its \"available collections\" chips listed manifest keys that can\u0027t be bound (shows/guests/providers…) while omitting riffables — actively misleading a new creator.\n\n## Example of done\nThe Data tab describes the add-a-Collection → pick-a-source → link-a-field workflow, and the chips show only riffables / riffs / articles (the real bindable sources).\n\n## Out of scope\nThe binding mechanics themselves (other tasks).\n\n## Source\n- **Parent Epic**: #35",
+        "body_hash":  "fe9cbb4877cc0c31ea629a2034611aecf829567b4ccfbd99c0ba917edc639317",
+        "content_hash":  "b9a1572d5babd9928133dd422cbe52b4d72951130f56c68d67b4ab790a8b7bbc"
+    },
+    {
+        "number":  38,
+        "title":  "Task: Bind a card\u0027s fields to the current item",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/38",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:44Z",
+        "updated_at":  "2026-07-09T07:16:07Z",
+        "closed_at":  "2026-07-09T07:16:07Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nAny content field inside a repeated card can pull from the current item instead of a fixed value.\n\n## Why\nRepeating a card is only useful if each copy shows that item\u0027s data. Creators need to point a heading, text, image, or button at a field of the current item, with a clear static-vs-linked toggle.\n\n## Example of done\nA field switches between a typed value and a \"linked\" value via a toggle; bound text/image-src/alt/label render the current item\u0027s data; the editor preview and the published site resolve bindings identically.\n\n## Out of scope\nBinding style props; binding whole sections; the Data-tab guidance (its own task).\n\n## Source\n- **Parent Epic**: #35",
+        "body_hash":  "0a9a0a4001daaff96f7970d716308c387fd3f21abf86facff88a102b53e1038a",
+        "content_hash":  "336052cfb98b8c59fe61ba7a36b0b7ff05cee939db836075e253824cca48d76a"
+    },
+    {
+        "number":  41,
+        "title":  "Task: Per-screen product tour for new creators",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/41",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:52Z",
+        "updated_at":  "2026-07-09T07:16:12Z",
+        "closed_at":  "2026-07-09T07:16:12Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Guided onboarding tours for the console (#36)\n\n## Goal\nEach main console screen has a first-visit guided tour for new creators.\n\n## Why\nNew users landed in the console with no idea what to do on each screen. A short, spotlighted walkthrough of the key controls gets them oriented without reading docs.\n\n## Example of done\nHome, Sources, Content, and Sites each auto-start a coach-mark tour once per creator; a help button replays the current screen\u0027s tour; closing early counts as seen so it never nags.\n\n## Out of scope\nThe in-editor (Puck iframe) tour — a separate follow-up.\n\n## Source\n- **Parent Epic**: #36",
+        "body_hash":  "75ad822840e25ab1eddbaad13bb1d6c40cbbb19ae12e7e46034463815c961a10",
+        "content_hash":  "196e055b8896963fc7101287cca1dfa4263917f6bb02ed262d5ddffff7b701ff"
+    },
+    {
+        "number":  40,
+        "title":  "Task: Scroll the editor canvas to a section when picked from the layers list",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/40",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:49Z",
+        "updated_at":  "2026-07-09T07:16:10Z",
+        "closed_at":  "2026-07-09T07:16:10Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nPicking a section in the editor\u0027s layers list scrolls the canvas to that section.\n\n## Why\nOn a long page the selected section is often off-screen, so a creator navigating via the layers list loses their place and can\u0027t see what they just selected.\n\n## Example of done\nSelecting an off-screen section in the layers list smooth-scrolls the canvas so the section comes into view.\n\n## Out of scope\nFree-drag canvas mode.\n\n## Source\n- **Parent Epic**: #35",
+        "body_hash":  "23e6593bb0b797159dfc279e3d857e719d59b09011a47383194883166e3b4192",
+        "content_hash":  "53e7961cf10cbe6887b354cc522d9c9576c69fd48c6913fe48c179c37686e3c8"
+    },
+    {
+        "number":  35,
+        "title":  "Epic: Visual site builder — bind sections to live catalog data",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/35",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:14:26Z",
+        "updated_at":  "2026-07-09T07:16:14Z",
+        "closed_at":  "2026-07-09T07:16:14Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Vision\nVision: Creator Console Dashboard (#15)\n\n## Milestone\nV1\n\n## Mechanic\nIn the site editor, a creator turns a static section into one driven by their live catalog. A Collection element repeats an item-template over a chosen data source, and any content field on an element inside it can switch from a fixed value to one bound to the current item. One shared resolver renders both the editor preview and the published site, so what the creator designs is exactly what the audience gets. Bundles a small editor-navigation improvement (picking a section scrolls the canvas to it).\n\n## Surfaces\n| Surface | Action | Impact |\n|---|---|---|\n| Site editor | Add a Collection element, pick a source | The section repeats once per item over riffables / riffs / articles |\n| Site editor | Toggle a field to \"linked\" | The field pulls from the current item instead of a typed-in value |\n| Published site | Visit the page | Each card renders per item from live catalog data |\n\n## Acceptance criteria\n- [x] A Collection element repeats its template once per item of the chosen source\n- [x] Text, image src/alt, and button label fields can each be bound to a field of the current item\n- [x] The editor preview shows real sample data per item; static vs bound values render differently\n- [x] The published site renders one card per item using the same resolution as the preview\n- [x] The inspector\u0027s Data tab explains the binding workflow and lists only genuinely bindable sources\n- [x] Picking a section in the layers list scrolls the canvas to it\n\n## Shipped\nDelivered in riffables-monorepo PR #23 (branch `feat/data-binding`), Phases 0–4.\n\n## Out of scope\n- Nested collections, filter/sort UI, binding style props, binding whole sections (deferred).\n\n## Source\n- **Parent Vision**: #15\n- **PRD**: PRD.md § visual site builder / data-binding *(proposed in v2-draft)*",
+        "body_hash":  "0a78498d19abc019ff32fef9c665f92bcf44ea20d7a8c8a95f1686cea27ea4b2",
+        "content_hash":  "78af9e3ace36470b33f8a9f7bdced43e2266cfdbd7a2dd8cd1c76e6152b1b786"
+    },
+    {
+        "number":  34,
+        "title":  "Task: Redesign Content Page Filter UI",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/34",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:01:09Z",
+        "updated_at":  "2026-07-09T07:01:09Z",
+        "closed_at":  "",
+        "author":  "lhts1810",
+        "body":  "# Task: Redesign Content Page Filter UI\n\n## Source\n- Parent: [Vision: Creator Console Dashboard](vision_6_creator_console.md) (Issue #15)\n\n## Goal\nRedesign the filter area on the Content curation page so that it is visually distinct from the actual Insight/Content cards.\n\n## Why\nCurrently, the filter controls share the same visual styling (such as borders, shadows, or background cards) as the generated content cards below it. This creates poor visual hierarchy and confuses creators, as the interactive control area looks like just another piece of extracted content instead of a functional toolbar.\n\n## Example of done\n- The filter area is restyled (e.g., using a flat background, distinct layout, or minimalist inline controls) so it clearly functions as a control bar.\n- The visual distinction between the filter area and the scrollable list of content cards is immediately obvious to the user.\n\n## Scope exclusions\n- Changing the underlying filtering logic, adding new filter parameters, or modifying backend query structures.\n- Redesigning the layout of the actual insight cards themselves.\n",
+        "body_hash":  "6c013f1da7d67e33a366d808fd9ef76ac3d724ed0a1920abaf06d4ef2df0c048",
+        "content_hash":  "5cd6dc51eab3e554b579aa61cd6e310a1c74361d6f5b41ef13a2dabf29e21ec9"
+    },
+    {
+        "number":  37,
+        "title":  "Task: Repeat a section over a collection of catalog data",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/37",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:42Z",
+        "updated_at":  "2026-07-09T07:16:06Z",
+        "closed_at":  "2026-07-09T07:16:06Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nA creator can make a section repeat once per item of their catalog.\n\n## Why\nCreators want one card design that renders for every riffable, riff, or article without hand-copying sections. A static layout can\u0027t scale to a live, growing library.\n\n## Example of done\nAdding a Collection element and choosing a source (riffables / riffs / articles) repeats its inner template once per item; the published site shows one card per item, and the editor previews the first.\n\n## Out of scope\nPer-field data-binding (its own task); filter/sort; nested collections.\n\n## Source\n- **Parent Epic**: #35",
+        "body_hash":  "40e2bc696e131b9d0460ef470e0a3bf46f2c4f43392a41efe1696b975a955a15",
+        "content_hash":  "818996da175c0dd781d720e0e6728bab8a80b773032bdf6205a23a499665d63e"
+    },
+    {
+        "number":  36,
+        "title":  "Epic: Guided onboarding tours for the console",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/36",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:15:10Z",
+        "updated_at":  "2026-07-09T07:49:43Z",
+        "closed_at":  "2026-07-09T07:16:16Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Vision\nVision: Creator Console Dashboard (#15)\n\n## Milestone\nV1\n\n## Mechanic\nA new creator opening a console screen for the first time is walked through it by a short, skippable coach-mark tour that spotlights the key controls one at a time — what Sources are for, where crawled Content lands, how to build the Site. Each main screen has its own tour; it auto-starts once per creator, is remembered per screen so it never nags, and can be replayed on demand.\n\n## Surfaces\n| Surface | Action | Impact |\n|---|---|---|\n| Console (first visit) | Land on Home / Sources / Content / Sites | That screen\u0027s tour auto-starts once |\n| Console | Click the help button | Replays the current screen\u0027s tour |\n\n## Acceptance criteria\n- [x] Each of Home, Sources, Content, Sites has its own step sequence anchored to real controls\n- [x] The current screen\u0027s tour auto-starts once per creator and never nags after it\u0027s seen\n- [x] Closing early counts as seen; a persistent control replays it\n- [x] Steps spotlight the target and dim the rest, with Back / Next / progress\n\n## Shipped\nDelivered in riffables-monorepo [PR #25](https://github.com/speedrun-labs/riffables-monorepo/pull/25) (merged 2026-07-09) — per-screen tours + the site-editor tour.\n\n## Out of scope\n- In-editor (Puck iframe) tour — deliberate follow-up.\n\n## Source\n- **Parent Vision**: #15\n- **PRD**: PRD.md § Pillar G (Guided Onboarding) *(proposed in v2-draft)*\n",
+        "body_hash":  "4551d40cfb2b5dd9f80d1cdc610cae258f7644c153149db3a701f0400ef0da48",
+        "content_hash":  "43a74e2261ac26b7b3575bbfd11ff472a3596eb04e065623f6ac3498d2c59c4e"
+    },
+    {
+        "number":  47,
+        "title":  "Task: Offer a \u0027View live site\u0027 action right after publishing",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/47",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T09:12:47Z",
+        "updated_at":  "2026-07-10T07:21:17Z",
+        "closed_at":  "2026-07-10T07:21:17Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console UX \u0026 accessibility hardening (#45)\n\n## Goal\nRight after a successful publish, the operator can open their live site in one click from the editor.\n\n## Why\nPublishing is the payoff moment, but the editor only shows a truncated \"Published\" text — no way to see the result. The operator has to leave the editor and go to /sites to find the \"View live\" link. The success state should offer the next obvious action.\n\n## Example of done\nAfter publish succeeds, the editor surfaces a \"View live site\" action linking to https://\u003csubdomain\u003e.\u003csuffix\u003e (opens the published site). It appears only on success, not on error.\n\n## Out of scope\nPost-publish analytics or share affordances.\n\n## Source\n- **Parent Epic**: #45",
+        "body_hash":  "c2645b534ba670a74a36d1ef2f63c28ddec367125f21429fce4b21f2ab38c5db",
+        "content_hash":  "3942c4423f134e3ef747cfe7ebff98d9ccaf9bc1ac9ff11d0c74b4741a8d3a82"
+    },
+    {
+        "number":  46,
+        "title":  "Task: Meet the 24px minimum tap-target size",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/46",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T09:12:44Z",
+        "updated_at":  "2026-07-10T07:21:14Z",
+        "closed_at":  "2026-07-10T07:21:14Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console UX \u0026 accessibility hardening (#45)\n\n## Goal\nEvery interactive control meets the 24×24px minimum pointer-target size.\n\n## Why\nAn audit found icon-only controls below the WCAG 2.2 AA (2.5.8) minimum — ~12 in the editor toolbar (undo/redo, viewport toggles, per-section duplicate/delete) and standalone action links like \"Open original\" on Content (17px tall). Small targets are hard to hit, especially on touch and for motor-impaired users.\n\n## Example of done\nTapping any button or action link in the console lands a target at least 24×24px (via padding or a min hit-area), with no visual redesign required. Editor toolbar icons and content-row actions included.\n\n## Out of scope\nInline links inside running prose (exempt from 2.5.8).\n\n## Source\n- **Parent Epic**: #45",
+        "body_hash":  "e5d7a12402769e05dc52f1f310feb0e2b3f33958882138dee83d5ad8965fee93",
+        "content_hash":  "377dffe81d23fa5af1224f8c93cc0aec1212f0cc8dc0df0ad39681c46a53e067"
+    },
+    {
+        "number":  49,
+        "title":  "Task: Guard against template styles.css drifting from source",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/49",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-10T04:27:08Z",
+        "updated_at":  "2026-07-10T07:34:48Z",
+        "closed_at":  "2026-07-10T07:34:38Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console UX \u0026 accessibility hardening (#45)\n\n## Goal\nThe template\u0027s compiled `styles.css` can\u0027t silently drift from the components it\u0027s built from.\n\n## Why\nThe template ships a pre-compiled `packages/templates/creator-library/src/styles.css` (built via `build:css` from source). It\u0027s regenerated by hand, so when someone edits a component\u0027s classNames and forgets to rebuild, classes the component uses silently vanish from the shipped CSS — the element just loses that styling with no error. This already bit us twice in `SiteHeader`: `px-block` (visible — the desktop header lost all horizontal padding) and `lg:hidden` (latent), both fixed in riffables-monorepo #27.\n\n## Example of done\nCI fails the build if `styles.css` is out of date with source — e.g. it runs `build:css` and `git diff --exit-code` on the output, so a drifted stylesheet can\u0027t be merged. Caveat to handle: classes applied dynamically (via Puck props / manifest, not literal classNames) aren\u0027t caught by Tailwind\u0027s content scan, so the guard must pair with a safelist for those rather than blindly pruning them.\n\n## Out of scope\nMigrating the template off a committed compiled stylesheet (bigger architectural change).\n\n## Source\n- **Parent Epic**: #45\n- Symptom fix: riffables-monorepo PR #27",
+        "body_hash":  "6c21d666bd9118fb4368f3e6b9752f080037844d1fb90f2ba27b381d0adc2c5d",
+        "content_hash":  "5c3b0124bc85dcd13358399983f7b7e75167d615934233b1bd5fd721232abc0c"
+    },
+    {
+        "number":  48,
+        "title":  "Task: Give dashboard screens and the editor a real heading structure",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/48",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T09:12:50Z",
+        "updated_at":  "2026-07-10T07:21:20Z",
+        "closed_at":  "2026-07-10T07:21:20Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Console UX \u0026 accessibility hardening (#45)\n\n## Goal\nDashboard screens and the editor expose a heading outline a screen reader can navigate.\n\n## Why\nThe audit found dashboard pages are H1-only — section and card titles (\"Connect a source\", \"Recent content\", stats) are plain divs — and the editor has no headings at all. Screen-reader users rely on the heading outline to skim and jump within a page; right now there\u0027s nothing to jump to.\n\n## Example of done\nEach screen has a logical heading order (h1 page title → h2 sections), and the editor\u0027s major regions (layers panel, inspector) carry headings, so a screen reader\u0027s \"next heading\" command walks the page\u0027s real structure. No visible change required (headings can keep their current styling).\n\n## Out of scope\nA full screen-reader QA pass of every widget (separate effort).\n\n## Source\n- **Parent Epic**: #45",
+        "body_hash":  "16deda04b37e8f88235afc6c5ccd251f636d118bab6a700353bcb5c9c7d771be",
+        "content_hash":  "c6f4d02be72be2b781f494ef7f2c34a2b64fc1e79e6e831bb3f515cdab47dd2d"
+    },
+    {
+        "number":  43,
+        "title":  "Task: Guided tour for the site editor",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/43",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:45:51Z",
+        "updated_at":  "2026-07-09T07:45:54Z",
+        "closed_at":  "2026-07-09T07:45:54Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Guided onboarding tours for the console (#36)\n\n## Goal\nThe site editor has its own first-visit guided tour.\n\n## Why\nThe onboarding tours covered the four main console screens but stopped short of the editor — the most complex surface, where a new creator is most likely to feel lost. The editor canvas is an iframe, which is why it was deferred from the first pass (noted out of scope on #36).\n\n## Example of done\nOpening the editor for the first time auto-starts a spotlight walkthrough of its chrome — the add/arrange panel, the live canvas, the inspector (Content/Data/Theme), Preview, and Publish. The canvas iframe is spotlit as one region (\"click any section to edit it\") rather than reaching inside it. A help button replays it; completion is remembered per creator, and the fixed editor layout stays put throughout (no scroll jump).\n\n## Out of scope\nHighlighting individual sections inside the canvas iframe.\n\n## Source\n- **Parent Epic**: #36",
+        "body_hash":  "ed7e38ff60022c0070d76cabab6ce2e6f1e64716f772846ec9ef5375b2f2f609",
+        "content_hash":  "1e50e4b63003bb2e52f1082ea7c73e262316b250ec2a96717cf16eb36e201af1"
+    },
+    {
+        "number":  42,
+        "title":  "Test Plan",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/42",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T07:26:56Z",
+        "updated_at":  "2026-07-09T07:26:56Z",
+        "closed_at":  "",
+        "author":  "nam11993",
+        "body":  "# RIFFABLES TEST PLAN\n\n| Information | Details |\n|---|---|\n| Project | Riffables AI |\n| Doc type | Test Plan |\n| Version | 1.0 |\n| Author | QA |\n| Objective | Fully cover the functionality based on the current PRD/Vision |\n\n---\n\n## 1. References\n\n- https://github.com/speedrun-labs/riffables-prd/issues\n\n## 2. Test Plan Objectives\n\n- Define the full testing scope for Riffables V1 based on the PRD.\n- Break down the functionality into clear modules.\n- Determine the test priority for each module: P0, P1, P2.\n- Identify the types of testing to be performed: Functional, Integration, API, UI, Security, AI Validation, and Regression.\n- Prioritize automation for stable flows with high regression value.\n- Leverage AI to accelerate test design, generate test data, support automation, and analyze defects.\n\n## 3. Product Summary for Testing\n\nRiffables is an AI platform that helps Creators turn content such as YouTube videos, Spotify podcasts, and RSS/Blogs into an AI Knowledge Base. The Audience can ask questions through a widget and receive answers with supporting sources, timestamps, and citations.\n\n| User Group | Purpose of Use | QA Scope to Focus On |\n|---|---|---|\n| Creator | Register an account, connect content sources, review/approve insights, customize the widget, and embed the widget. | Console/Dashboard, OAuth, sync status, review flow, theme builder. |\n| Audience | Ask AI questions through the widget, view results, and open citations/timestamps. | Widget, search, result, citation, responsive. |\n| Admin/Internal Team | Manage tenants, roles, support/debug. | Role, permission, tenant isolation, log visibility if available. |\n\n## 4. Scope of Testing\n\n### 4.1 In Scope\n\n- Authentication and account setup.\n- Multi-tenant isolation and role permissions.\n- Creator Dashboard/Console.\n- Content source integration: YouTube, Spotify, RSS.\n- OAuth/Google/YouTube permission flow, including the recording flow required for Google verification if it is included in the app.\n- Ingestion Pipeline: detect, sync, download/extract, transcribe, embed, status, retry.\n- AI Insight/Quote generation.\n- Verification/Citation: verify transcript, timestamp, and deep link.\n- Hybrid Search: keyword + semantic + merge/ranking.\n- Creator Dashboard: content list, processing status, review/approve, theme configuration.\n- Audience Widget: question/search, answer, citation badge/link, responsive behavior.\n- Audience Widget: chat/search/result/citation/responsive behavior.\n- Widget Theme Customization using AI/chat, if included in V1.\n- Regression, smoke, API, UI, integration, and basic security testing.\n\n### 4.2 Out of Scope\n\n- Livestream realtime.\n- Marketplace templates/themes.\n- Dedicated server/database for enterprise customers.\n- PDF, Google Docs, and PowerPoint if they are not included in V1.\n- Future recommendation engine.\n- Large-scale performance/load testing if there is no environment and no official benchmark requirement yet.\n\n## 5. Module Coverage Matrix\n\n| Module | Coverage Area | Priority | Manual | Automation / AI Support |\n|---|---|---|---|---|\n| Authentication | Register, login, logout, session/token, invalid credentials. | P0 | Yes | API + UI automation. |\n| Multi-tenant \u0026 Permission | Tenant isolation, RBAC, direct URL/API access, token misuse. | P0 | Yes | API automation + AI generates permission cases. |\n| Content Integration | Paste YouTube/RSS URL, validate source, register feed, schedule automatic import job. | P0 | Yes | API + UI automation; AI generates URL test data. |\n| Ingestion Pipeline | Queued/Processing/Ready states, background import, retry, duplicate handling, timeout. | P0 | Yes | API automation; AI analyzes job logs. |\n| Transcription | Large audio \u0026lt;=180 minutes, raw transcript, speaker separation host/guest. | P0 | Yes | API + manual review; AI supports transcript/speaker review. |\n| Verification \u0026 Citation | Verbatim quote match, hallucination reject, mismatch warning, transcript highlight, exact timestamp link, server-generated link validity, citation performance. | P0 | Yes | API automation + UI citation click; AI grounding/citation review. |\n| Hybrid Search | Keyword search, semantic/concept search, quoted exact search, fused ranking/RRF, max 10 results, sub-second load, tenant-scoped results, insight card + verbatim quote display. | P0 | Yes | API + UI automation; AI generates query variants and evaluates relevance. |\n| Creator Dashboard | Content list, status indicators, review/approve/reject, errors, responsiveness. | P1 | Yes | UI automation; AI screenshot/log support. |\n| Audience Widget | Ask/search, result layout, citation click, responsive, API timeout. | P1 | Yes | Playwright; AI generates UI scenarios. |\n| Widget Theme Builder | Natural language theme requests, AI Builder theme assistant, instant preview simulator, save styles to creator profile, allowed CSS variables, malicious script refusal. | P1 | Yes | UI automation; AI generates theme prompt variants; security negative prompt generation. |\n| Self-Serve Re-extraction | Manual extraction on single content, re-extract pending queue, replace previous insights, role restriction, real-time status, batch limit safeguard. | P0 | Yes | API automation + UI status validation; AI supports extraction log analysis and duplicate insight checks. |\n\n## 6. Test Types\n\n| Test Type | Objective | Applicable Modules |\n|---|---|---|\n| Functional Test | Verify that the functionality works according to the requirements. | All modules. |\n| API Test | Validate business logic, permissions, and data responses. | Auth, Tenant, Search, Verification, Pipeline. |\n| UI Test | Verify user flows and UI states. | Dashboard, Widget, Theme. |\n| Integration Test | Verify the flow from source → pipeline → transcript → search. | Content Integration, Pipeline, AI Processing. |\n| AI Validation Test | Evaluate grounding, hallucination, and citation accuracy. | AI Insight, Verification, Search. |\n| Security Test | Test roles, tenant isolation, and tokens. | Tenant, API, Widget. |\n| Performance | Verify latency/responsiveness and background jobs. | Search, Ingestion, Dashboard. |\n| Regression Test | Ensure that fixes/new features do not break core flows. | P0/P1 modules. |\n| Smoke Test | Quickly verify that the build is testable. | Login, Dashboard, Search, Widget, Citation. |\n\n## 7. Automation \u0026 AI Support\n\nThe project direction is to prioritize automated testing combined with AI agents to support the full QA lifecycle: reading the PRD, updating the Test Plan, generating checklists/test cases, generating or updating automation scripts, running tests, analyzing failures, and logging bugs.\n\nPlaywright acts as the test execution tool, while AI acts as an assistant for analysis, content generation, coordination, and result analysis. QA still reviews and approves the outputs before they are officially used.\n\n| Phase | AI + Playwright Usage | Output | Human Control |\n|---|---|---|---|\n| 1. PRD/Epic Intake | AI reads the Vision/Epic/Acceptance Criteria, summarizes the changes, and identifies impacted modules. | Impact summary, updated coverage proposal. | QA review. |\n| 2. Test Plan Update | AI suggests updates to the Scope, Module Coverage, Test Data, Risks, and Quality Gates. | Draft Test Plan update. | QA approve. |\n| 3. Test Case/Checklist Design | AI generates checklists/test cases at the positive, negative, boundary, permission, and error-handling levels. | Draft checklist/test cases. | QA refine. |\n| 4. Playwright Test Generation | AI generates Playwright test skeletons, locators, fixtures, and API helpers if needed. | Automation draft / PR. | QA review code. |\n| 5. Automated Execution | The AI agent can run Playwright tests by suite or impacted area. | Execution report, trace, screenshot, video. | QA monitor. |\n| 6. Failure Analysis | AI reads logs, traces, screenshots, and network responses to classify failures. | Root cause suggestion. | QA verify. |\n| 7. Bug Logging | AI creates bug drafts including steps to reproduce, expected result, actual result, evidence, and severity suggestion. | Bug draft in tracker. | QA submit. |\n| 8. Regression Update | AI suggests additional regression cases based on new bugs or Epic updates. | Regression update proposal. | QA approve. |\n\n### Control Rules for AI-generated Tests\n\n- AI-generated Test Plan changes must be reviewed by QA before delivery.\n- AI-generated test cases must be checked against PRD/Epic acceptance criteria before execution.\n- AI-generated Playwright scripts must pass code review before being merged into the automation repository.\n- AI may suggest severity and root cause, but QA/QA Lead owns the final bug classification.\n- AI may execute or trigger tests, but release Go/No-Go remains a human decision.\n- Sensitive tokens, cookies, private keys, production credentials and customer data must not be pasted into AI prompts.\n\n## 8. Automation Coverage Matrix\n\n| Module | Manual | API Auto | UI Auto | AI Support |\n|---|---|---|---|---|\n| Authentication | Yes | Yes | Yes | Generate scripts and negative credential test cases. |\n| Multi-tenant \u0026 Permission | Yes | Yes | Partial | Generate permission/direct URL test cases. |\n| Content Integration | Yes | Yes | Yes | Generate valid/invalid/duplicate URL test cases. |\n| Ingestion Pipeline | Yes | Yes | Partial | Analyze job logs, retry patterns, and timeout patterns. |\n| Transcription/Speaker Separation | Yes | Partial | No | AI supports transcript/speaker review. |\n| Verification \u0026 Citation | Yes | Yes | Partial | Evaluate grounding and citation accuracy. |\n| Hybrid Search | Yes | Yes | Yes | Generate keyword, semantic, and quoted query variants; AI evaluates relevance and top-result quality. |\n| Dashboard | Yes | Partial | Yes | Generate locators and review screenshots. |\n| Audience Widget | Yes | Partial | Yes | Generate UI scenarios. |\n| Widget Theme Builder | Yes | Partial | Yes | Generate prompt variants, invalid/malicious prompts, review preview screenshots, and saved style configuration. |\n| Self-Serve Re-extraction | ✓ | ✓ | ✓ | AI analyzes extraction logs, duplicate insight behavior, and status failure patterns. |\n| AI + Playwright Workflow | ✓ | ✓ | ✓ | AI reads PRD/Epic documents, generates test cases, generates/updates Playwright scripts, runs tests, analyzes traces/logs, and creates bug drafts. |\n\n## 9. Entry Criteria / Exit Criteria\n\n| Entry Criteria | Exit Criteria |\n|---|---|\n| PRD/Vision/Epic is clear enough to define the testing scope. | 100% P0 test executed. |\n| Build has been successfully deployed. | No Critical bugs remain. |\n| Test accounts, source data, and OAuth test app are ready. | High-priority bugs have been fixed or approved for deferral. |\n| Key API endpoints or main UI flows are accessible. | Regression smoke tests have passed, and 100% of AI-assisted findings and scripts have been reviewed by QA. |\n| Test data/golden dataset has been prepared. | P0 citation accuracy reaches 100%. |\n\n## 10. Proposed Test Plan\n\n| Step | AI Role | QA Role | Output | Estimate |\n|---|---|---|---|---|\n| AI Tool Usage Research | x | AI Tool Research | Operate the Playwright AI Agent to support testing. | 6h |\n| Read PRD | Summarize requirements, Acceptance Criteria, and risks. | Review. | Requirement summary. | 2h |\n| Update Test Plan | Suggest scope, coverage, and risks. | Approve/update. | Updated Test Plan. | 1h |\n| Generate Test Cases | Generate checklists/test cases. | Review/refine. | Test cases. | TBD |\n| Generate Automation | Generate scripts based on test cases. | Refactor/run. | Automation script. | TBD |\n| Execute Tests | Analyze traces/logs/screenshots and run automation. | Perform manual testing and confirm issues. | Test result. | TBD |\n| Log Bug | Generate bug title, steps, actual result, and expected result. | Submit bug. | Bug report. | TBD |\n\n## 11. QA Deliverables\n\n- Test Plan.\n- Module checklist.\n- Test cases.\n- Automation scripts.\n- Bug report.\n- Regression report.\n- Test summary report.\n\n## 12. Release Quality Gate\n\n| Metric | Target | Release Decision |\n|---|---|---|\n| Critical bug | 0 | No-Go if any remain. |\n| P0 test pass rate | 100% | No-Go if not achieved. |\n| Citation accuracy on P0 dataset | 100% | No-Go if not achieved. |\n| Tenant leak | 0 | No-Go if any occur. |\n| Smoke test | Pass | No-Go if failed. |\n| Automation regression pass rate | \u003e=95% | Review if lower. |\n| Search relevance on golden dataset | \u003e=95% if benchmark is available. | Review if lower. |\n| AI-generated automation review | 100% AI-generated Playwright scripts reviewed before merge. | Unreviewed AI-generated test code used in CI. |\n| AI bug draft governance | QA verifies all AI-generated bug reports before submission. | AI-generated bug submitted without QA validation. |\n",
+        "body_hash":  "32ae55a9a6e1162e5ee1366794c658874cc5df2e2ab0cab21311dbed2d7c3771",
+        "content_hash":  "963928018f6ea71f7d70c1e5dbdf61b66140af6893cddb6085e6a617d63298c5"
+    },
+    {
+        "number":  45,
+        "title":  "Epic: Console UX \u0026 accessibility hardening",
+        "state":  "open",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/45",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T09:12:15Z",
+        "updated_at":  "2026-07-09T09:17:29Z",
+        "closed_at":  "",
+        "author":  "sunday19x3",
+        "body":  "## Parent Vision\nVision: Creator Console Dashboard (#15)\n\n## Milestone\nV1.1\n\n## Mechanic\nA live audit of the console (Home, Sources, Content, Sites, Editor) found the accessibility baseline is already solid — see \"Verified passing\" below. This epic closes the handful of real gaps that remain: sub-minimum tap targets, a missing success affordance after publishing, and a thin heading structure for screen-reader navigation. Post-V1 polish, not launch-blocking.\n\n## Verified passing (audit, 2026-07-09)\n- Colour contrast meets WCAG AA on Home/Content/Editor (muted greys included).\n- Interactive controls have accessible names; images have alt; `main`/`nav` landmarks present.\n- Forms are labelled; empty, loading, and error states exist (errors use `role=\"alert\"`).\n- Editor section rows are keyboard-focusable (role=button + tabindex).\n\n## Acceptance criteria\n- [ ] Every interactive control presents a pointer target of at least 24×24px (icon buttons in the editor toolbar and content rows included), per WCAG 2.2 AA 2.5.8.\n- [ ] Immediately after a successful publish, the operator can open the live site in one click (from the editor, not only from /sites).\n- [ ] Each dashboard screen and the editor expose a heading outline a screen reader can navigate (not H1-only / heading-less).\n\n## Out of scope\n- The mobile/tablet story — see open question.\n\n## Open questions\n- **Mobile/tablet:** the editor already gates gracefully below lg (a clear \"Open the editor on a larger screen\" message + Back to Sites link — verified), and the dashboard screens work on mobile. The remaining question is narrower: should the onboarding tours run on mobile at all, or is desktop-only fine for the target operator? Needs a product call before scoping.\n\n## Source\n- **Parent Vision**: #15\n",
+        "body_hash":  "4ed476328089d24c28346983cc6c25620386b3a5bd1eada1eabb9de68f080bea",
+        "content_hash":  "c36fd7b6bbfc20f9be6f8799a381546dc3dc98835c518c49465a27f1d9606058"
+    },
+    {
+        "number":  44,
+        "title":  "Task: Fix the publish domain to a tenant subdomain",
+        "state":  "closed",
+        "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/44",
+        "labels":  {
+
+                   },
+        "created_at":  "2026-07-09T08:22:28Z",
+        "updated_at":  "2026-07-09T08:22:31Z",
+        "closed_at":  "2026-07-09T08:22:31Z",
+        "author":  "sunday19x3",
+        "body":  "## Parent Epic\nEpic: Visual site builder — bind sections to live catalog data (#35)\n\n## Goal\nThe publish dialog fixes the site\u0027s domain to `\u003csubdomain\u003e.\u003csuffix\u003e`, with only the subdomain editable and prefilled from the tenant.\n\n## Why\nPublish accepted a free-form full hostname, which invited typos and invalid hosts and let a site claim any domain. Every site should live in one fixed, platform-owned zone, so the operator should only choose the subdomain label — and shouldn\u0027t have to type the common case at all.\n\n## Example of done\nOpening Publish shows `https://\u003csubdomain\u003e.\u003csuffix\u003e`, where the suffix is fixed and environment-configured (e.g. `apps.riffables.com`) and shown read-only, and the subdomain is editable and prefilled with the tenant\u0027s slug. Invalid characters are sanitised as you type, and the saved host is always a valid `\u003csubdomain\u003e.\u003csuffix\u003e`.\n\n## Out of scope\nCustom domains outside the fixed zone (still excluded per PRD scope).\n\n## Source\n- **Parent Epic**: #35",
+        "body_hash":  "651c85b04e68de9d89edb044d2517a01dbb6c0fe8ea65fc4f6b5f1dd18d75232",
+        "content_hash":  "d2c107a15a74d60dd50724501f00ec838d220faff5edc3d4f184fc00a52df122"
+    }
+]

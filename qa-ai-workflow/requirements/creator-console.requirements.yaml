@@ -1,0 +1,323 @@
+feature: "creator-console"
+source_prd:
+  title: "Creator Console Dashboard and Curation UI"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/15"
+  version_or_commit: "github-issues-read-2026-07-16"
+  last_reviewed_at: "2026-07-16"
+  related_issues:
+    - id: "#15"
+      title: "Vision: Creator Console Dashboard"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/15"
+    - id: "#13"
+      title: "Epic: Creator Console Dashboard"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/13"
+    - id: "#21"
+      title: "Task: Fix Sources Page Crawl Feedback UI"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/21"
+    - id: "#34"
+      title: "Task: Redesign Content Page Filter UI"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/34"
+    - id: "#51"
+      title: "Epic: Console - wire the remaining backend APIs"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/51"
+    - id: "#67"
+      title: "Task: Relocate Pipeline Card for Visibility"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/67"
+    - id: "#69"
+      title: "Task: Add password visibility toggle"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/69"
+    - id: "#70"
+      title: "Task: Register BetterAuth Google callback so Continue with Google goes live"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/70"
+    - id: "#71"
+      title: "Task: Wire BetterAuth Google social provider for operator login"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/71"
+    - id: "#72"
+      title: "Task: Continue with Google button starts real social sign-in"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/72"
+
+requirements:
+  - id: "REQ-CONSOLE-001"
+    title: "Creator can authenticate and access an isolated workspace"
+    description: "The creator console must let creators authenticate and access a workspace scoped to their tenant."
+    prd_section: "Issue #13 Acceptance Criteria; Issue #15 Purpose"
+    source_issues:
+      - "#13"
+      - "#15"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A creator can authenticate into the console."
+      - "A new creator can establish or access an isolated workspace tenant."
+      - "Console data is scoped to the active workspace or tenant."
+      - "The creator can sign out or end the session."
+    assumptions:
+      - "Authentication is managed by the product's configured auth provider."
+    open_questions:
+      - "Which auth methods are enabled for the current release?"
+    related_requirements:
+      - "REQ-TENANT-001"
+
+  - id: "REQ-CONSOLE-002"
+    title: "Creator can navigate core console areas"
+    description: "The console must provide navigation to core management areas such as Sources, Content or Curation, Site Setup, and styling or builder surfaces."
+    prd_section: "Issue #13 Surface Tables; Issue #15 UI Component Architecture"
+    source_issues:
+      - "#13"
+      - "#15"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The console shows navigation for the main creator workflows."
+      - "Selecting a navigation item updates the main workspace area."
+      - "Navigation preserves the active tenant context."
+      - "The current section is visually identifiable."
+    assumptions: []
+    open_questions:
+      - "What is the final list of top-level console routes for V1?"
+    related_requirements:
+      - "REQ-CONSOLE-003"
+
+  - id: "REQ-CONSOLE-003"
+    title: "Creator can review and curate extracted insights"
+    description: "The console must let creators review AI-extracted Riffables or insights and approve, reject, or edit them before publication."
+    prd_section: "Issue #13 Mechanic; Issue #15 Curation Feed List"
+    source_issues:
+      - "#13"
+      - "#15"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The curation feed lists extracted insights or quote cards."
+      - "The creator can select an insight for review."
+      - "The creator can edit supported fields such as title, takeaways, or citation text."
+      - "The creator can approve an insight for publication."
+      - "The creator can reject an insight."
+    assumptions: []
+    open_questions:
+      - "Which fields are editable in the current curation UI?"
+    related_requirements:
+      - "REQ-AI-001"
+      - "REQ-AI-002"
+
+  - id: "REQ-CONSOLE-004"
+    title: "Sources page shows crawl feedback during and after crawl"
+    description: "The Sources page must display clear visual feedback when a crawl is running and after it completes."
+    prd_section: "Issue #21 Goal; Issue #21 Example of done"
+    source_issues:
+      - "#21"
+    priority: "must"
+    type: "functional"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "When a crawl is actively running, the Sources page indicates the running state."
+      - "When a crawl finishes, the UI updates to show the result."
+      - "Successful crawl completion is communicated clearly."
+      - "Failed crawl completion shows an error or failure indication."
+    assumptions: []
+    open_questions:
+      - "What exact success summary should be shown after crawl completion?"
+    related_requirements:
+      - "REQ-INGEST-003"
+      - "REQ-CRAWL-002"
+
+  - id: "REQ-CONSOLE-005"
+    title: "Sources page shows Last run and Last error data"
+    description: "The Sources page must populate Last run timestamp and Last error information from backend crawl data."
+    prd_section: "Issue #21 Goal; Issue #21 Example of done"
+    source_issues:
+      - "#21"
+    priority: "must"
+    type: "functional"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Last run timestamp is visible when crawl history exists."
+      - "Last run value matches backend crawl data."
+      - "Last error is visible when the last crawl failed or produced an error."
+      - "Last error clears or updates appropriately after a successful run."
+    assumptions: []
+    open_questions:
+      - "Should Last error show only the latest error or an error history link?"
+    related_requirements:
+      - "REQ-CONSOLE-004"
+
+  - id: "REQ-CONSOLE-006"
+    title: "Content page filter UI is visually distinct from content cards"
+    description: "The filter area on the Content curation page must be styled and structured as a control bar rather than looking like another generated content card."
+    prd_section: "Issue #34 Goal; Issue #34 Example of done"
+    source_issues:
+      - "#34"
+    priority: "should"
+    type: "ui"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The filter controls are visually distinct from insight or content cards."
+      - "The filter area reads as a functional toolbar or control bar."
+      - "The distinction is obvious without changing underlying filtering logic."
+      - "The actual insight card layout is not redesigned as part of this requirement."
+    assumptions: []
+    open_questions:
+      - "Is there a design reference for the desired filter toolbar style?"
+    related_requirements:
+      - "REQ-CONSOLE-003"
+
+  - id: "REQ-CONSOLE-007"
+    title: "Sources page keeps the Pipeline status card visible above the fold"
+    description: "The Sources page must place the Pipeline status card where operators can see queue and recent-run health without scrolling on standard desktop viewports."
+    prd_section: "Issue #67 Goal; Issue #67 Example of done"
+    source_issues:
+      - "#67"
+    priority: "should"
+    type: "ui"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The Pipeline card is removed from the bottom of the left column."
+      - "The Pipeline card is placed in the right column under the active source management section."
+      - "The Pipeline card is fully visible by default on standard desktop resolutions without vertical scrolling."
+      - "The card's internal data, metrics, and backend queries are unchanged by the layout move."
+    assumptions:
+      - "Standard desktop viewport means the QA-approved desktop size used for console regression."
+    open_questions:
+      - "Which exact viewport size should be used as the standard desktop layout oracle?"
+    related_requirements:
+      - "REQ-CONSOLE-004"
+      - "REQ-CONSOLE-005"
+
+  - id: "REQ-CONSOLE-008"
+    title: "Password fields support accessible show and hide visibility control"
+    description: "The sign-in and sign-up password field must provide an eye toggle that lets the user reveal or mask the typed password while preserving privacy and accessibility."
+    prd_section: "Issue #69 Goal; Issue #69 Example of done"
+    source_issues:
+      - "#69"
+    priority: "must"
+    type: "accessibility"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The password step shows an Eye or EyeOff button inside the password field."
+      - "Activating the control toggles the input type between masked password and plain text."
+      - "The control exposes an accessible label such as Show password or Hide password and updates aria-pressed."
+      - "The pointer target meets the agreed 24px accessibility baseline."
+      - "Navigating back to the email step resets password visibility to masked."
+    assumptions:
+      - "The same visibility behavior applies to both sign-in and sign-up password entry where those flows exist."
+    open_questions: []
+    related_requirements:
+      - "REQ-A11Y-001"
+      - "REQ-A11Y-005"
+
+  - id: "REQ-CONSOLE-009"
+    title: "Continue with Google starts the BetterAuth social sign-in flow"
+    description: "The console's Continue with Google button must call the BetterAuth social sign-in endpoint and follow the returned Google consent URL instead of being decorative."
+    prd_section: "Issue #72 Goal; Issue #72 What shipped; Issue #72 Example of done"
+    source_issues:
+      - "#72"
+    priority: "must"
+    type: "functional"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Clicking Continue with Google starts a POST to the social sign-in route."
+      - "The UI follows the returned Google consent URL when the provider is available."
+      - "The button shows a pending state while the sign-in request is in progress."
+      - "If the social route is unavailable or config is missing, the UI shows an inline error instead of silently failing."
+      - "The Google sign-in start flow does not expose protected console data before a valid session exists."
+    assumptions:
+      - "Full end-to-end Google round-trip depends on backend provider and redirect URI readiness."
+    open_questions:
+      - "Should QA treat full Google round-trip as blocked until #71 is closed?"
+    related_requirements:
+      - "REQ-CONSOLE-010"
+      - "REQ-CONSOLE-011"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-CONSOLE-010"
+    title: "BetterAuth enables Google social provider for operator login when configured"
+    description: "The service-api auth configuration must enable the Google social provider when Google client ID and secret are present, and leave it disabled when either value is absent."
+    prd_section: "Issue #71 Goal; Issue #71 Scope; Issue #71 Example of done"
+    source_issues:
+      - "#71"
+    priority: "must"
+    type: "integration"
+    status: "draft"
+    acceptance_criteria:
+      - "Auth options include socialProviders.google only when both GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET are configured."
+      - "Google login requests only openid, email, and profile scopes for operator sign-in."
+      - "Google account linking is enabled for trusted Google identities that match an existing email/password operator account."
+      - "Absent credentials disable the provider without breaking email/password login."
+      - "The backend callback route for Google is live when provider config is enabled."
+    assumptions:
+      - "The implementation reuses the existing Google OAuth app and does not require a new secret pair."
+    open_questions:
+      - "Which QA environment currently has both Google OAuth secrets and the backend provider wiring enabled?"
+    related_requirements:
+      - "REQ-CONSOLE-009"
+      - "REQ-CONSOLE-011"
+      - "REQ-TENANT-003"
+
+  - id: "REQ-CONSOLE-011"
+    title: "Google OAuth callback and environment configuration support deployed sign-in"
+    description: "The deployed environment must register the correct Google OAuth callback host and auth environment so Continue with Google can complete a real operator login."
+    prd_section: "Issue #70 Goal; Issue #70 Infra to do; Issue #72 Remaining"
+    source_issues:
+      - "#70"
+      - "#72"
+    priority: "must"
+    type: "integration"
+    status: "needs_confirmation"
+    acceptance_criteria:
+      - "The Google OAuth app includes the deployed BetterAuth callback URI used by the current service-api host."
+      - "The QA or deployed environment contains GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET where service-api can read them."
+      - "BETTER_AUTH_URL and trusted origins match the deployed console and API host arrangement."
+      - "A brand-new Google account is routed to organization setup after successful login."
+      - "An existing operator email can sign in through Google without creating a duplicate tenant/operator identity."
+    assumptions:
+      - "Issue #70 is closed, but issue #71 was still open in the 2026-07-16 intake."
+    open_questions:
+      - "Is the current callback host api-riffables.speedrunlabs.ai or api.riffables.com for the QA environment?"
+      - "Can QA execute full Google OAuth round-trip now, or should it remain a blocked test until #71 lands?"
+    related_requirements:
+      - "REQ-CONSOLE-009"
+      - "REQ-CONSOLE-010"
+
+  - id: "REQ-CONSOLE-012"
+    title: "Console UI wires implemented backend APIs for search, schedules, site lifecycle, article editing, and job status"
+    description: "The console must expose backend capabilities that already exist in service-api instead of leaving implemented endpoints unreachable from the operator UI."
+    prd_section: "Issue #51 Gaps found; Issue #51 Acceptance criteria"
+    source_issues:
+      - "#51"
+    priority: "must"
+    type: "integration"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Content search uses backend hybrid-search results instead of only client-side substring filtering over loaded rows."
+      - "Operators can create and edit recurring crawl schedules from the console."
+      - "Operators can unpublish a site, discard draft changes, and delete a site where authorized."
+      - "Operators can edit article content, not only publish or reject it."
+      - "Job or queue status is visible somewhere in the console."
+      - "Hardcoded fake site routes such as temporary or configuration pages are removed from the operator path."
+    assumptions:
+      - "Widget-config backend modules remain outside this requirement until Product chooses whether to deprecate or revive them."
+    open_questions:
+      - "What exact console surface owns job/queue status for #51 acceptance?"
+    related_requirements:
+      - "REQ-SEARCH-001"
+      - "REQ-INGEST-002"
+      - "REQ-INGEST-003"
+      - "REQ-PUBLIC-001"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Design"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm console route/module names."
+    - "Confirm curation editable fields."
+    - "Confirm crawl feedback data contract."
+    - "Confirm Google OAuth readiness because #70 is closed while #71 remains open in the latest PRD intake."
+    - "Confirm console API wiring acceptance paths for #51."

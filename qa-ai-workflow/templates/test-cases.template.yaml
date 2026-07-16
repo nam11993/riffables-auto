@@ -1,0 +1,31 @@
+feature: "<feature-name>"
+source_prd:
+  url: "<github-prd-url>"
+  version_or_commit: "<commit-sha-or-version>"
+
+test_cases:
+  - id: "TC-<MODULE>-001"
+    title: "<short test case title>"
+    requirement_ids:
+      - "REQ-<MODULE>-001"
+    priority: "high" # critical | high | medium | low
+    type: "positive" # positive | negative | boundary | integration | regression | exploratory
+    status: "draft" # draft | reviewed | approved | deprecated
+    automation_candidate: true
+    automation_status: "not-started" # not-started | planned | automated | not-suitable
+    preconditions:
+      - "<precondition 1>"
+    test_data:
+      - name: "<data name>"
+        value: "<data value>"
+    steps:
+      - step: 1
+        action: "<user/action>"
+        expected_result: "<expected outcome>"
+      - step: 2
+        action: "<user/action>"
+        expected_result: "<expected outcome>"
+    expected_result: "<final expected result>"
+    notes:
+      - "<note if needed>"
+

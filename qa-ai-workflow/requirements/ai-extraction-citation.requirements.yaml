@@ -1,0 +1,155 @@
+feature: "ai-extraction-citation"
+source_prd:
+  title: "Verifiable AI Extraction, Citation, and Re-extraction"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/7"
+  version_or_commit: "github-issues-read-2026-07-09"
+  last_reviewed_at: "2026-07-09"
+  related_issues:
+    - id: "#7"
+      title: "Vision: Verifiable AI Extraction"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/7"
+    - id: "#2"
+      title: "Epic: Verifiable Citation & Traceback Validation"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/2"
+    - id: "#3"
+      title: "Epic: Self-Serve Re-extraction Console Endpoint"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/3"
+
+requirements:
+  - id: "REQ-AI-001"
+    title: "AI-generated quotes must be verified against the source transcript"
+    description: "Every AI-generated quote card or quoted insight must be cross-checked against the original transcript before it is accepted."
+    prd_section: "Issue #7 Mechanic; Issue #2 Mechanic"
+    source_issues:
+      - "#7"
+      - "#2"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Generated quotes are compared against the original transcript."
+      - "A quote passes verification only if it matches the source transcript according to the configured threshold."
+      - "The verification result is stored or surfaced for review."
+      - "Failed verification prevents the quote from being treated as valid."
+    assumptions:
+      - "LCS_TOKEN_MATCH_THRESHOLD is 0.9 unless changed."
+    open_questions:
+      - "Are filler-word differences allowed, or must P0 quotes be exact verbatim?"
+    related_requirements:
+      - "REQ-AI-002"
+      - "REQ-AI-003"
+
+  - id: "REQ-AI-002"
+    title: "Hallucinated or unsupported AI statements are rejected"
+    description: "AI-generated statements that cannot be grounded in the source transcript must be flagged and rejected."
+    prd_section: "Issue #7 Purpose; Issue #2 Acceptance Criteria"
+    source_issues:
+      - "#7"
+      - "#2"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Unsupported statements are flagged as verification failures."
+      - "Hallucinated quote cards are rejected before publication."
+      - "The creator can see mismatch warnings in the curation surface."
+      - "Rejected items do not appear as valid public insights."
+    assumptions: []
+    open_questions:
+      - "Should the system auto-delete rejected AI output or keep it for creator review?"
+    related_requirements:
+      - "REQ-AI-001"
+
+  - id: "REQ-AI-003"
+    title: "Citation badges link to the exact source timestamp"
+    description: "Verified insights and quote cards must include citation data that lets users jump to the exact video or audio timestamp."
+    prd_section: "Issue #7 Surfaces affected; Issue #2 Acceptance Criteria"
+    source_issues:
+      - "#7"
+      - "#2"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A verified quote includes source citation metadata."
+      - "Clicking a citation badge opens the source media at the cited timestamp."
+      - "Citation links are generated server-side."
+      - "Invalid or stale citation links are not emitted as valid citations."
+    assumptions: []
+    open_questions:
+      - "Which player providers must be supported for timestamp deep links in V1?"
+    related_requirements:
+      - "REQ-PUBLIC-004"
+
+  - id: "REQ-AI-004"
+    title: "Creators can manually re-extract a single content item"
+    description: "Authorized creators must be able to trigger AI re-extraction for a specific content item from the console."
+    prd_section: "Issue #3 Mechanic; Issue #3 Acceptance Criteria"
+    source_issues:
+      - "#3"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A re-extract action is available for an eligible content item."
+      - "Triggering re-extract enqueues a new extraction run for that item."
+      - "The console displays re-extraction status."
+      - "Only authorized roles can trigger re-extraction."
+    assumptions: []
+    open_questions:
+      - "Which roles are allowed to trigger single-item re-extraction?"
+    related_requirements:
+      - "REQ-AI-005"
+
+  - id: "REQ-AI-005"
+    title: "Re-extraction replaces previous insights without duplicates"
+    description: "When a content item is re-extracted, the system must replace previous insights in a way that avoids duplicate quote cards or stale generated output."
+    prd_section: "Issue #3 Acceptance Criteria"
+    source_issues:
+      - "#3"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Re-extraction removes or supersedes previous generated insights for the item."
+      - "Duplicate quote cards are not created by repeated re-extraction."
+      - "The latest extraction output is clearly distinguishable from stale output."
+    assumptions: []
+    open_questions:
+      - "Should old insights be hard-deleted, archived, or versioned?"
+    related_requirements:
+      - "REQ-AI-004"
+
+  - id: "REQ-AI-006"
+    title: "Bulk pending re-extraction is safeguarded by a batch limit"
+    description: "The console may offer a Re-extract Pending action, but it must be constrained by a batch limit to prevent accidental massive extraction runs."
+    prd_section: "Issue #3 Mechanic; Issue #3 Locked Constants"
+    source_issues:
+      - "#3"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Re-extract Pending enqueues only eligible pending content."
+      - "The bulk action respects the configured batch extraction limit."
+      - "The UI communicates when the batch limit affects the action."
+      - "Unauthorized users cannot trigger bulk re-extraction."
+    assumptions:
+      - "BATCH_EXTRACT_LIMIT is 20 unless changed."
+    open_questions:
+      - "Should QA validate exact batch limit behavior through API, UI, or both?"
+    related_requirements:
+      - "REQ-AI-004"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm citation exactness rules."
+    - "Confirm re-extraction authorization and duplicate handling."
+    - "Prepare golden transcript and citation datasets."
+

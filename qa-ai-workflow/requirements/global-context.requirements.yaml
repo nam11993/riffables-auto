@@ -1,0 +1,121 @@
+feature: "global-context"
+source_prd:
+  title: "Riffables Overview, UI Description, and QA Baseline"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/11"
+  version_or_commit: "github-issues-read-2026-07-09"
+  last_reviewed_at: "2026-07-09"
+  related_issues:
+    - id: "#11"
+      title: "Vision: Overview"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/11"
+    - id: "#12"
+      title: "Vision: UI description"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/12"
+    - id: "#42"
+      title: "Test Plan"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/42"
+
+requirements:
+  - id: "REQ-GLOBAL-001"
+    title: "Platform supports creator and audience journeys"
+    description: "The platform must support the creator journey for importing, curating, and publishing content and the audience journey for searching, reading, and opening verified citations."
+    prd_section: "Issue #11 Purpose; Issue #42 Product Summary"
+    source_issues:
+      - "#11"
+      - "#42"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Creator-facing workflows are represented in the console requirements."
+      - "Audience-facing workflows are represented in the public site and search requirements."
+      - "Ingestion, AI extraction, citation, and search are traceable as connected product flows."
+    assumptions: []
+    open_questions: []
+    related_requirements:
+      - "REQ-INGEST-001"
+      - "REQ-AI-001"
+      - "REQ-SEARCH-001"
+      - "REQ-PUBLIC-001"
+
+  - id: "REQ-GLOBAL-002"
+    title: "Creator console UI modules are covered by QA requirements"
+    description: "The creator console UI modules described by the PRD must be covered by requirements or explicitly marked out of scope."
+    prd_section: "Issue #12 Creator Console; Issue #42 Scope of Testing"
+    source_issues:
+      - "#12"
+      - "#42"
+    priority: "must"
+    type: "qa-governance"
+    status: "draft"
+    acceptance_criteria:
+      - "Authentication and tenant onboarding are represented."
+      - "Ingestion pipeline manager and Sources behavior are represented."
+      - "Content library and curation behavior are represented."
+      - "Site builder, theme customization, and public publishing behavior are represented."
+      - "Any unavailable V1 modules are documented as out of scope."
+    assumptions: []
+    open_questions:
+      - "Are all UI modules in #12 still current?"
+    related_requirements:
+      - "REQ-CONSOLE-001"
+      - "REQ-CONSOLE-003"
+      - "REQ-BUILDER-001"
+
+  - id: "REQ-GLOBAL-003"
+    title: "Audience public site UI modules are covered by QA requirements"
+    description: "The audience public site modules described by the PRD must be covered by requirements or explicitly marked out of scope."
+    prd_section: "Issue #12 Audience Public Site; Issue #42 Scope of Testing"
+    source_issues:
+      - "#12"
+      - "#42"
+    priority: "must"
+    type: "qa-governance"
+    status: "draft"
+    acceptance_criteria:
+      - "Search and result layout are represented."
+      - "Citation click and timestamp behavior are represented."
+      - "Responsive behavior is planned for test coverage if in scope."
+      - "Audience account or member-gated behavior is marked in scope or out of scope."
+    assumptions: []
+    open_questions:
+      - "Is responsive testing required for mobile, tablet, and desktop in the first test cycle?"
+    related_requirements:
+      - "REQ-PUBLIC-002"
+      - "REQ-PUBLIC-003"
+      - "REQ-PUBLIC-004"
+
+  - id: "REQ-GLOBAL-004"
+    title: "P0 quality gates are explicit"
+    description: "Release quality gates must explicitly track critical bugs, P0 test pass rate, citation accuracy, tenant leaks, smoke status, automation regression, and AI-generated artifact review."
+    prd_section: "Issue #42 Release Quality Gate"
+    source_issues:
+      - "#42"
+    priority: "must"
+    type: "qa-governance"
+    status: "draft"
+    acceptance_criteria:
+      - "Critical bugs must be zero for release."
+      - "P0 tests must reach the agreed pass target."
+      - "P0 citation accuracy must reach the agreed target."
+      - "Tenant leaks must be zero."
+      - "Smoke tests must pass."
+      - "AI-generated tests and bug reports require QA review."
+    assumptions:
+      - "Issue #42 quality gates remain the baseline until replaced."
+    open_questions:
+      - "Should automation regression pass rate be enforced at 95 percent for the first cycle?"
+    related_requirements:
+      - "REQ-TENANT-001"
+      - "REQ-AI-001"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+  qa_review_focus:
+    - "Use this file as coverage governance, not detailed test case source."
+    - "Confirm which #12 UI modules are still current."
+    - "Confirm release quality gate targets."

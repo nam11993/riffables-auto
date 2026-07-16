@@ -1,0 +1,143 @@
+feature: "accessibility-ux"
+source_prd:
+  title: "Console UX and Accessibility Hardening"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/45"
+  version_or_commit: "github-issues-read-2026-07-16"
+  last_reviewed_at: "2026-07-16"
+  related_issues:
+    - id: "#45"
+      title: "Epic: Console UX & accessibility hardening"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/45"
+    - id: "#46"
+      title: "Task: Meet the 24px minimum tap-target size"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/46"
+    - id: "#47"
+      title: "Task: Offer a 'View live site' action right after publishing"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/47"
+    - id: "#48"
+      title: "Task: Give dashboard screens and the editor a real heading structure"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/48"
+
+requirements:
+  - id: "REQ-A11Y-001"
+    title: "Interactive controls meet 24px minimum pointer target size"
+    description: "Interactive controls in the console and editor must provide a pointer target of at least 24 by 24 pixels."
+    prd_section: "Issue #45 Acceptance criteria; Issue #46 Goal"
+    source_issues:
+      - "#45"
+      - "#46"
+    priority: "should"
+    type: "accessibility"
+    status: "draft"
+    acceptance_criteria:
+      - "Icon buttons in the editor toolbar meet the 24 by 24 pixel pointer target minimum."
+      - "Per-section duplicate and delete controls meet the 24 by 24 pixel pointer target minimum."
+      - "Standalone content-row action links meet the 24 by 24 pixel pointer target minimum."
+      - "The fix does not require a visual redesign when padding or hit area is sufficient."
+    assumptions:
+      - "Inline links inside running prose are exempt from this requirement."
+    open_questions:
+      - "Should QA measure rendered visual size or actual hit area?"
+    related_requirements: []
+
+  - id: "REQ-A11Y-002"
+    title: "Successful publish offers immediate View live site action"
+    description: "After publish succeeds from the editor, the operator must be able to open the live site in one click."
+    prd_section: "Issue #45 Acceptance criteria; Issue #47 Goal"
+    source_issues:
+      - "#45"
+      - "#47"
+    priority: "should"
+    type: "ui"
+    status: "draft"
+    acceptance_criteria:
+      - "After publish succeeds, the editor shows a View live site action."
+      - "The action links to the published live site URL."
+      - "The action appears only after successful publish."
+      - "The action does not appear on publish error."
+    assumptions: []
+    open_questions:
+      - "Should View live site open in the same tab or a new tab?"
+    related_requirements:
+      - "REQ-BUILDER-005"
+      - "REQ-PUBLIC-001"
+
+  - id: "REQ-A11Y-003"
+    title: "Dashboard screens expose a navigable heading outline"
+    description: "Dashboard screens must use a logical heading structure so screen-reader users can navigate page sections."
+    prd_section: "Issue #45 Acceptance criteria; Issue #48 Goal"
+    source_issues:
+      - "#45"
+      - "#48"
+    priority: "should"
+    type: "accessibility"
+    status: "draft"
+    acceptance_criteria:
+      - "Each dashboard screen has one page-level h1."
+      - "Major page sections use h2 or appropriate heading levels."
+      - "Section and card titles that function as structure are exposed as headings."
+      - "Heading order is logical and does not skip confusingly."
+    assumptions: []
+    open_questions:
+      - "Which dashboard screens are in accessibility scope for this release?"
+    related_requirements:
+      - "REQ-A11Y-004"
+
+  - id: "REQ-A11Y-004"
+    title: "Editor exposes headings for major regions"
+    description: "The editor must expose headings for major regions such as layers panel, canvas area, and inspector so screen-reader users can navigate the editor structure."
+    prd_section: "Issue #48 Example of done"
+    source_issues:
+      - "#48"
+    priority: "should"
+    type: "accessibility"
+    status: "draft"
+    acceptance_criteria:
+      - "The editor has a logical page or region heading structure."
+      - "The layers panel has an accessible heading."
+      - "The inspector has an accessible heading."
+      - "The heading structure is available to screen readers without requiring visible redesign."
+    assumptions: []
+    open_questions:
+      - "Should the canvas region itself expose a heading or landmark, or both?"
+    related_requirements:
+      - "REQ-A11Y-003"
+
+  - id: "REQ-A11Y-005"
+    title: "Known passing accessibility baseline remains intact"
+    description: "Existing verified accessibility behaviors must remain passing while hardening changes are implemented."
+    prd_section: "Issue #45 Verified passing"
+    source_issues:
+      - "#45"
+    priority: "should"
+    type: "accessibility"
+    status: "draft"
+    acceptance_criteria:
+      - "Color contrast remains WCAG AA on audited console/editor surfaces."
+      - "Interactive controls keep accessible names."
+      - "Images keep useful alt text where needed."
+      - "Main and navigation landmarks remain present."
+      - "Errors continue to use alert semantics where applicable."
+    assumptions:
+      - "The audit baseline was recorded on 2026-07-09."
+    open_questions:
+      - "Should QA run an automated accessibility tool as part of regression?"
+    related_requirements:
+      - "REQ-A11Y-001"
+      - "REQ-A11Y-003"
+
+review_notes:
+  status: "draft"
+  latest_prd_intake: "2026-07-16"
+  scope_update: "Issue #45 changed from open to closed and is now treated as regression baseline; keep accessibility checks explicit because they protect console/editor UX."
+  recommended_reviewers:
+    - "QA"
+    - "Design"
+    - "Accessibility"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm measurement method for tap targets."
+    - "Confirm editor and dashboard screen scope."
+    - "Confirm whether mobile/tablet is in or out of scope."
+    - "Run the baseline accessibility regression after auth, onboarding, and editor changes."

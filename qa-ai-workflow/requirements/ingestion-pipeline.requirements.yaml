@@ -1,0 +1,154 @@
+feature: "ingestion-pipeline"
+source_prd:
+  title: "Pluggable Ingestion Pipeline and Automatic Feed Sync"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/6"
+  version_or_commit: "github-issues-read-2026-07-09"
+  last_reviewed_at: "2026-07-09"
+  related_issues:
+    - id: "#6"
+      title: "Vision: Pluggable Ingestion Pipeline"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/6"
+    - id: "#1"
+      title: "Epic: Automatic Feed Sync & Ingestion"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/1"
+
+requirements:
+  - id: "REQ-INGEST-001"
+    title: "Creator can register supported external content sources"
+    description: "The creator must be able to add supported external media sources, including YouTube channels, Spotify podcast feeds, and Blog RSS feeds, for automatic ingestion."
+    prd_section: "Issue #6 Purpose; Issue #1 Mechanic"
+    source_issues:
+      - "#6"
+      - "#1"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The console accepts a supported YouTube channel source."
+      - "The console accepts a supported Spotify podcast feed source."
+      - "The console accepts a supported Blog RSS feed source."
+      - "Unsupported or invalid source URLs are rejected with a clear error."
+      - "A successfully registered source is visible in the creator console."
+    assumptions:
+      - "Direct local file upload is out of scope for V1."
+    open_questions:
+      - "Which exact URL formats are valid for each supported source type?"
+    related_requirements:
+      - "REQ-INGEST-002"
+
+  - id: "REQ-INGEST-002"
+    title: "New content from registered sources is automatically imported"
+    description: "The system must monitor configured creator sources and schedule background import jobs for new media according to the allowed sync frequency."
+    prd_section: "Issue #6 Mechanic; Issue #1 Acceptance Criteria"
+    source_issues:
+      - "#6"
+      - "#1"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "New content from registered sources is detected by background sync."
+      - "Detected content is enqueued for ingestion without requiring manual copy-paste."
+      - "Sync frequency respects the configured limit."
+      - "The console remains responsive while background import jobs run."
+    assumptions:
+      - "SYNC_FREQUENCY_LIMIT_HOURS is 1 unless Product or Engineering changes it."
+    open_questions:
+      - "What source polling schedule is available in the QA environment?"
+    related_requirements:
+      - "REQ-INGEST-003"
+
+  - id: "REQ-INGEST-003"
+    title: "Ingestion jobs expose processing states in the console"
+    description: "The creator console must show clear processing states for imported content so the creator can tell whether an item is queued, processing, ready, or failed."
+    prd_section: "Issue #1 Surface Tables; Issue #1 Acceptance Criteria"
+    source_issues:
+      - "#1"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Queued content is shown with a Queued state."
+      - "Content currently being processed is shown with a Processing state."
+      - "Successfully processed content is shown with a Ready state."
+      - "Failed content is shown with an error state or error message."
+      - "State changes are reflected in the content list without misleading stale data."
+    assumptions: []
+    open_questions:
+      - "Should state updates be live, polling-based, or visible after refresh only for V1?"
+    related_requirements:
+      - "REQ-INGEST-004"
+
+  - id: "REQ-INGEST-004"
+    title: "Large media files are processed without timeout or crash"
+    description: "The ingestion pipeline must process large audio or video files within the documented import duration limit without crashing, timing out, or blocking the console."
+    prd_section: "Issue #1 Acceptance Criteria; Issue #1 Locked Constants"
+    source_issues:
+      - "#1"
+    priority: "must"
+    type: "non-functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Media up to the supported import duration limit can be processed."
+      - "Long-running ingestion does not crash the worker."
+      - "Long-running ingestion does not time out in the user-facing console."
+      - "The creator can still use the console while the job runs in the background."
+    assumptions:
+      - "MAX_IMPORT_DURATION_MINUTES is 180 unless changed by Product or Engineering."
+    open_questions:
+      - "Can QA use real long media, synthetic media, or mocked worker duration for this validation?"
+    related_requirements:
+      - "REQ-INGEST-005"
+
+  - id: "REQ-INGEST-005"
+    title: "Transcription separates speakers in raw transcripts"
+    description: "Imported media must produce raw transcripts that separate speakers, such as host and guest, when speaker separation is available."
+    prd_section: "Issue #1 Acceptance Criteria"
+    source_issues:
+      - "#1"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A processed media item produces a raw transcript."
+      - "The transcript identifies separate speakers when the media contains multiple speakers."
+      - "Speaker labels are visible or available to downstream extraction and review flows."
+    assumptions:
+      - "Speaker separation quality may require a golden sample dataset for QA."
+    open_questions:
+      - "What is the minimum acceptable speaker separation accuracy for release?"
+    related_requirements:
+      - "REQ-AI-001"
+
+  - id: "REQ-INGEST-006"
+    title: "Failed imports retry and surface actionable errors"
+    description: "Failed ingestion jobs must retry automatically when appropriate and must expose useful error information to the creator console."
+    prd_section: "Issue #1 Acceptance Criteria"
+    source_issues:
+      - "#1"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A transient import failure is retried automatically."
+      - "A failed import displays an error message in the console."
+      - "The error message is clear enough for QA or support to identify the failure category."
+      - "Repeated failures do not loop forever without a terminal state or escalation signal."
+    assumptions: []
+    open_questions:
+      - "What retry count and retry backoff should be used for test expectations?"
+    related_requirements:
+      - "REQ-INGEST-003"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm supported source formats."
+    - "Confirm sync frequency and long-media test strategy."
+    - "Confirm retry and error-state expectations."
+

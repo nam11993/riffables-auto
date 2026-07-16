@@ -1,0 +1,487 @@
+feature: "controlled-ingestion"
+source_prd:
+  title: "Controlled ingestion for large channels"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/18"
+  version_or_commit: "github-issues-read-2026-07-16"
+  last_reviewed_at: "2026-07-16"
+  related_issues:
+    - id: "#18"
+      title: "Vision: Controlled ingestion for large channels"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/18"
+    - id: "#19"
+      title: "Epic: Ingest mode selection (auto vs manual)"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/19"
+    - id: "#20"
+      title: "Epic: Channel video catalog & curation"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/20"
+    - id: "#22"
+      title: "Epic: Crawl progress, cancellation, and fair processing"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/22"
+    - id: "#23"
+      title: "Task: Creator picks ingest mode when connecting a channel"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/23"
+    - id: "#24"
+      title: "Task: Manual-mode channel refuses every automatic ingest"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/24"
+    - id: "#25"
+      title: "Task: Creator switches a channel between auto and manual"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/25"
+    - id: "#26"
+      title: "Task: Connecting a channel builds a browsable video catalog"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/26"
+    - id: "#27"
+      title: "Task: Catalog shows each video's ingest state"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/27"
+    - id: "#28"
+      title: "Task: Creator selects catalog videos and ingests just those"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/28"
+    - id: "#29"
+      title: "Task: Refreshing the catalog picks up new uploads"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/29"
+    - id: "#30"
+      title: "Task: Live progress for a running crawl"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/30"
+    - id: "#31"
+      title: "Task: Creator cancels a running crawl"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/31"
+    - id: "#32"
+      title: "Task: Large backfill runs in bounded batches without blocking fresh videos"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/32"
+
+requirements:
+  - id: "REQ-INGEST-MODE-001"
+    title: "Creator can choose an ingest mode when connecting a YouTube channel"
+    description: "When connecting a YouTube channel, the creator must be able to choose between Auto and Manual ingest mode before the channel connection completes."
+    prd_section: "Issue #19 Mechanic; Issue #23 Goal"
+    source_issues:
+      - "#19"
+      - "#23"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The connect-a-channel form shows an Auto / Manual choice."
+      - "Each mode has a one-line explanation visible to the creator."
+      - "The ingest mode is captured before the first channel crawl can start."
+      - "The selected mode is stored on the connected channel."
+    assumptions:
+      - "This requirement applies to YouTube channels for the POC."
+    open_questions: []
+    related_requirements:
+      - "REQ-INGEST-MODE-002"
+      - "REQ-INGEST-MODE-003"
+
+  - id: "REQ-INGEST-MODE-002"
+    title: "Auto mode is the default and preserves existing ingest behavior"
+    description: "If the creator does not change the ingest mode during channel connection, the channel defaults to Auto mode and behaves like the current automatic ingest flow."
+    prd_section: "Issue #19 Modes; Issue #23 Example of done"
+    source_issues:
+      - "#19"
+      - "#23"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Auto mode is preselected on the connect-a-channel form."
+      - "Connecting with Auto mode starts ingestion of the latest videos according to the current behavior."
+      - "Run, Backfill, schedules, and new-upload automatic pickup remain available for Auto channels."
+      - "Existing clients that do not pass a mode continue to create Auto channels."
+    assumptions:
+      - "Auto is the backward-compatible default for existing API/UI flows."
+    open_questions: []
+    related_requirements:
+      - "REQ-INGEST-MODE-001"
+      - "REQ-INGEST-MODE-003"
+
+  - id: "REQ-INGEST-MODE-003"
+    title: "Manual mode does not ingest anything on channel connection"
+    description: "When a creator connects a channel using Manual mode, the system must not start any teaser crawl, latest-video crawl, transcription, extraction, or Riff creation."
+    prd_section: "Issue #19 Acceptance criteria; Issue #23 Example of done"
+    source_issues:
+      - "#19"
+      - "#23"
+      - "#24"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Connecting with Manual mode creates the channel without starting an ingest job."
+      - "No Riffs appear as a side effect of connecting a Manual channel."
+      - "No transcription or extraction budget is spent during Manual channel connection."
+      - "The creator can later ingest videos only through explicit catalog selection."
+    assumptions: []
+    open_questions: []
+    related_requirements:
+      - "REQ-CATALOG-001"
+      - "REQ-CATALOG-004"
+
+  - id: "REQ-INGEST-MODE-004"
+    title: "Manual mode refuses every automatic ingest path"
+    description: "A Manual-mode channel must reject all automatic or implicit ingest triggers except explicit catalog selection."
+    prd_section: "Issue #19 Acceptance criteria; Issue #24 Goal"
+    source_issues:
+      - "#19"
+      - "#24"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Run controls are hidden or unavailable for Manual-mode channels."
+      - "Backfill controls are hidden or unavailable for Manual-mode channels."
+      - "Scheduled crawls do not ingest Manual-mode channels."
+      - "Direct API attempts to Run, Backfill, or trigger scheduled ingest for a Manual channel are refused."
+      - "The refusal message directs the creator to select videos from the catalog instead."
+      - "Explicit catalog selection remains allowed for Manual-mode channels."
+    assumptions:
+      - "The ingest gate should fail closed at a shared ingest entry point instead of relying only on UI hiding."
+    open_questions:
+      - "What exact error code and error message should the API return when refusing a Manual-mode automatic ingest?"
+    related_requirements:
+      - "REQ-CATALOG-004"
+      - "REQ-CRAWL-001"
+
+  - id: "REQ-INGEST-MODE-005"
+    title: "Creator can switch a connected channel between Auto and Manual"
+    description: "A creator must be able to switch a connected YouTube channel between Auto and Manual mode from the source card."
+    prd_section: "Issue #19 Where chosen; Issue #25 Goal"
+    source_issues:
+      - "#19"
+      - "#25"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The source card shows the current ingest mode."
+      - "The source card exposes an action to switch Auto to Manual or Manual to Auto."
+      - "Switching to Manual hides or disables Run, Backfill, and future auto-crawl entry points."
+      - "Switching to Auto restores Run, Backfill, schedules, and future auto-crawl entry points."
+      - "Switching a non-channel source to Manual is refused with a clear message."
+    assumptions:
+      - "Mode switching is available only for supported channel sources in the POC."
+    open_questions:
+      - "Should the UI require confirmation before switching mode if a crawl is currently running?"
+    related_requirements:
+      - "REQ-INGEST-MODE-006"
+
+  - id: "REQ-INGEST-MODE-006"
+    title: "Switching ingest mode is side-effect free"
+    description: "Changing a channel's ingest mode must only change the setting for future ingest decisions and must not start, stop, or cancel ingestion by itself."
+    prd_section: "Issue #19 Mechanic; Issue #25 Example of done"
+    source_issues:
+      - "#19"
+      - "#25"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Switching from Manual to Auto does not automatically start a crawl."
+      - "Switching from Auto to Manual does not automatically cancel an already-running crawl."
+      - "A crawl already running before the switch continues according to its own lifecycle."
+      - "The new mode takes effect at the next ingest decision."
+    assumptions: []
+    open_questions:
+      - "If a creator switches to Manual while a large crawl is running, should the UI recommend using Cancel?"
+    related_requirements:
+      - "REQ-CRAWL-004"
+
+  - id: "REQ-CATALOG-001"
+    title: "Connecting a channel builds a metadata-only video catalog"
+    description: "Every connected YouTube channel must get a browsable catalog of discovered videos using metadata only, without downloading, transcribing, extracting, or creating Riffs."
+    prd_section: "Issue #20 Mechanic; Issue #26 Goal"
+    source_issues:
+      - "#20"
+      - "#26"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "After connecting a channel, the creator can open a catalog of that channel's videos."
+      - "Each catalog item includes at least video title and publish date."
+      - "Building the catalog does not create Riffs."
+      - "Building the catalog does not download media, transcribe audio, or run AI extraction."
+      - "The catalog shows a total count when available."
+      - "Very large catalogs show a partial indicator when enumeration is capped."
+    assumptions:
+      - "Catalog enumeration uses the channel's existing OAuth grant."
+    open_questions:
+      - "What exact catalog ceiling should be applied for the POC?"
+    related_requirements:
+      - "REQ-CATALOG-002"
+      - "REQ-CATALOG-003"
+
+  - id: "REQ-CATALOG-002"
+    title: "Creator can browse and search the channel catalog"
+    description: "The channel catalog must support browsing and title-based search so creators can find videos before deciding what to ingest."
+    prd_section: "Issue #20 Actions; Issue #26 Example of done"
+    source_issues:
+      - "#20"
+      - "#26"
+    priority: "should"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The creator can page or otherwise browse through catalog videos."
+      - "The creator can search catalog videos by title."
+      - "Search filters catalog results without starting ingestion."
+      - "Browsing and searching the catalog do not spend processing budget."
+    assumptions: []
+    open_questions:
+      - "Should search be client-side for the POC or backed by an API query?"
+    related_requirements:
+      - "REQ-CATALOG-001"
+
+  - id: "REQ-CATALOG-003"
+    title: "Catalog row shows accurate ingest state"
+    description: "Every catalog row must show the current ingest state for the video so creators know whether it can be selected."
+    prd_section: "Issue #20 Per-video state; Issue #27 Goal"
+    source_issues:
+      - "#20"
+      - "#27"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A never-processed video shows Not ingested."
+      - "A video waiting in the pipeline shows Queued."
+      - "A video currently being processed shows Processing."
+      - "A video already turned into Riffables shows Riffed."
+      - "A video whose last attempt failed shows Failed."
+      - "Catalog state updates after a crawl finishes without leaving stale Processing or Queued states."
+    assumptions:
+      - "State is derived from existing riffs and ingestion records to avoid persisted state drift."
+    open_questions:
+      - "Does the UI need separate Failed and Retryable Failed copy, or is Failed enough?"
+    related_requirements:
+      - "REQ-CATALOG-004"
+
+  - id: "REQ-CATALOG-004"
+    title: "Only eligible catalog videos can be selected for ingestion"
+    description: "The catalog must allow selection only for videos that are not ingested or previously failed, and must prevent selection of videos already queued, processing, or riffed."
+    prd_section: "Issue #20 Per-video state; Issue #27 Example of done"
+    source_issues:
+      - "#20"
+      - "#27"
+      - "#28"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "Not ingested videos are selectable."
+      - "Failed videos are selectable for retry."
+      - "Queued videos are not selectable."
+      - "Processing videos are not selectable."
+      - "Riffed videos are not selectable."
+      - "The UI clearly communicates why non-selectable videos cannot be selected."
+    assumptions: []
+    open_questions:
+      - "Should failed videos have a dedicated Retry action or use the same selection flow?"
+    related_requirements:
+      - "REQ-CATALOG-003"
+      - "REQ-CATALOG-005"
+
+  - id: "REQ-CATALOG-005"
+    title: "Creator can ingest exactly the selected catalog videos"
+    description: "A creator must be able to select one or more eligible catalog videos and start ingestion for exactly those videos, with no extra videos included."
+    prd_section: "Issue #20 Actions; Issue #28 Goal"
+    source_issues:
+      - "#20"
+      - "#28"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The creator can tick one or more eligible videos."
+      - "Clicking Ingest selected starts ingestion for the selected videos."
+      - "Only selected videos enter the pipeline."
+      - "The system refuses video IDs that are not in the selected channel's catalog."
+      - "The system reports how many videos were queued or accepted for ingestion."
+      - "Already-riffed videos cannot be included in the selection."
+    assumptions:
+      - "Catalog selection is the only allowed ingest path for Manual-mode channels."
+    open_questions:
+      - "Should partial success be allowed if some selected videos become ineligible between selection and submit?"
+    related_requirements:
+      - "REQ-INGEST-MODE-004"
+      - "REQ-CRAWL-001"
+
+  - id: "REQ-CATALOG-006"
+    title: "Catalog refresh picks up new uploads without re-ingesting known videos"
+    description: "Refreshing the catalog must add newly published videos while preserving known catalog entries and their ingest states."
+    prd_section: "Issue #20 Actions; Issue #29 Goal"
+    source_issues:
+      - "#20"
+      - "#29"
+    priority: "should"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A refresh reads channel metadata and adds new uploads to the catalog."
+      - "Existing catalog entries remain unchanged after refresh."
+      - "Existing ingest states remain unchanged after refresh."
+      - "Refresh does not start ingestion."
+      - "Refresh does not re-ingest videos already known to the catalog."
+      - "On a fully-read channel, refresh stops once it reaches already-known videos."
+    assumptions:
+      - "Refresh is metadata-only and newest-first."
+    open_questions:
+      - "How should the UI show refresh progress for very large channels?"
+    related_requirements:
+      - "REQ-CATALOG-001"
+
+  - id: "REQ-CRAWL-001"
+    title: "Every ingest run is processed in bounded batches"
+    description: "Auto teaser ingest, scheduled ingest, catalog selection, and whole-channel backfill must be executed as bounded batches instead of one long blocking job."
+    prd_section: "Issue #22 Mechanic; Issue #32 Goal"
+    source_issues:
+      - "#22"
+      - "#32"
+    priority: "must"
+    type: "non-functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A single ingest run is split into multiple batches when it contains more videos than the batch size."
+      - "Each batch has a bounded maximum size."
+      - "A long backfill does not monopolize the shared processing pipeline."
+      - "Already-riffed videos are not processed again."
+      - "A service restart resumes an unfinished backfill from progress already recorded instead of starting from zero."
+    assumptions:
+      - "The PRD mentions a batch size around 10 videos; final value should be confirmed with engineering."
+    open_questions:
+      - "What batch size should be locked for V1.1 and for tests?"
+    related_requirements:
+      - "REQ-CRAWL-002"
+      - "REQ-CRAWL-005"
+
+  - id: "REQ-CRAWL-002"
+    title: "Creator sees live progress for a running crawl"
+    description: "While a crawl or ingest run is running, the creator must see videos done and total videos advancing live without needing a page reload."
+    prd_section: "Issue #22 Progress & control; Issue #30 Goal"
+    source_issues:
+      - "#22"
+      - "#30"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The UI shows videos done and total videos for a running crawl."
+      - "The done count advances as batches complete."
+      - "The progress view updates without a manual page reload."
+      - "The total reflects the number of videos the run is expected to process."
+      - "When the crawl finishes, the UI shows a completed state."
+    assumptions:
+      - "The existing job counters can provide done and total values."
+    open_questions:
+      - "Should progress be delivered by polling, websocket, server-sent events, or another mechanism?"
+    related_requirements:
+      - "REQ-CRAWL-001"
+      - "REQ-CRAWL-003"
+
+  - id: "REQ-CRAWL-003"
+    title: "Creator can cancel a running crawl"
+    description: "A creator must be able to cancel a running crawl, and the system must stop picking up further videos promptly without leaving unprocessed videos stuck."
+    prd_section: "Issue #22 Progress & control; Issue #31 Goal"
+    source_issues:
+      - "#22"
+      - "#31"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The UI exposes a Cancel action while a cancellable crawl is running."
+      - "Cancel stops the run within one processing batch."
+      - "Videos already processed before cancellation remain processed."
+      - "Videos not yet processed return to Not ingested or another selectable retry state."
+      - "The source's Run control re-enables after the crawl ends."
+      - "No further videos are picked up after cancellation takes effect."
+    assumptions:
+      - "The in-flight batch is allowed to drain instead of being interrupted mid-video."
+    open_questions:
+      - "What UI state should be shown between clicking Cancel and the batch finishing?"
+    related_requirements:
+      - "REQ-CATALOG-003"
+      - "REQ-CATALOG-004"
+
+  - id: "REQ-CRAWL-004"
+    title: "Per-source crawl lock keeps only the active source busy"
+    description: "When one source is running a crawl, only that source should be marked busy while other sources remain actionable according to their own state."
+    prd_section: "Issue #22 Progress & control"
+    source_issues:
+      - "#22"
+    priority: "should"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "A running crawl locks only the source being crawled."
+      - "Other sources remain visible and actionable if they are otherwise eligible."
+      - "The UI does not imply that all sources are blocked by a single source crawl."
+    assumptions: []
+    open_questions:
+      - "Are there any tenant-level operations that intentionally lock all sources?"
+    related_requirements:
+      - "REQ-CRAWL-002"
+      - "REQ-CRAWL-003"
+
+  - id: "REQ-CRAWL-005"
+    title: "Fresh and interactive work is prioritized over large backfills"
+    description: "The processing pipeline must ensure that a large whole-channel backfill does not block fresh or interactive work from another creator."
+    prd_section: "Issue #22 Fairness behavior; Issue #32 Why"
+    source_issues:
+      - "#22"
+      - "#32"
+    priority: "must"
+    type: "non-functional"
+    status: "draft"
+    acceptance_criteria:
+      - "A creator's 1,000-video backfill does not prevent another creator's fresh video from starting processing."
+      - "Interactive Run work is prioritized over scheduled work."
+      - "Scheduled work is prioritized over catalog selection work."
+      - "Catalog selection work is prioritized over whole-channel backfill work."
+      - "Large backfills still make incremental progress and eventually complete."
+      - "No video is processed twice as a result of priority changes."
+    assumptions:
+      - "The intended priority order is interactive Run, scheduled, catalog selection, whole-channel backfill."
+    open_questions:
+      - "How will QA observe or simulate cross-tenant fairness in the available test environment?"
+    related_requirements:
+      - "REQ-CRAWL-001"
+      - "REQ-CRAWL-006"
+
+  - id: "REQ-CRAWL-006"
+    title: "Unfinished crawl work survives service restart"
+    description: "If the service restarts during a large backfill or ingest run, the system must resume unfinished work without restarting from zero or duplicating completed videos."
+    prd_section: "Issue #22 Fairness behavior; Issue #32 Example of done"
+    source_issues:
+      - "#22"
+      - "#32"
+    priority: "should"
+    type: "non-functional"
+    status: "draft"
+    acceptance_criteria:
+      - "After a service restart, an unfinished backfill resumes from persisted progress."
+      - "Completed videos are not reprocessed after restart."
+      - "Unfinished videos remain eligible to continue processing."
+      - "Progress shown to the creator remains consistent after recovery."
+    assumptions:
+      - "The test environment can simulate worker or service restart."
+    open_questions:
+      - "Which service restart scenario is in QA scope: API, worker, queue, or all of them?"
+    related_requirements:
+      - "REQ-CRAWL-001"
+      - "REQ-CRAWL-005"
+
+review_notes:
+  status: "draft"
+  latest_prd_intake: "2026-07-16"
+  scope_update: "Issues #18-#32 changed from open to closed and are now treated as P0 regression baseline instead of open implementation risk."
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm requirement IDs and module names are acceptable."
+    - "Confirm Auto/Manual behavior before writing test cases."
+    - "Confirm catalog state definitions and selectability rules."
+    - "Confirm batch size, priority order, and observable test hooks for fairness."
+    - "Resolve open questions before marking requirements approved."
+    - "Keep all controlled-ingestion behavior executable as regression even though the source issues are closed."

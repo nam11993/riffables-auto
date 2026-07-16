@@ -1,0 +1,267 @@
+{
+  "generated_at": "2026-07-16T03:04:09.506Z",
+  "source": "github-web-browser-session",
+  "repository": "speedrun-labs/riffables-prd",
+  "previous_snapshot": "C:\\Users\\namnh189.FSOFT.FPT.VN\\Documents\\Riffables\\qa-ai-workflow\\prd-sources\\snapshots\\issues-20260713-093244.json",
+  "current_snapshot": "C:\\Users\\namnh189.FSOFT.FPT.VN\\Documents\\Riffables\\qa-ai-workflow\\prd-sources\\snapshots\\issues-20260716-100409.json",
+  "current_total": 71,
+  "current_open": 21,
+  "current_closed": 50,
+  "compare_policy": "browser fallback: title/state/new/removed only; rendered body and labels ignored to avoid API-vs-browser false positives",
+  "new_issues": [
+    {
+      "number": 66,
+      "title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
+      "state": "open",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/66"
+    },
+    {
+      "number": 67,
+      "title": "Task: Relocate Pipeline Card for Visibility",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/67"
+    },
+    {
+      "number": 68,
+      "title": "Task: Ask first-time users before auto-running onboarding tours",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/68"
+    },
+    {
+      "number": 69,
+      "title": "Task: Show/hide password toggle on the sign-in form",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/69"
+    },
+    {
+      "number": 70,
+      "title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/70"
+    },
+    {
+      "number": 71,
+      "title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
+      "state": "open",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/71"
+    },
+    {
+      "number": 72,
+      "title": "Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/72"
+    }
+  ],
+  "changed_issues": [
+    {
+      "number": 18,
+      "title": "Vision: Controlled ingestion for large channels",
+      "state": "closed",
+      "previous_title": "Vision: Controlled ingestion for large channels",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/18"
+    },
+    {
+      "number": 19,
+      "title": "Epic: Ingest mode selection (auto vs manual)",
+      "state": "closed",
+      "previous_title": "Epic: Ingest mode selection (auto vs manual)",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/19"
+    },
+    {
+      "number": 20,
+      "title": "Epic: Channel video catalog & curation",
+      "state": "closed",
+      "previous_title": "Epic: Channel video catalog & curation",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/20"
+    },
+    {
+      "number": 21,
+      "title": "Task: Fix Sources Page Crawl Feedback UI",
+      "state": "closed",
+      "previous_title": "Task: Fix Sources Page Crawl Feedback UI",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/21"
+    },
+    {
+      "number": 22,
+      "title": "Epic: Crawl progress, cancellation, and fair processing",
+      "state": "closed",
+      "previous_title": "Epic: Crawl progress, cancellation, and fair processing",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/22"
+    },
+    {
+      "number": 23,
+      "title": "Task: Creator picks ingest mode when connecting a channel",
+      "state": "closed",
+      "previous_title": "Task: Creator picks ingest mode when connecting a channel",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/23"
+    },
+    {
+      "number": 24,
+      "title": "Task: Manual-mode channel refuses every automatic ingest",
+      "state": "closed",
+      "previous_title": "Task: Manual-mode channel refuses every automatic ingest",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/24"
+    },
+    {
+      "number": 25,
+      "title": "Task: Creator switches a channel between auto and manual",
+      "state": "closed",
+      "previous_title": "Task: Creator switches a channel between auto and manual",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/25"
+    },
+    {
+      "number": 26,
+      "title": "Task: Connecting a channel builds a browsable video catalog",
+      "state": "closed",
+      "previous_title": "Task: Connecting a channel builds a browsable video catalog",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/26"
+    },
+    {
+      "number": 27,
+      "title": "Task: Catalog shows each video's ingest state",
+      "state": "closed",
+      "previous_title": "Task: Catalog shows each video's ingest state",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/27"
+    },
+    {
+      "number": 28,
+      "title": "Task: Creator selects catalog videos and ingests just those",
+      "state": "closed",
+      "previous_title": "Task: Creator selects catalog videos and ingests just those",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/28"
+    },
+    {
+      "number": 29,
+      "title": "Task: Refreshing the catalog picks up new uploads",
+      "state": "closed",
+      "previous_title": "Task: Refreshing the catalog picks up new uploads",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/29"
+    },
+    {
+      "number": 30,
+      "title": "Task: Live progress for a running crawl",
+      "state": "closed",
+      "previous_title": "Task: Live progress for a running crawl",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/30"
+    },
+    {
+      "number": 31,
+      "title": "Task: Creator cancels a running crawl",
+      "state": "closed",
+      "previous_title": "Task: Creator cancels a running crawl",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/31"
+    },
+    {
+      "number": 32,
+      "title": "Task: Large backfill runs in bounded batches without blocking fresh videos",
+      "state": "closed",
+      "previous_title": "Task: Large backfill runs in bounded batches without blocking fresh videos",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/32"
+    },
+    {
+      "number": 34,
+      "title": "Task: Redesign Content Page Filter UI",
+      "state": "closed",
+      "previous_title": "Task: Redesign Content Page Filter UI",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/34"
+    },
+    {
+      "number": 45,
+      "title": "Epic: Console UX & accessibility hardening",
+      "state": "closed",
+      "previous_title": "Epic: Console UX & accessibility hardening",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/45"
+    },
+    {
+      "number": 51,
+      "title": "Epic: Console — wire the remaining backend APIs",
+      "state": "closed",
+      "previous_title": "Epic: Console — wire the remaining backend APIs",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/51"
+    },
+    {
+      "number": 59,
+      "title": "Task: Replace the synthetic guest/show labels on the audience site",
+      "state": "closed",
+      "previous_title": "Task: Replace the synthetic guest/show labels on the audience site",
+      "previous_state": "open",
+      "changed_fields": [
+        "state"
+      ],
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/59"
+    }
+  ],
+  "removed_issues": []
+}

@@ -1,0 +1,106 @@
+feature: "tenant-security"
+source_prd:
+  title: "Multi-Tenant Isolation"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/10"
+  version_or_commit: "github-issues-read-2026-07-09"
+  last_reviewed_at: "2026-07-09"
+  related_issues:
+    - id: "#10"
+      title: "Vision: Multi-Tenant Isolation"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/10"
+
+requirements:
+  - id: "REQ-TENANT-001"
+    title: "All tenant data access is scoped to the authenticated tenant"
+    description: "All database queries, service APIs, creator console views, and public widget queries must be scoped to the authenticated or resolved tenant."
+    prd_section: "Issue #10 Mechanic"
+    source_issues:
+      - "#10"
+    priority: "must"
+    type: "security"
+    status: "draft"
+    acceptance_criteria:
+      - "A creator can access only data belonging to their tenant."
+      - "API responses do not include records from another tenant."
+      - "Search queries return only content belonging to the current tenant."
+      - "Admin or support views apply an explicit tenant scope."
+    assumptions:
+      - "Tenant isolation is enforced at service and/or database query level."
+    open_questions:
+      - "Is row-level security implemented in the DB, application layer, or both?"
+    related_requirements:
+      - "REQ-TENANT-002"
+
+  - id: "REQ-TENANT-002"
+    title: "Direct URL or API access cannot bypass tenant isolation"
+    description: "Users must not be able to access another tenant's resources by changing URLs, IDs, request parameters, headers, or tokens."
+    prd_section: "Issue #10 Mechanic; Issue #42 Module Coverage Matrix"
+    source_issues:
+      - "#10"
+      - "#42"
+    priority: "must"
+    type: "security"
+    status: "draft"
+    acceptance_criteria:
+      - "Changing a resource ID to another tenant's ID is rejected or returns not found."
+      - "Changing tenant URL parameters does not expose another tenant's data."
+      - "Using a token from one tenant cannot access resources from another tenant."
+      - "Public site and widget APIs remain tenant-scoped."
+    assumptions: []
+    open_questions:
+      - "Should unauthorized cross-tenant access return 403 or 404?"
+    related_requirements:
+      - "REQ-TENANT-001"
+
+  - id: "REQ-TENANT-003"
+    title: "Team roles control tenant actions"
+    description: "The platform must support basic team roles so only authorized users can perform sensitive creator console actions."
+    prd_section: "Issue #10 V1 split"
+    source_issues:
+      - "#10"
+    priority: "must"
+    type: "security"
+    status: "draft"
+    acceptance_criteria:
+      - "Viewer, Editor, and Admin roles are recognized or mapped to supported permissions."
+      - "Sensitive actions are restricted to authorized roles."
+      - "Unauthorized role attempts are blocked with a clear result."
+      - "Role checks are enforced by API, not only hidden in UI."
+    assumptions:
+      - "Granular sub-team folder permissions are V1.1 or later."
+    open_questions:
+      - "What exact permission matrix applies to Viewer, Editor, and Admin?"
+    related_requirements:
+      - "REQ-AI-004"
+      - "REQ-AI-006"
+
+  - id: "REQ-TENANT-004"
+    title: "Operational logs avoid exposing other tenant data"
+    description: "System administration and support log access must avoid exposing individual tenant details unless there is an approved support/debug workflow."
+    prd_section: "Issue #10 Open decisions"
+    source_issues:
+      - "#10"
+    priority: "should"
+    type: "security"
+    status: "draft"
+    acceptance_criteria:
+      - "Logs avoid leaking sensitive tenant content by default."
+      - "Support/debug access is scoped, audited, or otherwise controlled."
+      - "Cross-tenant logs are not visible to ordinary tenant users."
+    assumptions: []
+    open_questions:
+      - "What support/debug log visibility is allowed for admins?"
+    related_requirements:
+      - "REQ-TENANT-001"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Security"
+    - "Engineering"
+  qa_review_focus:
+    - "Confirm role matrix."
+    - "Define cross-tenant negative test data."
+    - "Confirm expected 403 vs 404 behavior."

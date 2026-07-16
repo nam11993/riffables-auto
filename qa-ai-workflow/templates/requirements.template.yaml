@@ -1,0 +1,25 @@
+feature: "<feature-name>"
+source_prd:
+  title: "<prd-title>"
+  url: "<github-prd-url>"
+  version_or_commit: "<commit-sha-or-version>"
+  last_reviewed_at: "<yyyy-mm-dd>"
+
+requirements:
+  - id: "REQ-<MODULE>-001"
+    title: "<short requirement title>"
+    description: "<clear requirement statement>"
+    prd_section: "<section heading or anchor>"
+    priority: "must" # must | should | could
+    type: "functional" # functional | non-functional | business-rule | data | integration
+    status: "draft" # draft | reviewed | approved | deprecated
+    acceptance_criteria:
+      - "<criterion 1>"
+      - "<criterion 2>"
+    assumptions:
+      - "<assumption if any>"
+    open_questions:
+      - "<question if requirement is unclear>"
+    related_requirements:
+      - "REQ-<MODULE>-002"
+

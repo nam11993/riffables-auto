@@ -1,0 +1,263 @@
+feature: "site-builder-onboarding"
+source_prd:
+  title: "Visual Site Builder and Guided Onboarding"
+  source_type: "github-issues"
+  url: "https://github.com/speedrun-labs/riffables-prd/issues/35"
+  version_or_commit: "github-issues-read-2026-07-16"
+  last_reviewed_at: "2026-07-16"
+  related_issues:
+    - id: "#35"
+      title: "Epic: Visual site builder - bind sections to live catalog data"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/35"
+    - id: "#37"
+      title: "Task: Repeat a section over a collection of catalog data"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/37"
+    - id: "#38"
+      title: "Task: Bind a card's fields to the current item"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/38"
+    - id: "#39"
+      title: "Task: Guide creators to binding from the inspector's Data tab"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/39"
+    - id: "#40"
+      title: "Task: Scroll the editor canvas to a section when picked from the layers list"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/40"
+    - id: "#44"
+      title: "Task: Fix the publish domain to a tenant subdomain"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/44"
+    - id: "#36"
+      title: "Epic: Guided onboarding tours for the console"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/36"
+    - id: "#41"
+      title: "Task: Per-screen product tour for new creators"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/41"
+    - id: "#43"
+      title: "Task: Guided tour for the site editor"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/43"
+    - id: "#66"
+      title: "Task: Let the site-editor Assistant propose previewable public-site diffs"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/66"
+    - id: "#68"
+      title: "Task: Ask first-time users before auto-running onboarding tours"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/68"
+
+requirements:
+  - id: "REQ-BUILDER-001"
+    title: "Creator can repeat a section over live catalog data"
+    description: "The site editor must let a creator add a Collection element that repeats an item template once per item from a chosen live catalog source."
+    prd_section: "Issue #35 Mechanic; Issue #37 Goal"
+    source_issues:
+      - "#35"
+      - "#37"
+    priority: "should"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The editor provides a Collection element or equivalent repeated-section control."
+      - "The creator can choose a supported source such as riffables, riffs, or articles."
+      - "The editor preview repeats the template for catalog items."
+      - "The published site renders one card or section instance per item."
+    assumptions:
+      - "This closed issue is tracked as regression baseline."
+    open_questions:
+      - "Which live catalog sources are currently supported in the editor?"
+    related_requirements:
+      - "REQ-BUILDER-002"
+
+  - id: "REQ-BUILDER-002"
+    title: "Fields inside repeated cards can bind to the current item"
+    description: "Content fields inside a repeated card must be able to pull from the current item instead of using fixed static values."
+    prd_section: "Issue #35 Acceptance criteria; Issue #38 Goal"
+    source_issues:
+      - "#35"
+      - "#38"
+    priority: "should"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Text fields can be bound to fields of the current item."
+      - "Image src and alt fields can be bound to fields of the current item."
+      - "Button labels can be bound to fields of the current item."
+      - "Static and bound values are visually or structurally distinguishable in the editor."
+      - "Editor preview and published site resolve bindings consistently."
+    assumptions: []
+    open_questions:
+      - "What field types are supported for binding in the current editor?"
+    related_requirements:
+      - "REQ-BUILDER-001"
+
+  - id: "REQ-BUILDER-003"
+    title: "Inspector Data tab explains the binding workflow"
+    description: "The inspector Data tab must guide creators through the binding workflow and show only genuinely bindable sources."
+    prd_section: "Issue #35 Acceptance criteria; Issue #39 Goal"
+    source_issues:
+      - "#35"
+      - "#39"
+    priority: "should"
+    type: "ui"
+    status: "draft"
+    acceptance_criteria:
+      - "The Data tab explains the add Collection, pick source, link field workflow."
+      - "The Data tab lists only real bindable sources."
+      - "The Data tab includes riffables, riffs, and articles if those are the supported sources."
+      - "The Data tab does not show misleading non-bindable manifest keys."
+    assumptions: []
+    open_questions:
+      - "Should the Data tab include examples or only concise guidance?"
+    related_requirements:
+      - "REQ-BUILDER-002"
+
+  - id: "REQ-BUILDER-004"
+    title: "Selecting a section in layers scrolls the editor canvas to it"
+    description: "When the creator selects a section from the editor layers list, the canvas must scroll to bring that section into view."
+    prd_section: "Issue #35 Mechanic; Issue #40 Goal"
+    source_issues:
+      - "#35"
+      - "#40"
+    priority: "should"
+    type: "ui"
+    status: "draft"
+    acceptance_criteria:
+      - "Selecting an off-screen section from the layers list scrolls the canvas."
+      - "The selected section becomes visible after the action."
+      - "The scroll behavior does not lose the current selection."
+      - "The behavior works on long pages."
+    assumptions: []
+    open_questions:
+      - "Should the scroll be smooth or instant for test expectations?"
+    related_requirements: []
+
+  - id: "REQ-BUILDER-005"
+    title: "Publish dialog uses a fixed tenant subdomain format"
+    description: "The publish dialog must save public site hosts using a fixed platform-owned suffix with only the tenant subdomain editable."
+    prd_section: "Issue #44 Goal; Issue #44 Example of done"
+    source_issues:
+      - "#44"
+    priority: "must"
+    type: "business-rule"
+    status: "draft"
+    acceptance_criteria:
+      - "The publish dialog shows a host in the format subdomain plus fixed suffix."
+      - "The suffix is read-only and environment-configured."
+      - "The subdomain is prefilled from the tenant slug."
+      - "Invalid subdomain characters are sanitized or rejected."
+      - "The saved host is always a valid subdomain under the fixed suffix."
+    assumptions:
+      - "Custom domains are out of scope."
+    open_questions:
+      - "What exact suffix is used in QA and production?"
+    related_requirements:
+      - "REQ-PUBLIC-001"
+
+  - id: "REQ-ONBOARD-001"
+    title: "Main console screens provide first-visit guided tours"
+    description: "Home, Sources, Content, and Sites screens must each provide a short guided tour for new creators."
+    prd_section: "Issue #36 Mechanic; Issue #41 Goal"
+    source_issues:
+      - "#36"
+      - "#41"
+    priority: "could"
+    type: "ui"
+    status: "draft"
+    acceptance_criteria:
+      - "Each main console screen has its own step sequence."
+      - "A screen tour auto-starts once per creator on first visit."
+      - "Closing early counts as seen so the tour does not repeatedly nag."
+      - "A persistent help control can replay the current screen tour."
+      - "Tour steps include Back, Next, and progress affordances."
+    assumptions:
+      - "This closed issue is tracked as regression baseline."
+    open_questions:
+      - "Where is tour-seen state persisted?"
+    related_requirements:
+      - "REQ-ONBOARD-002"
+
+  - id: "REQ-ONBOARD-002"
+    title: "Site editor provides its own guided tour"
+    description: "The site editor must provide a first-visit guided tour that introduces the editor chrome and major regions."
+    prd_section: "Issue #36 Out of scope; Issue #43 Goal"
+    source_issues:
+      - "#36"
+      - "#43"
+    priority: "could"
+    type: "ui"
+    status: "draft"
+    acceptance_criteria:
+      - "Opening the editor for the first time starts an editor tour."
+      - "The tour introduces add or arrange panel, live canvas, inspector, Preview, and Publish."
+      - "The canvas iframe is highlighted as a region without requiring per-section iframe targeting."
+      - "The editor help button can replay the tour."
+      - "Completion is remembered per creator."
+    assumptions:
+      - "Individual sections inside the canvas iframe are out of scope."
+    open_questions:
+      - "Should editor tour state share storage with main screen tours?"
+    related_requirements:
+      - "REQ-ONBOARD-001"
+
+  - id: "REQ-BUILDER-006"
+    title: "Site editor Assistant proposes previewable diffs for natural-language public-site edits"
+    description: "The site editor Assistant must let an operator request supported public-site edits in natural language and respond with a previewable diff that can be accepted or rejected before it mutates the site."
+    prd_section: "Issue #66 Goal; Issue #66 expected Assistant behavior"
+    source_issues:
+      - "#66"
+    priority: "must"
+    type: "ai-assisted-functional"
+    status: "draft"
+    acceptance_criteria:
+      - "The Assistant accepts a natural-language edit request from the site editor."
+      - "For supported edits, the Assistant proposes a structured diff rather than silently changing the live site."
+      - "The operator can preview the proposed diff before applying it."
+      - "Accepting the diff applies the intended public-site change and preserves unrelated content."
+      - "Rejecting or cancelling the diff leaves the current site unchanged."
+      - "Unsupported, ambiguous, unsafe, or out-of-scope edit requests are refused or require clarification."
+      - "The Assistant cannot bypass allowed editor fields, tenant boundaries, or publication permissions."
+    assumptions:
+      - "The exact supported edit operation list is not confirmed in the 2026-07-16 PRD intake."
+      - "Previewable diff is the QA oracle until Product/Engineering defines more precise pass/fail criteria."
+    open_questions:
+      - "Which public-site edit operations are in scope for #66: copy, layout, theme, component visibility, ordering, data binding, or publish settings?"
+      - "What fields may an AI-generated diff modify?"
+      - "Should accepted diffs auto-save draft only, update preview only, or publish immediately after operator confirmation?"
+    related_requirements:
+      - "REQ-CONSOLE-012"
+      - "REQ-THEME-004"
+      - "REQ-THEME-005"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-ONBOARD-003"
+    title: "Console asks first-time users before auto-running onboarding tours"
+    description: "After a user's first successful sign-in, the console must ask whether they are new before auto-running per-screen onboarding tours."
+    prd_section: "Issue #68 Goal; Issue #68 Example of done"
+    source_issues:
+      - "#68"
+    priority: "should"
+    type: "ui"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "On the first authenticated visit per user, a dialog asks whether this is the user's first time in Riffables."
+      - "Choosing the new-user option starts tours as before, including the current screen immediately."
+      - "Choosing the returning-user option prevents tour auto-start on future visits while preserving manual replay from Help."
+      - "Dismissing the dialog without choosing persists no decision and re-offers the prompt on the next visit."
+      - "Users who already completed the home tour are grandfathered and are not asked."
+      - "The consent behavior applies to desktop tours and the focus-mode editor honors the same choice."
+    assumptions:
+      - "The user-level decision is tracked in localStorage unless Product/Engineering confirms server-side storage."
+    open_questions:
+      - "Should onboarding consent be stored only locally, per browser, or server-side per operator account?"
+    related_requirements:
+      - "REQ-ONBOARD-001"
+      - "REQ-ONBOARD-002"
+
+review_notes:
+  status: "draft"
+  recommended_reviewers:
+    - "QA"
+    - "Product"
+    - "Design"
+    - "Engineering"
+  qa_review_focus:
+    - "Treat closed issues as regression baseline."
+    - "Confirm supported live catalog sources."
+    - "Confirm publish host suffix per environment."
+    - "Confirm supported site-editor Assistant edit operations and generated-diff pass/fail oracle."
+    - "Confirm where onboarding consent state is persisted."
