@@ -31,9 +31,44 @@ TC-CONSOLE-023
 TC-CONSOLE-024
 TC-CONSOLE-025
 TC-CONSOLE-026
+TC-SOURCE-001
+TC-SOURCE-003
 TC-SOURCE-007
+TC-SOURCE-009
 TC-SOURCE-013
 TC-SOURCE-014
+TC-SOURCE-015
+TC-SOURCE-016
+TC-SOURCE-017
+TC-SOURCE-018
+TC-SOURCE-022
+TC-SOURCE-023
+TC-SOURCE-024
+TC-SOURCE-025
+TC-SOURCE-026
+TC-SOURCE-031
+TC-SOURCE-034A
+TC-SOURCE-036
+TC-SOURCE-037
+TC-SOURCE-038A
+TC-SOURCE-039
+TC-SOURCE-040
+TC-SOURCE-041
+TC-SOURCE-042A
+TC-SOURCE-043
+TC-SOURCE-044
+TC-SOURCE-045
+TC-SOURCE-045A
+TC-CATALOG-001
+TC-CATALOG-010
+TC-CATALOG-013
+TC-CATALOG-014
+TC-CATALOG-017
+TC-CATALOG-019
+TC-CATALOG-020
+TC-CRAWL-013
+TC-INGEST-016
+TC-INGEST-020
 TC-PUBLIC-009
 TC-A11Y-005
 TC-ONBOARD-007
@@ -42,11 +77,60 @@ TC-ONBOARD-007
 Latest full staging run:
 
 ```text
-25 passed
-1 skipped
+35 Playwright tests
+32 passed
+3 skipped
+0 failed
 ```
 
-`TC-PUBLIC-009` is skipped until `PUBLIC_SITE_URL` is provided.
+Skipped in the latest full run:
+
+```text
+TC-PUBLIC-009 - missing PUBLIC_SITE_URL
+TC-SOURCE-023 - current fixture now has a connected source
+TC-SOURCE-002/TC-SOURCE-008 - full Google OAuth flow is gated by SOURCE_CONNECT_FULL=false
+```
+
+Known expected-fail checks counted as passed by Playwright:
+
+```text
+TC-SOURCE-016
+TC-SOURCE-017
+TC-SOURCE-018
+```
+
+These represent current source-input validation gaps on staging.
+
+Latest connected-source no-data run:
+
+```text
+npm run test:sources:connected-no-data
+7 passed
+```
+
+This run covers the connected YouTube source card, details modal, schedule modal review, read-only refresh, pipeline visibility, and empty Channel Videos panel. It does not submit crawl, backfill, schedule creation, catalog refresh, selected ingestion, delete, or mode-switch actions.
+
+Latest connected-source action no-data run:
+
+```text
+npm run test:sources:action-no-data
+4 Playwright checks passed
+```
+
+Per-case QA status for `TC-SOURCE-034A`, `TC-SOURCE-038A`, `TC-SOURCE-042A`, and `TC-SOURCE-045A` is partial until backend job/content count assertions are added.
+
+Latest connected-source populated crawl-data run:
+
+```text
+npm run test:sources:crawl-data
+6 Playwright checks
+5 passed
+1 failed
+```
+
+Pass coverage: populated catalog metadata/search, Failed row selectability, No insights disabled state, selected Failed retry, Queued transition, terminal failure, and no-audio/no-transcript content.
+
+Fail coverage: `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, and `TC-INGEST-018` still fail on the current fixture because the expected two-video successful crawl did not complete; latest run was `0/1 · 1 failed` and the audio video returned provider `Video unavailable`.
 
 Automation flow mapping is documented in:
 

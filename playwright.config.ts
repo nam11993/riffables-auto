@@ -4,6 +4,7 @@ import path from 'node:path';
 
 loadDotEnv();
 const baseURL = process.env.BASE_URL || 'http://localhost:3000';
+const browserChannel = process.env.BROWSER_CHANNEL || undefined;
 
 export default defineConfig({
   testDir: './automation/tests',
@@ -32,7 +33,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: { ...devices['Desktop Chrome'], channel: browserChannel }
     }
   ],
   outputDir: 'test-results'

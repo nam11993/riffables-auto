@@ -10,6 +10,11 @@
     "test:auth": "playwright test automation/tests/auth --workers=1",
     "test:auth:headed": "playwright test automation/tests/auth --headed --workers=1",
     "test:sources": "playwright test automation/tests/sources --workers=1",
+    "test:sources:connected": "playwright test automation/tests/sources/youtube-source.spec.ts --grep TC-SOURCE-014 --workers=1",
+    "test:sources:connected-no-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @connected-no-data --workers=1",
+    "test:sources:action-no-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-action-no-data --workers=1",
+    "test:sources:crawl-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-data --workers=1",
+    "source:oauth:manual": "powershell -ExecutionPolicy Bypass -File scripts/open-source-oauth-manual.ps1",
     "test:debug": "playwright test automation/tests/smoke --debug",
     "report": "playwright show-report"
   },

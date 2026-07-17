@@ -122,6 +122,8 @@ export async function selectExistingOrganizationIfPresent(page: Page): Promise<v
     return;
   }
 
+  await page.getByText(/loading organizations/i).waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => undefined);
+
   const organizationSelect = page
     .locator('button')
     .filter({ hasText: /select/i })
