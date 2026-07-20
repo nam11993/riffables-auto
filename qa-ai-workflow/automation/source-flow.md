@@ -55,12 +55,53 @@ automation/tests/sources/youtube-source.spec.ts
 | Run date | `2026-07-17` |
 | Environment | `https://riffables.speedrunlabs.ai` |
 | Browser | `Playwright Chromium` |
-| Fixture | Connected YouTube source `@nhnbaohan` with catalog rows `test 2` and `test 1` |
+| Fixture | Connected YouTube source `@nhnbaohan` with catalog rows `test 3`, `test 2`, and `test 1` |
 | Command | `npm run test:sources:crawl-data` with `SOURCE_CRAWL_DATA=true` and `SOURCE_CRAWL_MUTATION=true` |
 | Result | `6 Playwright checks run: 5 passed, 1 failed.` |
 | Passed cases | `TC-SOURCE-042`, `TC-SOURCE-043`, `TC-SOURCE-044` partial, `TC-SOURCE-045` partial, `TC-CATALOG-001`, `TC-CATALOG-010`, `TC-CATALOG-013`, `TC-CATALOG-014`, `TC-CATALOG-017`, `TC-CATALOG-019` partial, `TC-CATALOG-020`, `TC-CRAWL-013`, `TC-INGEST-016`, `TC-INGEST-020` |
 | Failed cases | `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-INGEST-018` |
-| Failure reason | Full Run crawl success expected `2/2`, but latest run stayed `0/1 · 1 failed`; audio item returned provider `Video unavailable`. |
+| Failure reason | Full Run crawl success expected a complete multi-item crawl, but the earlier audio fixture `test 2` returned provider `Video unavailable`. Selected-ingest success is now covered by `test 3`. |
+
+## Latest Successful Audio-Content Run
+
+| Field | Value |
+| --- | --- |
+| Run date | `2026-07-17` |
+| Environment | `https://riffables.speedrunlabs.ai` |
+| Browser | `Playwright Chromium` |
+| Fixture | Newly posted audio clip `test 3` on `@nhnbaohan` |
+| Command | `npm run test:sources:crawl-success` with `SOURCE_CRAWL_DATA=true` |
+| Result | `1 passed` |
+| Covered cases | `TC-INGEST-018`, `TC-CRAWL-013` |
+| Observed states | `Queued` -> `Transcribing` -> `Extracting` -> content row with `TRANSCRIPT Available`, `No riffables`, and `1 with transcript`. |
+
+## Latest Exact Selected Two-Video Run
+
+| Field | Value |
+| --- | --- |
+| Run date | `2026-07-20` |
+| Environment | `https://riffables.speedrunlabs.ai` |
+| Browser | `Playwright Chromium` |
+| Fixture | Two newest eligible clips: `chiếc đèn cuối phố` and `Video 1` |
+| Fresh selection result | Both rows were enabled before ingest and the CTA changed to `Ingest 2 selected`. |
+| Mutating run result | Rows changed to `Queued`, source Recent runs reached `2/2`, `Last error` was `None`. |
+| Content result | Content showed `Showing 4 of 4 · 0 extracted · 3 with transcript`; both new clips ended as `No riffables` with `TRANSCRIPT Available`. |
+| Repeatable command | `npm run test:sources:exact-selected` with `SOURCE_CRAWL_DATA=true` |
+| Repeatable result | `1 passed` |
+
+## Latest Unselected Guard Check
+
+| Field | Value |
+| --- | --- |
+| Run date | `2026-07-20` |
+| Environment | `https://riffables.speedrunlabs.ai` |
+| Browser | `Playwright Chromium` |
+| Command | Visible in-app browser run against `@nhnbaohan` |
+| Result | `Pass` |
+| Catalog total | `8 videos` |
+| Selected rows | `video 5`, `video 4` |
+| Unselected guard row | `Clip 3` |
+| Evidence | `video 5` and `video 4` moved to `Queued`; `Clip 3` remained fresh/selectable; Recent runs reached `2/2`; Last error stayed `None`; after refresh, selected rows ended as `No insights`. |
 
 ## Flow-To-Testcase Mapping
 
@@ -81,7 +122,10 @@ automation/tests/sources/youtube-source.spec.ts
 | Populated catalog search | `TC-SOURCE-043`, `TC-CATALOG-017` | `Auto PASS 2026-07-17` | Searches for `test 2`, verifies catalog remains read-only, then clears search. |
 | Catalog row state selectability | `TC-SOURCE-044`, `TC-CATALOG-019`, `TC-CATALOG-020` | `Auto PARTIAL PASS 2026-07-17` | Verifies Failed row is selectable and No insights row is disabled. Additional Not ingested, Queued, Processing, and Riffed fixtures are still required. |
 | Failed video selected retry | `TC-SOURCE-045`, `TC-CATALOG-020`, `TC-INGEST-016`, `TC-INGEST-020`, `TC-CRAWL-013` | `Auto PASS/PARTIAL PASS 2026-07-17` | Selects one Failed row, submits `Ingest 1 selected`, observes Queued, then terminal provider failure. Full exact-selected coverage still needs at least two fresh eligible rows. |
-| Populated Run crawl success contract | `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-INGEST-018` | `Auto FAIL 2026-07-17` | Expected two-video successful crawl did not occur. Latest run stayed `0/1 · 1 failed` and the audio fixture returned `Video unavailable`. |
+| Successful audio selected-ingest content | `TC-INGEST-018`, `TC-CRAWL-013` | `Auto PASS 2026-07-17` | Newly posted clip `test 3` was selected and ingested, then appeared in Content with `TRANSCRIPT Available`. |
+| Exact selected two-video ingest | `TC-SOURCE-045`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-CRAWL-013`, `TC-INGEST-018` | `Auto PASS/PARTIAL PASS 2026-07-20` | Selected `chiếc đèn cuối phố` plus `Video 1`, submitted `Ingest 2 selected`, and verified latest run `2/2` with transcript content. |
+| Exact selected unselected-row guard | `TC-SOURCE-045`, `TC-CATALOG-005` | `Auto PASS 2026-07-20` | Selected `video 5` and `video 4`, submitted `Ingest 2 selected`, verified both selected rows queued and Recent run reached `2/2`, while unselected `Clip 3` remained fresh/selectable. Selected rows later ended as `No insights`, which is valid for selection coverage but not proof of generated riffables. |
+| Populated Run crawl success contract | `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010` | `Auto FAIL 2026-07-17` | Full multi-item Run crawl success has not passed yet. Selected-ingest success is covered separately by `test 3`. |
 | Sources refresh is read-only against connected configuration | `TC-SOURCE-040` | `Auto PASS 2026-07-17` | Captures source/card baseline, clicks page refresh, and verifies source identity/configuration remains stable with no crawl/backfill/schedule/OAuth side effect. |
 | Channel Videos panel supports empty catalog browsing | `TC-SOURCE-041`, `TC-SOURCE-043` | `Auto PASS 2026-07-17` | Opens Videos, verifies empty/partial catalog state and controls, tests search and pagination behavior, then closes without catalog refresh or ingestion. |
 | Ingest selected with zero selected or empty catalog | `TC-SOURCE-045A` | `Auto PARTIAL PASS 2026-07-17` | Verifies `Ingest 0 selected` is visible, safely blocked/refused when zero items are selected, and the source context remains stable. Backend job/content counts still need observability. |

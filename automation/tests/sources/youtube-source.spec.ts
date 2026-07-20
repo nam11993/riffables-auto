@@ -516,6 +516,125 @@ test.describe('YouTube source connection flows', () => {
     expectNoBrokenUiText(text);
   });
 
+  test('TC-INGEST-018 TC-CRAWL-013 @source-crawl-data @source-crawl-success Successful audio clip is visible with transcript after ingest', async ({
+    page
+  }) => {
+    const config = smokeConfig();
+    const source = youtubeSource();
+    const fixture = crawlDataFixture();
+
+    test.skip(!hasCredentials(config), 'Set SMOKE_EMAIL and SMOKE_PASSWORD to run populated crawl automation.');
+    test.skip(!sourceCrawlDataEnabled(), 'Set SOURCE_CRAWL_DATA=true to run populated crawl automation.');
+
+    await openConnectedSources(page, source.handle);
+    await page.goto('/content');
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await dismissOnboardingIfPresent(page);
+
+    const text = await contentScreenText(page);
+    expect(text).toContain(fixture.successTitle);
+    expect(text).toMatch(/with transcript/i);
+    expect(text).toMatch(/TRANSCRIPT\s+Available/i);
+    expect(text).toMatch(new RegExp(`${escapeRegExp(fixture.successTitle)}[\\s\\S]*No riffables`, 'i'));
+    expectNoBrokenUiText(text);
+  });
+
+  test('TC-SOURCE-045 TC-CRAWL-002 TC-CRAWL-010 TC-CRAWL-013 TC-INGEST-018 @source-crawl-data @source-crawl-exact-selected Exact selected two-video ingest completed with transcripts', async ({
+    page
+  }) => {
+    const config = smokeConfig();
+    const source = youtubeSource();
+    const fixture = exactSelectedFixture();
+
+    test.skip(!hasCredentials(config), 'Set SMOKE_EMAIL and SMOKE_PASSWORD to run populated crawl automation.');
+    test.skip(!sourceCrawlDataEnabled(), 'Set SOURCE_CRAWL_DATA=true to run populated crawl automation.');
+
+    await openConnectedSources(page, source.handle);
+    const sourceText = await sourceScreenText(page);
+    const expectedRunPattern = new RegExp(`\\b${fixture.expectedRunTotal}\\/${fixture.expectedRunTotal}\\b`, 'i');
+    const matchingRun = recentRunTextMatching(sourceText, expectedRunPattern);
+    expect(matchingRun).toMatch(expectedRunPattern);
+    expect(matchingRun).not.toMatch(/failed/i);
+
+    await page.goto('/content');
+    await page.waitForLoadState('networkidle').catch(() => undefined);
+    await dismissOnboardingIfPresent(page);
+
+    const contentText = await contentScreenText(page);
+    expect(contentText).toMatch(new RegExp(`${fixture.expectedTranscriptCount} with transcript`, 'i'));
+    for (const title of fixture.titles) {
+      if (title) {
+        expectContentRowHasTranscript(contentText, title);
+      }
+    }
+    expectNoBrokenUiText(contentText);
+  });
+
+  test('TC-SOURCE-045 TC-CATALOG-005 @source-crawl-data @source-crawl-unselected-guard Exact selected ingest leaves unselected fresh video untouched', async ({
+    page
+  }) => {
+    const config = smokeConfig();
+    const source = youtubeSource();
+    const fixture = exactSelectedFixture();
+
+    test.setTimeout(fixture.waitMs + 90_000);
+    test.skip(!hasCredentials(config), 'Set SMOKE_EMAIL and SMOKE_PASSWORD to run populated crawl automation.');
+    test.skip(!sourceCrawlDataEnabled(), 'Set SOURCE_CRAWL_DATA=true to run populated crawl automation.');
+    test.skip(!sourceCrawlMutationEnabled(), 'Set SOURCE_CRAWL_MUTATION=true to run mutating crawl automation.');
+
+    await openConnectedSources(page, source.handle);
+    const dialog = await openRefreshedVideosDialog(page);
+    const freshVideos = catalogFreshNotIngestedVideoButtons(dialog);
+    const freshCount = await freshVideos.count();
+    const freshTexts = await catalogButtonTexts(freshVideos);
+
+    console.log(`Fresh selectable catalog rows: ${freshCount}`);
+    for (const [index, text] of freshTexts.entries()) {
+      console.log(`Fresh row ${index + 1}: ${text}`);
+    }
+
+    test.skip(
+      freshCount < 3,
+      `Need at least 3 fresh selectable videos to select 2 and prove 1 remains untouched. Current rows: ${freshTexts.join(
+        ' | '
+      )}`
+    );
+
+    const selectedA = freshVideos.nth(0);
+    const selectedB = freshVideos.nth(1);
+    const unselected = freshVideos.nth(2);
+    const unselectedTextBefore = await compactLocatorText(unselected);
+    const unselectedTitle = firstCatalogLine(unselectedTextBefore);
+
+    await selectedA.click();
+    await selectedB.click();
+    await expect(dialog.getByRole('button', { name: /Ingest 2 selected/i })).toBeEnabled();
+    await expectFreshNotIngestedRow(unselected);
+
+    await dialog.getByRole('button', { name: /Ingest 2 selected/i }).click();
+    await expect(dialog).toContainText(/Queued|Processing|Transcribing|Extracting|Not ingested/i);
+    const unselectedAfterSubmit = catalogVideoButton(dialog, unselectedTitle);
+    await expectFreshNotIngestedRow(unselectedAfterSubmit);
+    await expect(unselectedAfterSubmit).toContainText(unselectedTitle);
+
+    const afterText = await waitForLatestRecentRun(
+      page,
+      new RegExp(`\\b${fixture.expectedRunTotal}\\/${fixture.expectedRunTotal}\\b`, 'i'),
+      fixture.waitMs
+    );
+    const latest = latestRecentRunText(afterText);
+
+    expect(latest).toMatch(new RegExp(`\\b${fixture.expectedRunTotal}\\/${fixture.expectedRunTotal}\\b`, 'i'));
+    expect(latest).not.toMatch(/failed/i);
+
+    const verifyDialog = await openRefreshedVideosDialog(page);
+    const verifyUnselected = catalogFreshNotIngestedVideoButtons(verifyDialog).filter({
+      hasText: new RegExp(escapeRegExp(unselectedTitle), 'i')
+    });
+    await expect(verifyUnselected.first()).toBeEnabled();
+    await closeVisibleDialog(page);
+  });
+
   test('TC-SOURCE-045 TC-CATALOG-020 TC-INGEST-016 TC-INGEST-020 TC-CRAWL-013 @source-crawl-data Failed catalog video retry queues selected item and surfaces terminal failure', async ({
     page
   }) => {
@@ -884,8 +1003,39 @@ function catalogVideoButton(dialog: Locator, title: string): Locator {
   return dialog.getByRole('button', { name: new RegExp(escapeRegExp(title), 'i') }).first();
 }
 
+function catalogFreshNotIngestedVideoButtons(dialog: Locator): Locator {
+  return dialog
+    .locator('button')
+    .filter({ hasText: /\d{1,2}\/\d{1,2}\/\d{4}/ })
+    .filter({ hasNotText: /No insights|Failed|Queued|Processing|Transcribing|Extracting|Riffed/i });
+}
+
 async function catalogDialogText(dialog: Locator): Promise<string> {
   return dialog.innerText().then((text) => text.replace(/\s+/g, ' ').trim());
+}
+
+async function catalogButtonTexts(buttons: Locator): Promise<string[]> {
+  const count = await buttons.count();
+  const texts: string[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    texts.push(await compactLocatorText(buttons.nth(index)));
+  }
+
+  return texts;
+}
+
+async function compactLocatorText(locator: Locator): Promise<string> {
+  return locator.innerText().then((text) => text.replace(/\s+/g, ' ').trim());
+}
+
+async function expectFreshNotIngestedRow(row: Locator): Promise<void> {
+  await expect(row).toBeEnabled();
+  await expect(row).not.toContainText(/No insights|Failed|Queued|Processing|Transcribing|Extracting|Riffed/i);
+}
+
+function firstCatalogLine(rowText: string): string {
+  return rowText.split(/\s{2,}| Published | Not ingested | Queued | Processing | Riffed | Failed /i)[0].trim();
 }
 
 async function expectCatalogHasNoSelectedWork(page: Page, handle: string): Promise<void> {
@@ -968,6 +1118,22 @@ function latestRecentRunText(text: string): string {
   return (secondRunIndex === -1 ? firstRun : firstRun.slice(0, secondRunIndex + 1)).trim();
 }
 
+function recentRunTextMatching(text: string, expected: RegExp): string {
+  const recentRunsIndex = text.search(/RECENT RUNS/i);
+  if (recentRunsIndex === -1) {
+    return '';
+  }
+
+  const recentRuns = text.slice(recentRunsIndex).replace(/^RECENT RUNS\s*/i, '');
+  return (
+    recentRuns
+      .split(/(?=YouTube channel\s+)/i)
+      .map((run) => run.trim())
+      .filter(Boolean)
+      .find((run) => expected.test(run)) || ''
+  );
+}
+
 async function connectedSourceBaseline(
   page: Page,
   handle: string
@@ -1006,6 +1172,10 @@ function expectNoBrokenUiText(text: string): void {
   expect(text).not.toMatch(/undefined|null|NaN|\[object Object\]/i);
 }
 
+function expectContentRowHasTranscript(contentText: string, title: string): void {
+  expect(contentText).toMatch(new RegExp(`${escapeRegExp(title)}[\\s\\S]*TRANSCRIPT\\s+Available`, 'i'));
+}
+
 function emptyBackfillDate(): string {
   return process.env.SOURCE_BACKFILL_EMPTY_DATE || '2026-07-17';
 }
@@ -1018,9 +1188,17 @@ type CrawlDataFixture = {
   expectedVideoCount: number;
   audioTitle: string;
   silentTitle: string;
+  successTitle: string;
   audioExpectedState: string;
   silentExpectedState: string;
   searchKeyword: string;
+  waitMs: number;
+};
+
+type ExactSelectedFixture = {
+  titles: string[];
+  expectedRunTotal: number;
+  expectedTranscriptCount: number;
   waitMs: number;
 };
 
@@ -1035,16 +1213,34 @@ function sourceCrawlMutationEnabled(): boolean {
 function crawlDataFixture(): CrawlDataFixture {
   const audioTitle = process.env.SOURCE_CRAWL_AUDIO_TITLE || 'test 2';
   const silentTitle = process.env.SOURCE_CRAWL_SILENT_TITLE || 'test 1';
+  const successTitle = process.env.SOURCE_CRAWL_SUCCESS_TITLE || 'test 3';
 
   return {
-    expectedVideoCount: Number(process.env.SOURCE_EXPECTED_VIDEO_COUNT || 2),
+    expectedVideoCount: Number(process.env.SOURCE_EXPECTED_VIDEO_COUNT || 8),
     audioTitle,
     silentTitle,
+    successTitle,
     audioExpectedState: process.env.SOURCE_CRAWL_AUDIO_EXPECTED_STATE || 'Failed',
     silentExpectedState: process.env.SOURCE_CRAWL_SILENT_EXPECTED_STATE || 'No insights',
     searchKeyword: process.env.SOURCE_CRAWL_SEARCH_KEYWORD || audioTitle,
     waitMs: Number(process.env.SOURCE_CRAWL_WAIT_MS || 120_000)
   };
+}
+
+function exactSelectedFixture(): ExactSelectedFixture {
+  return {
+    titles: splitConfiguredTitles(process.env.SOURCE_EXACT_SELECTED_TITLES || process.env.SOURCE_EXACT_SELECTED_TITLE_B || 'Video 1'),
+    expectedRunTotal: Number(process.env.SOURCE_EXACT_SELECTED_EXPECTED_TOTAL || 2),
+    expectedTranscriptCount: Number(process.env.SOURCE_EXACT_SELECTED_EXPECTED_TRANSCRIPT_COUNT || 3),
+    waitMs: Number(process.env.SOURCE_EXACT_SELECTED_WAIT_MS || 180_000)
+  };
+}
+
+function splitConfiguredTitles(value: string): string[] {
+  return value
+    .split(',')
+    .map((title) => title.trim())
+    .filter(Boolean);
 }
 
 function futureSourceTypeCard(page: Page, sourceType: string): Locator {

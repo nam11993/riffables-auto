@@ -68,6 +68,7 @@ TC-CATALOG-019
 TC-CATALOG-020
 TC-CRAWL-013
 TC-INGEST-016
+TC-INGEST-018
 TC-INGEST-020
 TC-PUBLIC-009
 TC-A11Y-005
@@ -130,7 +131,38 @@ npm run test:sources:crawl-data
 
 Pass coverage: populated catalog metadata/search, Failed row selectability, No insights disabled state, selected Failed retry, Queued transition, terminal failure, and no-audio/no-transcript content.
 
-Fail coverage: `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, and `TC-INGEST-018` still fail on the current fixture because the expected two-video successful crawl did not complete; latest run was `0/1 · 1 failed` and the audio video returned provider `Video unavailable`.
+Fail coverage: `TC-SOURCE-034`, `TC-CRAWL-002`, and `TC-CRAWL-010` still fail for the full Run crawl contract because the expected multi-item successful crawl did not complete; earlier audio fixture `test 2` returned provider `Video unavailable`.
+
+Latest successful audio-content run:
+
+```text
+npm run test:sources:crawl-success
+1 passed
+```
+
+This verifies the newly ingested `test 3` content row has `TRANSCRIPT Available` and contributes to the `with transcript` count. Full multi-item Run crawl remains separate from this selected-ingest success check.
+
+Latest exact selected two-video run:
+
+```text
+npm run test:sources:exact-selected
+1 passed
+```
+
+This verifies the completed exact selected-ingest state for the two newest eligible clips: a `2/2` recent run, content count `3 with transcript`, and `Video 1` with `TRANSCRIPT Available`. The original mutating run selected `chiếc đèn cuối phố` plus `Video 1`; because those rows are now processed, full unselected-row coverage requires three fresh selectable clips in the catalog at the same time.
+
+Latest unselected-row guard run:
+
+```text
+Visible in-app browser run
+Catalog: 8 videos
+Selected: video 5, video 4
+Unselected guard: Clip 3 remained fresh/selectable
+Recent run: 2/2
+Last error: None
+```
+
+This completes full `TC-SOURCE-045` exact selected/unselected coverage for the current fixture. The selected rows later ended as `No insights`; that is acceptable for selection coverage, but it is not a generated-riffable success signal. Rerunning the mutating guard requires three new fresh selectable rows in the same catalog state.
 
 Automation flow mapping is documented in:
 

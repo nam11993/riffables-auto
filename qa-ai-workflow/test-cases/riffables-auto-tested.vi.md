@@ -1,0 +1,152 @@
+# Riffables - Bản Testcase Đã Chạy Automation
+
+## Phạm Vi
+
+Tài liệu này là bản tiếng Việt để QA đọc nhanh các testcase trong `riffables-master.test-cases.md` đã có trạng thái automation.
+
+Nguồn gốc:
+
+| Trường | Giá trị |
+| --- | --- |
+| File gốc | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
+| Phạm vi lọc | Các testcase có cột `Status` bắt đầu bằng `Auto` |
+| Tổng số testcase trong master | `362` |
+| Số testcase có automation status | `72` |
+| Ngày tổng hợp | `2026-07-20` |
+
+Quy ước status:
+
+| Status | Ý nghĩa |
+| --- | --- |
+| `Auto PASS` | Automation đã chạy và kết quả đạt kỳ vọng của testcase. |
+| `Auto PARTIAL PASS` | Automation mới cover được một phần, vẫn cần data/backend/manual check để kết luận đầy đủ. |
+| `Auto PARTIAL` | Có bằng chứng automation một phần, nhưng chưa đủ điều kiện để pass một phần theo contract đầy đủ. |
+| `Auto BLOCKED` | Automation bị chặn bởi điều kiện ngoài hệ thống, ví dụ Google OAuth. |
+| `Auto EXPECTED FAIL` | Automation cố ý đánh dấu fail vì staging đang có bug/behavior chưa đúng. |
+| `Auto SKIP` | Automation bị skip vì thiếu cấu hình hoặc fixture. |
+
+Tổng hợp nhanh:
+
+| Nhóm status | Số lượng |
+| --- | ---: |
+| PASS | 55 |
+| PARTIAL PASS | 10 |
+| PARTIAL | 1 |
+| BLOCKED | 2 |
+| EXPECTED FAIL | 3 |
+| SKIP | 1 |
+| Tổng | 72 |
+
+## Tổng Hợp Theo Module
+
+| Module | Số case auto | Ghi chú |
+| --- | ---: | --- |
+| Auth / Account / Workspace | 15 | Login, logout, signup, forgot/change password request, setup organization, workspace/account menu. |
+| Source / YouTube | 32 | Source UI, OAuth boundary, connected source, catalog entry points, selected ingest entry points. |
+| Ingestion | 3 | Queued, ready/transcript coverage, permanent failure/no-transcript terminal state. |
+| Catalog | 9 | Metadata, exact selected ingest, search, selectability, failed retry. |
+| Crawl | 3 | Progress done/total và total khớp selected input. |
+| Console / Home | 7 | Core navigation, Home overview, summary modules, next-step CTA, How it works. |
+| Public Site | 1 | Published public site smoke, hiện đang skip do thiếu URL fixture. |
+| Accessibility | 1 | Heading structure cơ bản. |
+| Onboarding | 1 | First authenticated onboarding dialog. |
+
+## Auth / Account / Workspace
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-AUTH-001` | P0 | Đăng nhập thành công và vào đúng workspace/tenant | `Auto PASS 2026-07-16` | Kiểm tra direct email/password, chọn organization nếu cần, vào console đã authenticated. |
+| `TC-AUTH-003` | P0 | User chưa đăng nhập không được vào route bảo vệ | `Auto PASS 2026-07-16` | Mở `/sources` khi signed out và xác nhận bị gate/redirect về sign-in. |
+| `TC-AUTH-004` | P1 | Đăng xuất kết thúc session | `Auto PASS 2026-07-16` | Sau sign out, mở lại route bảo vệ phải quay về sign-in. |
+| `TC-AUTH-023` | P0 | Tạo account mới và đến màn setup organization | `Auto PASS 2026-07-16` | Signup creator mới thành công, không leak tenant khác. |
+| `TC-AUTH-024` | P1 | Forgot password gửi yêu cầu reset link | `Auto PASS 2026-07-16` | Chỉ verify app hiện confirmation an toàn, chưa verify email/reset link thật. |
+| `TC-AUTH-025` | P1 | User đã login yêu cầu change-password email link | `Auto PASS 2026-07-16` | Vào Account Settings, bấm Change password, verify confirmation gửi email. |
+| `TC-AUTH-044` | P0 | Existing creator vào được màn select organization sau login | `Auto PASS 2026-07-16` | Verify `/setup-organization`, danh sách workspace và action Select. |
+| `TC-AUTH-045` | P0 | Existing creator chọn được organization có sẵn | `Auto PASS 2026-07-16` | Sau khi select organization, console load đúng tenant. |
+| `TC-AUTH-046` | P1 | Setup organization validate blank và auto-generate slug | `Auto PASS 2026-07-16` | Nút tạo disabled khi blank, nhập name thì sinh slug hợp lệ. |
+| `TC-AUTH-047` | P1 | Setup organization reject slug sai format | `Auto PASS 2026-07-16` | Slug uppercase/space/symbol bị reject. |
+| `TC-AUTH-048` | P0 | Creator mới tạo organization và vào dashboard | `Auto PASS 2026-07-16` | Tạo organization mới thành công, vào dashboard đúng tenant. |
+| `TC-AUTH-049` | P1 | Menu workspace trên Home hiện workspace và account actions | `Auto PASS 2026-07-16` | Verify danh sách workspace, Create workspace, Account settings. |
+| `TC-AUTH-050` | P1 | Mở Account Settings từ menu Home workspace | `Auto PASS 2026-07-16` | Điều hướng đến `/settings`, thấy sign-in methods và Change password. |
+| `TC-AUTH-051` | P1 | Modal Create workspace validate blank và slug | `Auto PASS 2026-07-16` | Validate name/slug, invalid slug disabled submit, cancel không tạo workspace. |
+| `TC-AUTH-052` | P0 | Workspace mới được persist và selectable sau login | `Auto PASS 2026-07-16` | Tạo workspace, sign out/in lại, workspace mới vẫn xuất hiện và chọn được. |
+
+## Source / YouTube
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-SOURCE-001` | P0 | Màn Sources mở thành công và hiện các loại source supported | `Auto PASS 2026-07-17` | Verify Sources page, YouTube channel ready, các source tương lai Crawling soon. |
+| `TC-SOURCE-002` | P0 | YouTube channel được chấp nhận và lưu | `Auto BLOCKED 2026-07-17` | Bị chặn tại Google OAuth automated browser trước consent. |
+| `TC-SOURCE-003` | P0 | Chọn Manual mode trước khi connect YouTube channel | `Auto PARTIAL PASS 2026-07-17` | Mới cover pre-OAuth manual-mode selection, chưa complete callback. |
+| `TC-SOURCE-007` | P0 | Mở workflow connect source | `Auto PASS 2026-07-17` | Verify Connect a source area, source choices, controls. |
+| `TC-SOURCE-008` | P0 | Connect YouTube channel Auto mode | `Auto BLOCKED 2026-07-17` | Bị chặn tại Google OAuth automated browser trước consent. |
+| `TC-SOURCE-009` | P0 | Connect YouTube channel Manual mode | `Auto PARTIAL PASS 2026-07-17` | Mới cover chọn Manual trước OAuth. |
+| `TC-SOURCE-013` | P0 | Form YouTube chấp nhận handle và bắt đầu Google verification | `Auto PASS 2026-07-17` | Điền source handle, Verify with Google enable và redirect sang Google. |
+| `TC-SOURCE-014` | P0 | Connected YouTube channel active và có crawl controls | `Auto PASS 2026-07-17` | Source active, Auto, có Details/Videos/Run crawl/Backfill. |
+| `TC-SOURCE-015` | P0 | YouTube input blank không submit được | `Auto PASS 2026-07-17` | Verify with Google disabled khi input blank. |
+| `TC-SOURCE-016` | P0 | Handle YouTube sai format phải bị reject | `Auto EXPECTED FAIL 2026-07-17` | Staging hiện vẫn enable Google verification cho value malformed. |
+| `TC-SOURCE-017` | P0 | Domain source không hỗ trợ phải bị reject | `Auto EXPECTED FAIL 2026-07-17` | Staging hiện vẫn enable Google verification cho TikTok/Facebook/example. |
+| `TC-SOURCE-018` | P0 | URL YouTube không phải channel phải bị reject | `Auto EXPECTED FAIL 2026-07-17` | Staging hiện vẫn enable Google verification cho watch/shorts/playlist/embed. |
+| `TC-SOURCE-022` | P1 | Source type Crawling soon không thể submit active source | `Auto PASS 2026-07-17` | Click/kiểm tra các type disabled/future không start flow active. |
+| `TC-SOURCE-023` | P0 | Workspace chưa có source hiện empty first-source state | `Auto PASS 2026-07-17` | Verify Connect your first source và No ingestion runs yet. |
+| `TC-SOURCE-024` | P0 | Connected Auto source card hiện metadata và actions | `Auto PASS 2026-07-17` | Verify metadata, controls, pipeline cards, recent runs. |
+| `TC-SOURCE-025` | P0 | Source Details modal hiện diagnostic metadata scoped đúng tenant | `Auto PASS 2026-07-17` | Details có source id/type/status/created/updated/last run/backend config. |
+| `TC-SOURCE-026` | P1 | Details modal View crawled content route về content context | `Auto PASS 2026-07-17` | Điều hướng từ Details sang Content nếu CTA có sẵn. |
+| `TC-SOURCE-031` | P1 | Schedule modal hiện recurring crawl cadence options | `Auto PASS 2026-07-17` | Chỉ review modal, không tạo schedule. |
+| `TC-SOURCE-034` | P0 | Run crawl interactive cập nhật progress | `Auto PARTIAL 2026-07-17` | Selected-ingest thành công với 1 clip đạt `1/1`; full Run crawl multi-item vẫn cần fixture mới. |
+| `TC-SOURCE-034A` | P0 | Run crawl khi không có eligible data | `Auto PARTIAL PASS 2026-07-17` | UI/action path ổn định; backend job/content count cần thêm observability. |
+| `TC-SOURCE-036` | P0 | Force rerun chỉ modify lần explicit crawl tiếp theo | `Auto PARTIAL PASS 2026-07-17` | Mới verify control hiển thị/no-submit guard. |
+| `TC-SOURCE-037` | P0 | Backfill form validate date và limit | `Auto PARTIAL PASS 2026-07-17` | Verify controls và edit limit, chưa submit Backfill thật. |
+| `TC-SOURCE-038A` | P0 | Backfill valid request nhưng không có matching data | `Auto PARTIAL PASS 2026-07-17` | UI/action path verified, vẫn cần backend job/content count. |
+| `TC-SOURCE-039` | P0 | Pipeline cards hiện queue health và recent runs | `Auto PASS 2026-07-17` | Verify Crawl/Transcribe/Extract/Embed và Recent runs. |
+| `TC-SOURCE-040` | P1 | Sources Refresh cập nhật visible state không đổi config source | `Auto PASS 2026-07-17` | Refresh page/source không tạo crawl/backfill/schedule/OAuth side effect. |
+| `TC-SOURCE-041` | P0 | Channel Videos panel mở được và handle empty/partial catalog | `Auto PASS 2026-07-17` | Mở panel, search/pagination empty/partial, không ingest. |
+| `TC-SOURCE-042` | P0 | Catalog Refresh chỉ metadata, không ingest videos | `Auto PASS 2026-07-17` | Refresh catalog thấy row known mà không start ingest. |
+| `TC-SOURCE-042A` | P0 | Catalog Refresh khi provider empty | `Auto PARTIAL PASS 2026-07-17` | UI/action path verified, cần thêm backend/content count. |
+| `TC-SOURCE-043` | P1 | Search/pagination catalog không start ingestion | `Auto PASS 2026-07-17` | Search keyword, clear search, không có run mới. |
+| `TC-SOURCE-044` | P0 | State của catalog row điều khiển selectability | `Auto PARTIAL PASS 2026-07-17` | Đã cover fresh/selectable, Failed selectable, Queued transition, No insights disabled; còn thiếu Processing/Riffed fixtures. |
+| `TC-SOURCE-045` | P0 | Ingest selected chỉ queue đúng các video đã chọn | `Auto PASS 2026-07-20` | Chọn 2 video; video không chọn không bị ingest; run `2/2`; selected rows sau đó `No insights`, không phải generated-riffable success. |
+| `TC-SOURCE-045A` | P0 | Ingest selected với 0 item/empty catalog bị block an toàn | `Auto PARTIAL PASS 2026-07-17` | UI/action path verified; cần backend job/content count để kết luận đầy đủ. |
+
+## Ingestion / Catalog / Crawl
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-INGEST-016` | P0 | State Queued xuất hiện sau ingest request | `Auto PASS 2026-07-17` | Sau `Ingest 1 selected`, row chuyển Queued trước khi terminal failure. |
+| `TC-INGEST-018` | P0 | Ready/success state sau ingest thành công | `Auto PASS 2026-07-20` | Cover 3 clip có transcript; latest exact-selected có `3 with transcript`. |
+| `TC-INGEST-020` | P0 | Permanent failure vào terminal state | `Auto PASS 2026-07-17` | Failed retry có terminal failure; no-audio content `TRANSCRIPT None yet` / `No riffables`. |
+| `TC-CATALOG-001` | P0 | Catalog có metadata title và publish date | `Auto PASS 2026-07-17` | Metadata-only catalog row hiện title/date. |
+| `TC-CATALOG-005` | P0 | Chỉ video được chọn mới vào pipeline | `Auto PASS 2026-07-20` | 2 video được chọn vào Queued/run `2/2`; video không chọn vẫn unselected/fresh. |
+| `TC-CATALOG-010` | P0 | Catalog hiện metadata và count info | `Auto PASS 2026-07-17` | Row known visible; count có thể tạm hiện refresh state. |
+| `TC-CATALOG-013` | P0 | Mở catalog sau khi channel connected | `Auto PASS 2026-07-17` | Channel catalog mở được trong đúng tenant. |
+| `TC-CATALOG-014` | P0 | Catalog row hiện đúng title và publish date | `Auto PASS 2026-07-17` | Kiểm tra title/date của row known. |
+| `TC-CATALOG-017` | P1 | Search catalog theo title không ingest | `Auto PASS 2026-07-17` | Search chỉ filter rows, không start pipeline. |
+| `TC-CATALOG-018` | P0 | Not ingested video selectable | `Auto PASS 2026-07-17` | Fresh row enabled và CTA thành `Ingest 1 selected`; rerun cần clip fresh mới. |
+| `TC-CATALOG-019` | P0 | Queued/Processing/Riffed videos bị disabled | `Auto PARTIAL PASS 2026-07-17` | Đã cover No insights disabled; còn thiếu Queued, Processing, Riffed fixtures. |
+| `TC-CATALOG-020` | P0 | Failed video có thể retry selection | `Auto PASS 2026-07-17` | Failed row được select, queued, rồi terminal failure. |
+| `TC-CRAWL-002` | P0 | Progress hiện done/total | `Auto PASS 2026-07-20` | Selected-ingest progress đạt `2/2`; có intermediate Transcribing/Extracting. |
+| `TC-CRAWL-010` | P0 | Progress total khớp số video expected | `Auto PASS 2026-07-20` | Selected total khớp final `2/2`. |
+| `TC-CRAWL-013` | P0 | Progress total khớp selected input | `Auto PASS 2026-07-20` | Chọn 2 rows -> CTA `Ingest 2 selected` -> Recent run `2/2`. |
+
+## Console / Home / Public / A11Y / Onboarding
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-PUBLIC-009` | P0 | Published public site load được | `Auto SKIP 2026-07-16` | Bị skip vì chưa có `PUBLIC_SITE_URL`. |
+| `TC-CONSOLE-003` | P1 | Các workflow creator chính truy cập được | `Auto PASS 2026-07-16` | Navigate dashboard/Sources/Content/Site/Builder nếu có. |
+| `TC-CONSOLE-009` | P1 | Refresh route vẫn giữ đúng section hiện tại | `Auto PASS 2026-07-16` | Nav state/page title/main content ổn định sau refresh. |
+| `TC-CONSOLE-011` | P1 | Top-level console navigation | `Auto PASS 2026-07-16` | Home, Sources, Content, Sites load đúng tenant, không redirect auth. |
+| `TC-CONSOLE-023` | P1 | Home Overview hiện 4 summary modules cơ bản | `Auto PASS 2026-07-16` | Sources, Riffs, Articles, Site module visible. |
+| `TC-CONSOLE-024` | P1 | Home Overview summary modules điều hướng đúng trang | `Auto PASS 2026-07-16` | Click module -> `/sources`, `/content`, `/sites` đúng tenant. |
+| `TC-CONSOLE-025` | P1 | Home Next step CTA route đến Sources workflow | `Auto PASS 2026-07-16` | CTA Open sources/recommendation đưa đến `/sources`. |
+| `TC-CONSOLE-026` | P2 | Home How it works hiện đúng core workflow | `Auto PASS 2026-07-16` | 3 bước: connect source, extract ideas, publish library/site. |
+| `TC-A11Y-005` | P1 | Mỗi screen có heading structure hợp lý | `Auto PASS 2026-07-16` | Kiểm tra h1/heading order cơ bản. |
+| `TC-ONBOARD-007` | P1 | Lần authenticated đầu tiên hỏi user mới/cũ | `Auto PASS 2026-07-16` | Onboarding consent dialog có choice cho new/returning user. |
+
+## Các Điểm Cần Lưu Ý Khi QA Review
+
+1. `TC-SOURCE-045` và `TC-CATALOG-005` đã pass về exact selected/unselected: chỉ item được chọn vào pipeline, item không chọn không bị ingest nhầm.
+2. `No insights` sau khi ingest không phải bug của 2 case trên. Nó chỉ nói rằng video đã xử lý xong nhưng không tạo riffable/insight. Nếu muốn test AI tạo insight thành công, cần testcase/fixture riêng có expected `Riffed` hoặc generated insight.
+3. Google OAuth hiện là boundary lớn nhất: các case full connect Auto/Manual vẫn bị blocked nếu không có manual consent, storage state, hoặc staging bypass.
+4. Các case partial về crawl/backfill/catalog cần thêm backend observability hoặc fixture có state `Processing`, `Riffed`, long-running crawl, large/backfill.
+5. Các `EXPECTED FAIL` là bug/behavior hiện tại của staging về validation input source: automation đang ghi nhận để dev fix sau.

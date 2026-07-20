@@ -55,6 +55,8 @@ The first smoke flow covers:
 | `TC-SOURCE-043`, `TC-CATALOG-017` | Populated catalog search filters known titles without ingest. |
 | `TC-SOURCE-044`, `TC-CATALOG-019`, `TC-CATALOG-020` | Catalog row state controls selectability for current Failed and No insights fixture rows. |
 | `TC-SOURCE-045`, `TC-INGEST-016`, `TC-INGEST-020`, `TC-CRAWL-013` | Failed catalog video retry queues one selected item, shows Queued, then surfaces terminal failure. |
+| `TC-INGEST-018`, `TC-CRAWL-013` | Successful audio clip content shows transcript after ingest. |
+| `TC-SOURCE-045`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-CRAWL-013`, `TC-INGEST-018` | Exact selected two-video ingest completed with `2/2` run total and transcript content. |
 | `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-INGEST-018` | Full populated Run crawl success contract. Current staging fails because the audio fixture returns provider `Video unavailable`. |
 
 ## Current Home Scope
@@ -117,10 +119,14 @@ SOURCE_CRAWL_MUTATION
 SOURCE_EXPECTED_VIDEO_COUNT
 SOURCE_CRAWL_AUDIO_TITLE
 SOURCE_CRAWL_SILENT_TITLE
+SOURCE_CRAWL_SUCCESS_TITLE
 SOURCE_CRAWL_AUDIO_EXPECTED_STATE
 SOURCE_CRAWL_SILENT_EXPECTED_STATE
 SOURCE_CRAWL_SEARCH_KEYWORD
 SOURCE_CRAWL_WAIT_MS
+SOURCE_EXACT_SELECTED_TITLES
+SOURCE_EXACT_SELECTED_EXPECTED_TOTAL
+SOURCE_EXACT_SELECTED_EXPECTED_TRANSCRIPT_COUNT
 ```
 
 The sign-in page also has a `Continue with Google` option, but this smoke suite prioritizes the direct email/password form submit. If a future account is routed through Google OAuth, Playwright may be blocked by Google's browser automation protections. In that case the authenticated smoke tests are skipped with an explicit reason. To run that OAuth variant, provide one of these:
@@ -269,6 +275,57 @@ Latest populated crawl-data staging check:
 ```
 
 The passing checks cover populated catalog metadata, catalog search, Failed/No insights selectability, selected Failed retry, queued state, terminal failure feedback, and no-audio/no-transcript content. The failing check is the full successful Run crawl contract: current staging showed latest run `0/1 · 1 failed` instead of the expected two-video success, and the audio fixture returned provider `Video unavailable`.
+
+Successful audio-content check:
+
+```powershell
+$env:SOURCE_CRAWL_DATA='true'
+npm run test:sources:crawl-success
+```
+
+Latest successful audio-content staging check:
+
+```text
+1 passed
+```
+
+This check uses `SOURCE_CRAWL_SUCCESS_TITLE`, currently `test 3`, and verifies the ingested content is visible with `TRANSCRIPT Available` and at least one item with transcript.
+
+Exact selected two-video check:
+
+```powershell
+$env:SOURCE_CRAWL_DATA='true'
+npm run test:sources:exact-selected
+```
+
+Latest exact selected staging check:
+
+```text
+1 passed
+```
+
+The fresh run selected the two newest eligible catalog rows, `chiếc đèn cuối phố` and `Video 1`, submitted `Ingest 2 selected`, and reached run total `2/2`. The repeatable automation check validates the completed state even after newer runs exist: a `2/2` recent run is present, `Video 1` has `TRANSCRIPT Available`, and the content list shows `3 with transcript`.
+
+Exact selected unselected-row guard:
+
+```powershell
+$env:SOURCE_CRAWL_DATA='true'
+$env:SOURCE_CRAWL_MUTATION='true'
+npm run test:sources:exact-selected-mutation
+```
+
+Latest unselected-row guard result:
+
+```text
+Visible in-app browser run passed
+Catalog: 8 videos
+Selected: video 5, video 4
+Unselected guard: Clip 3 remained fresh/selectable
+Recent run: 2/2
+Last error: None
+```
+
+Full `TC-SOURCE-045` exact selected/unselected coverage passed on 2026-07-20. The run selected `video 5` and `video 4`, submitted `Ingest 2 selected`, verified both selected rows moved to `Queued`, verified unselected `Clip 3` did not enter the pipeline, and confirmed Recent runs reached `2/2`. The selected rows later ended as `No insights`; that is acceptable for selection coverage, but it is not a generated-riffable success signal. Rerunning this mutating guard requires three new fresh selectable rows.
 
 Headed mode:
 

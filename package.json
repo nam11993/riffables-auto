@@ -14,6 +14,9 @@
     "test:sources:connected-no-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @connected-no-data --workers=1",
     "test:sources:action-no-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-action-no-data --workers=1",
     "test:sources:crawl-data": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-data --workers=1",
+    "test:sources:crawl-success": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-success --workers=1",
+    "test:sources:exact-selected": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-exact-selected --workers=1",
+    "test:sources:exact-selected-mutation": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-unselected-guard --workers=1",
     "source:oauth:manual": "powershell -ExecutionPolicy Bypass -File scripts/open-source-oauth-manual.ps1",
     "test:debug": "playwright test automation/tests/smoke --debug",
     "report": "playwright show-report"
