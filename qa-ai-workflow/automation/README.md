@@ -70,7 +70,44 @@ TC-CRAWL-013
 TC-INGEST-016
 TC-INGEST-018
 TC-INGEST-020
+TC-SEARCH-001
+TC-SEARCH-004
+TC-SEARCH-006
+TC-SEARCH-011
+TC-SEARCH-013
+TC-SEARCH-015
+TC-SEARCH-016
+TC-PUBLIC-001
+TC-PUBLIC-002
+TC-PUBLIC-003
+TC-PUBLIC-005
+TC-PUBLIC-007
 TC-PUBLIC-009
+TC-PUBLIC-010
+TC-PUBLIC-011
+TC-PUBLIC-014
+TC-PUBLIC-016
+TC-PUBLIC-022
+TC-PUBLIC-023
+TC-PUBLIC-024
+TC-CONSOLE-041
+TC-CONSOLE-042
+TC-CONSOLE-043
+TC-CONSOLE-044
+TC-CONSOLE-045
+TC-CONSOLE-046
+TC-CONSOLE-047
+TC-CONSOLE-048
+TC-BUILDER-020
+TC-BUILDER-021
+TC-BUILDER-022
+TC-BUILDER-023
+TC-BUILDER-024
+TC-BUILDER-025
+TC-BUILDER-026
+TC-BUILDER-027
+TC-BUILDER-029
+TC-BUILDER-030
 TC-A11Y-005
 TC-ONBOARD-007
 ```
@@ -164,6 +201,48 @@ Last error: None
 
 This completes full `TC-SOURCE-045` exact selected/unselected coverage for the current fixture. The selected rows later ended as `No insights`; that is acceptable for selection coverage, but it is not a generated-riffable success signal. Rerunning the mutating guard requires three new fresh selectable rows in the same catalog state.
 
+Latest public show-content run:
+
+```text
+npm run test:public
+9 Playwright tests
+7 passed
+2 skipped
+1 expected-fail
+0 unexpected failed
+```
+
+Pass coverage: Sunday public site load/refresh, library cards, keyword search, exact quoted search ranking, invalid public URL, and search boundary inputs.
+
+Skipped coverage:
+
+```text
+TC-PUBLIC-005 - current detail page has quote/source text but no clickable media timestamp affordance.
+TC-PUBLIC-002 / TC-PUBLIC-016 - missing Tenant B public URL and unique Tenant B label fixture.
+```
+
+Expected fail:
+
+```text
+TC-PUBLIC-014 - Sunday public page still exposes template/demo placeholder copy (`Sample Studio`, `demo show`, `Package preview`).
+```
+
+Latest Baohan site/editor run:
+
+```text
+npm run test:site
+11 Playwright checks
+7 passed
+2 failed
+2 skipped
+```
+
+Pass coverage: Baohan `/sites` manage/publish state, editor entry from `/sites`, authenticated editor context, editor refresh, Preview button, publish to `https://baohan.apps.riffables.com/`, invalid publish subdomain guard, layers/section selection, inspector tabs, and Assistant entrypoint.
+
+Failures: `TC-BUILDER-021` could not expose an editable text field after section selection, and `TC-BUILDER-029` / `TC-PUBLIC-023` failed because the Baohan public site still shows template placeholders and `/search?q=test` returns `No matches`.
+
+Skipped/blocked coverage: `TC-BUILDER-022` did not run in the final pass because the edit marker was not created, and lifecycle cases `TC-CONSOLE-044` to `TC-CONSOLE-048` still need exposed unpublish/delete controls or role fixtures.
+
 Automation flow mapping is documented in:
 
 ```text
@@ -173,6 +252,8 @@ qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
 qa-ai-workflow/automation/source-flow.md
+qa-ai-workflow/automation/public-site-flow.md
+qa-ai-workflow/automation/site-editor-flow.md
 ```
 
 Luu script automation hoac tai lieu huong dan automation.

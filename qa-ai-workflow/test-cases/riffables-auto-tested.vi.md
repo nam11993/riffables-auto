@@ -10,9 +10,9 @@ Nguồn gốc:
 | --- | --- |
 | File gốc | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
 | Phạm vi lọc | Các testcase có cột `Status` bắt đầu bằng `Auto` |
-| Tổng số testcase trong master | `362` |
-| Số testcase có automation status | `72` |
-| Ngày tổng hợp | `2026-07-20` |
+| Tổng số testcase trong master | `384` |
+| Số testcase có automation status | `109` |
+| Ngày tổng hợp | `2026-07-21` |
 
 Quy ước status:
 
@@ -23,19 +23,21 @@ Quy ước status:
 | `Auto PARTIAL` | Có bằng chứng automation một phần, nhưng chưa đủ điều kiện để pass một phần theo contract đầy đủ. |
 | `Auto BLOCKED` | Automation bị chặn bởi điều kiện ngoài hệ thống, ví dụ Google OAuth. |
 | `Auto EXPECTED FAIL` | Automation cố ý đánh dấu fail vì staging đang có bug/behavior chưa đúng. |
+| `Auto FAIL` | Automation đã chạy và kết quả không đạt expected result của testcase. |
 | `Auto SKIP` | Automation bị skip vì thiếu cấu hình hoặc fixture. |
 
 Tổng hợp nhanh:
 
 | Nhóm status | Số lượng |
 | --- | ---: |
-| PASS | 55 |
-| PARTIAL PASS | 10 |
+| PASS | 75 |
+| PARTIAL PASS | 15 |
 | PARTIAL | 1 |
-| BLOCKED | 2 |
-| EXPECTED FAIL | 3 |
-| SKIP | 1 |
-| Tổng | 72 |
+| BLOCKED | 7 |
+| EXPECTED FAIL | 4 |
+| FAIL | 4 |
+| SKIP | 3 |
+| Tổng | 109 |
 
 ## Tổng Hợp Theo Module
 
@@ -46,8 +48,10 @@ Tổng hợp nhanh:
 | Ingestion | 3 | Queued, ready/transcript coverage, permanent failure/no-transcript terminal state. |
 | Catalog | 9 | Metadata, exact selected ingest, search, selectability, failed retry. |
 | Crawl | 3 | Progress done/total và total khớp selected input. |
-| Console / Home | 7 | Core navigation, Home overview, summary modules, next-step CTA, How it works. |
-| Public Site | 1 | Published public site smoke, hiện đang skip do thiếu URL fixture. |
+| Console / Home / Sites | 15 | Core navigation, Home overview, summary modules, next-step CTA, How it works, Sites setup/lifecycle guards. |
+| Search | 7 | Keyword search, exact quoted search, result limit, empty/long input boundary. |
+| Public Site | 13 | Sunday public site load/search plus Baohan public-site publish/search fixture gates. |
+| Site Builder / Editor | 10 | Baohan editor chrome, preview, invalid publish guard, layers/inspector, Assistant entrypoint. |
 | Accessibility | 1 | Heading structure cơ bản. |
 | Onboarding | 1 | First authenticated onboarding dialog. |
 
@@ -128,11 +132,58 @@ Tổng hợp nhanh:
 | `TC-CRAWL-010` | P0 | Progress total khớp số video expected | `Auto PASS 2026-07-20` | Selected total khớp final `2/2`. |
 | `TC-CRAWL-013` | P0 | Progress total khớp selected input | `Auto PASS 2026-07-20` | Chọn 2 rows -> CTA `Ingest 2 selected` -> Recent run `2/2`. |
 
-## Console / Home / Public / A11Y / Onboarding
+## Public Site / Search
 
 | ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
 | --- | --- | --- | --- | --- |
-| `TC-PUBLIC-009` | P0 | Published public site load được | `Auto SKIP 2026-07-16` | Bị skip vì chưa có `PUBLIC_SITE_URL`. |
+| `TC-SEARCH-001` | P0 | Keyword search trả kết quả liên quan | `Auto PASS 2026-07-21` | Search `K-pop` trên Sunday public site trả kết quả `Fancams are an engine of K-pop virality`. |
+| `TC-SEARCH-004` | P0 | Exact wording được ưu tiên hơn kết quả semantic yếu hơn | `Auto PASS 2026-07-21` | Query quoted exact phrase đưa title exact lên kết quả đầu tiên. |
+| `TC-SEARCH-006` | P0 | Số lượng kết quả không vượt configured maximum | `Auto PASS 2026-07-21` | Tổng declared result của query `K-pop` nằm trong max automation `60`. |
+| `TC-SEARCH-011` | P0 | Keyword search trả insight match | `Auto PASS 2026-07-21` | Verify keyword `K-pop` trả đúng insight/card kỳ vọng trong tenant Sunday. |
+| `TC-SEARCH-013` | P0 | Exact quoted search ưu tiên exact wording | `Auto PASS 2026-07-21` | Query `"Fancams are an engine of K-pop virality"` trả exact title làm first riffable result. |
+| `TC-SEARCH-015` | P1 | Empty/whitespace search input được xử lý an toàn | `Auto PASS 2026-07-21` | Empty query hiện guidance, whitespace query hiện no-match/safe state, không crash. |
+| `TC-SEARCH-016` | P1 | Long search input được xử lý an toàn | `Auto PASS 2026-07-21` | Long repeated `K-pop` query không crash, không hiện internal error/stack trace. |
+| `TC-PUBLIC-001` | P0 | Public site load đúng audience interface của tenant | `Auto PASS 2026-07-21` | `https://sunday.apps.riffables.com/` load và refresh được, có context `Sunday Okay`. |
+| `TC-PUBLIC-002` | P0 | Unknown/incorrect tenant URL không lộ data tenant khác | `Auto SKIP 2026-07-21` | Đã có automation hook, nhưng cần `PUBLIC_TENANT_B_URL` và `PUBLIC_TENANT_B_UNIQUE_TEXT`. |
+| `TC-PUBLIC-003` | P0 | Public site hiển thị searchable insight library | `Auto PASS 2026-07-21` | `/library` có nhiều riff/source cards; `/search?q=K-pop` trả matching cards. |
+| `TC-PUBLIC-005` | P0 | Citation mở source media tại timestamp đúng | `Auto SKIP 2026-07-21` | Detail có quote/source text nhưng chưa có clickable media timestamp affordance để verify. |
+| `TC-PUBLIC-007` | P0 | Insight cards hiển thị mandatory fields ổn định | `Auto PASS 2026-07-21` | Card có source label, riff sequence, title, summary/snippet trước và sau search. |
+| `TC-PUBLIC-009` | P0 | Published public site load được | `Auto PASS 2026-07-21` | Case cũ hết skip vì đã có Sunday `PUBLIC_SITE_URL`. |
+| `TC-PUBLIC-010` | P0 | Invalid/unpublished public URL không lộ content | `Auto PASS 2026-07-21` | Invalid path trả `No published site was found here`, không render library cards. |
+| `TC-PUBLIC-011` | P0 | Public insight card có required fields | `Auto PASS 2026-07-21` | Nhiều cards trên `/library` có field chính ổn định. |
+| `TC-PUBLIC-014` | P0 | Public labels dùng data thật của creator/tenant | `Auto EXPECTED FAIL 2026-07-21` | Trang Sunday vẫn hiện placeholder/demo copy: `Sample Studio`, `demo show`, `Package preview`. |
+| `TC-PUBLIC-016` | P0 | Public labels tenant-scoped | `Auto SKIP 2026-07-21` | Cần Tenant B public URL và unique label fixture để verify đầy đủ. |
+| `TC-PUBLIC-022` | P0 | Baohan public site load sau khi publish từ editor | `Auto PASS 2026-07-21` | Đã publish và mở được `https://baohan.apps.riffables.com/`, không còn `NOT FOUND`. |
+| `TC-PUBLIC-023` | P0 | Baohan public library/search dùng đúng content Baohan | `Auto FAIL 2026-07-21` | Search `test` trên public Baohan trả `No matches`, chưa thấy content Baohan published/searchable. |
+| `TC-PUBLIC-024` | P0 | Baohan public site không lộ fixture Sunday | `Auto PARTIAL PASS 2026-07-21` | Public root không thấy `Sunday Okay`; chưa chạy đủ Sunday-only query list. |
+
+## Site Editor / Publish / Baohan
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-CONSOLE-041` | P0 | Màn Sites tạo/quản lý site Baohan | `Auto PASS 2026-07-21` | Site thật đã được tạo/publish; `/sites` hiện `Manage & publish`. |
+| `TC-CONSOLE-042` | P0 | Sites list/status tenant-scoped | `Auto PASS 2026-07-21` | `/sites` manage/publish state load đúng Baohan, không lộ fixture Sunday. |
+| `TC-CONSOLE-043` | P0 | Mở editor giữ đúng context Baohan | `Auto PASS 2026-07-21` | Click entrypoint từ `/sites`, vào `/sites/editor`, không redirect auth, refresh vẫn load editor. |
+| `TC-CONSOLE-044` | P0 | Unpublish Baohan site | `Auto BLOCKED 2026-07-21` | Mutation enabled nhưng UI hiện tại không expose control `Unpublish` để automation click. |
+| `TC-CONSOLE-045` | P0 | Republish Baohan unpublished site | `Auto BLOCKED 2026-07-21` | Phụ thuộc unpublish state; chưa có unpublished fixture/control. |
+| `TC-CONSOLE-046` | P1 | Discard draft changes | `Auto BLOCKED 2026-07-21` | Không thấy discard control; draft persistence fail riêng ở `TC-BUILDER-022`. |
+| `TC-CONSOLE-047` | P1 | Delete disposable Baohan site | `Auto BLOCKED 2026-07-21` | Không có disposable site/delete control; không xóa primary Baohan site. |
+| `TC-CONSOLE-048` | P0 | Role thấp không được mutate lifecycle | `Auto BLOCKED 2026-07-21` | Cần lower-privilege account/API fixture. |
+| `TC-BUILDER-020` | P0 | Baohan editor load đủ editor chrome | `Auto PASS 2026-07-21` | Verify Page sections, Section settings, Preview, Publish, Design, Media, Assistant, refresh. |
+| `TC-BUILDER-021` | P0 | Manual text edit update selected field | `Auto FAIL 2026-07-21` | Sau khi chọn section, editor vẫn báo `Select a section...`, không expose field editable cho automation. |
+| `TC-BUILDER-022` | P0 | Draft edit save và persist sau reload | `Auto FAIL 2026-07-21` | Marker QA bị revert về `A library of conversations` sau reload. |
+| `TC-BUILDER-023` | P0 | Preview mở được trước publish | `Auto PARTIAL PASS 2026-07-21` | Preview mở được, chưa test draft marker vs live site vì cần mutation/public URL. |
+| `TC-BUILDER-024` | P0 | Publish Baohan site với subdomain | `Auto PASS 2026-07-21` | Publish subdomain `baohan`, live URL load được. |
+| `TC-BUILDER-025` | P0 | Invalid publish subdomain bị block | `Auto PARTIAL PASS 2026-07-21` | Đã test value có space/special char; cần mở rộng thêm boundary values. |
+| `TC-BUILDER-026` | P1 | Chọn section từ layers panel | `Auto PASS 2026-07-21` | Click một section thật, inspector vẫn hiển thị. |
+| `TC-BUILDER-027` | P1 | Inspector tabs sau khi chọn section | `Auto PARTIAL PASS 2026-07-21` | Đã thấy `content/data/theme`; hover/focus highlight cần selector sâu hơn. |
+| `TC-BUILDER-029` | P0 | Catalog binding chỉ dùng Riffables của Baohan | `Auto FAIL 2026-07-21` | Public site vẫn hiện placeholder `Sample Studio`/`Local sample`, search `test` không ra content Baohan. |
+| `TC-BUILDER-030` | P0 | Assistant không auto-publish/mutate live site | `Auto PARTIAL PASS 2026-07-21` | Entry point Assistant mở được; prompt-level AI safety vẫn manual/gated. |
+
+## Console / Home / A11Y / Onboarding
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
 | `TC-CONSOLE-003` | P1 | Các workflow creator chính truy cập được | `Auto PASS 2026-07-16` | Navigate dashboard/Sources/Content/Site/Builder nếu có. |
 | `TC-CONSOLE-009` | P1 | Refresh route vẫn giữ đúng section hiện tại | `Auto PASS 2026-07-16` | Nav state/page title/main content ổn định sau refresh. |
 | `TC-CONSOLE-011` | P1 | Top-level console navigation | `Auto PASS 2026-07-16` | Home, Sources, Content, Sites load đúng tenant, không redirect auth. |
@@ -150,3 +201,6 @@ Tổng hợp nhanh:
 3. Google OAuth hiện là boundary lớn nhất: các case full connect Auto/Manual vẫn bị blocked nếu không có manual consent, storage state, hoặc staging bypass.
 4. Các case partial về crawl/backfill/catalog cần thêm backend observability hoặc fixture có state `Processing`, `Riffed`, long-running crawl, large/backfill.
 5. Các `EXPECTED FAIL` là bug/behavior hiện tại của staging về validation input source: automation đang ghi nhận để dev fix sau.
+6. Public site batch đã chuyển `TC-PUBLIC-009` từ skip sang pass nhờ URL Sunday thật.
+7. `TC-PUBLIC-014` đang expected-fail vì public page còn hiện placeholder/demo labels; đây là gap cần dev/product xác nhận hoặc fix.
+8. `TC-PUBLIC-005`, `TC-PUBLIC-002`, `TC-PUBLIC-016` chưa pass vì thiếu clickable citation timestamp hoặc Tenant B public fixture.
