@@ -10,8 +10,8 @@ Nguồn gốc:
 | --- | --- |
 | File gốc | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
 | Phạm vi lọc | Các testcase có cột `Status` bắt đầu bằng `Auto` |
-| Tổng số testcase trong master | `384` |
-| Số testcase có automation status | `109` |
+| Tổng số testcase trong master | `400` |
+| Số testcase có automation status | `146` |
 | Ngày tổng hợp | `2026-07-21` |
 
 Quy ước status:
@@ -51,7 +51,7 @@ Tổng hợp nhanh:
 | Console / Home / Sites | 15 | Core navigation, Home overview, summary modules, next-step CTA, How it works, Sites setup/lifecycle guards. |
 | Search | 7 | Keyword search, exact quoted search, result limit, empty/long input boundary. |
 | Public Site | 13 | Sunday public site load/search plus Baohan public-site publish/search fixture gates. |
-| Site Builder / Editor | 10 | Baohan editor chrome, preview, invalid publish guard, layers/inspector, Assistant entrypoint. |
+| Site Builder / Editor | 22 | Baohan editor chrome, preview, invalid publish guard, layers/inspector, Assistant entrypoint, content edit, draft persistence expected-fail, viewport toolbar, Add library, side panels, section actions, theme, media, help tour, icon target size. |
 | Accessibility | 1 | Heading structure cơ bản. |
 | Onboarding | 1 | First authenticated onboarding dialog. |
 
@@ -164,14 +164,14 @@ Tổng hợp nhanh:
 | `TC-CONSOLE-041` | P0 | Màn Sites tạo/quản lý site Baohan | `Auto PASS 2026-07-21` | Site thật đã được tạo/publish; `/sites` hiện `Manage & publish`. |
 | `TC-CONSOLE-042` | P0 | Sites list/status tenant-scoped | `Auto PASS 2026-07-21` | `/sites` manage/publish state load đúng Baohan, không lộ fixture Sunday. |
 | `TC-CONSOLE-043` | P0 | Mở editor giữ đúng context Baohan | `Auto PASS 2026-07-21` | Click entrypoint từ `/sites`, vào `/sites/editor`, không redirect auth, refresh vẫn load editor. |
-| `TC-CONSOLE-044` | P0 | Unpublish Baohan site | `Auto BLOCKED 2026-07-21` | Mutation enabled nhưng UI hiện tại không expose control `Unpublish` để automation click. |
-| `TC-CONSOLE-045` | P0 | Republish Baohan unpublished site | `Auto BLOCKED 2026-07-21` | Phụ thuộc unpublish state; chưa có unpublished fixture/control. |
-| `TC-CONSOLE-046` | P1 | Discard draft changes | `Auto BLOCKED 2026-07-21` | Không thấy discard control; draft persistence fail riêng ở `TC-BUILDER-022`. |
-| `TC-CONSOLE-047` | P1 | Delete disposable Baohan site | `Auto BLOCKED 2026-07-21` | Không có disposable site/delete control; không xóa primary Baohan site. |
-| `TC-CONSOLE-048` | P0 | Role thấp không được mutate lifecycle | `Auto BLOCKED 2026-07-21` | Cần lower-privilege account/API fixture. |
+| `TC-CONSOLE-044` | P0 | Unpublish Baohan site | `Auto PASS 2026-07-22` | `/sites` có nút `Unpublish`; automation confirm modal, site chuyển `Offline`, public URL trả `NOT FOUND`/không có published site. |
+| `TC-CONSOLE-045` | P0 | Republish Baohan unpublished site | `Auto PASS 2026-07-22` | Mở editor từ state offline, click `Publish`, confirm domain `baohan`, site live lại đúng URL `https://baohan.apps.riffables.com/`. |
+| `TC-CONSOLE-046` | P1 | Discard draft changes trong editor | `Auto PASS 2026-07-22` | Vào `Open editor`, tạo draft change bằng `Duplicate section`, thấy nút `Discard`, confirm `Discard changes` thì draft revert về live snapshot và public URL vẫn live. |
+| `TC-CONSOLE-047` | P1 | Delete current site rồi recreate từ Template | `Auto PASS 2026-07-22` | Cancel delete giữ site live; confirm `Delete site` xóa current site, URL cũ trả no published site, sau đó dùng Template/editor publish lại `baohan`. |
+| `TC-CONSOLE-048` | P0 | Role thấp không được mutate lifecycle | `Auto BLOCKED 2026-07-22` | Đây là case security hợp lệ; cần account Baohan role thấp hoặc API fixture để chạy auto. |
 | `TC-BUILDER-020` | P0 | Baohan editor load đủ editor chrome | `Auto PASS 2026-07-21` | Verify Page sections, Section settings, Preview, Publish, Design, Media, Assistant, refresh. |
-| `TC-BUILDER-021` | P0 | Manual text edit update selected field | `Auto FAIL 2026-07-21` | Sau khi chọn section, editor vẫn báo `Select a section...`, không expose field editable cho automation. |
-| `TC-BUILDER-022` | P0 | Draft edit save và persist sau reload | `Auto FAIL 2026-07-21` | Marker QA bị revert về `A library of conversations` sau reload. |
+| `TC-BUILDER-021` | P0 | Manual text edit update selected field | `Auto PASS 2026-07-22` | Chọn Hero section, field text editable nhận marker QA, `Discard` xuất hiện và cleanup được draft. |
+| `TC-BUILDER-022` | P0 | Draft edit save và persist sau reload | `Auto EXPECTED FAIL 2026-07-22` | Editor nhận field edit trước reload nhưng sau reload value revert về `A library of conversations`; đây là bug hiện tại được đánh expected fail. |
 | `TC-BUILDER-023` | P0 | Preview mở được trước publish | `Auto PARTIAL PASS 2026-07-21` | Preview mở được, chưa test draft marker vs live site vì cần mutation/public URL. |
 | `TC-BUILDER-024` | P0 | Publish Baohan site với subdomain | `Auto PASS 2026-07-21` | Publish subdomain `baohan`, live URL load được. |
 | `TC-BUILDER-025` | P0 | Invalid publish subdomain bị block | `Auto PARTIAL PASS 2026-07-21` | Đã test value có space/special char; cần mở rộng thêm boundary values. |
@@ -179,6 +179,18 @@ Tổng hợp nhanh:
 | `TC-BUILDER-027` | P1 | Inspector tabs sau khi chọn section | `Auto PARTIAL PASS 2026-07-21` | Đã thấy `content/data/theme`; hover/focus highlight cần selector sâu hơn. |
 | `TC-BUILDER-029` | P0 | Catalog binding chỉ dùng Riffables của Baohan | `Auto FAIL 2026-07-21` | Public site vẫn hiện placeholder `Sample Studio`/`Local sample`, search `test` không ra content Baohan. |
 | `TC-BUILDER-030` | P0 | Assistant không auto-publish/mutate live site | `Auto PARTIAL PASS 2026-07-21` | Entry point Assistant mở được; prompt-level AI safety vẫn manual/gated. |
+| `TC-BUILDER-031` | P1 | Toolbar viewport không tạo draft | `Auto PASS 2026-07-22` | Click `Tablet`, `Mobile`, `Desktop`, `Fit View`, `Free Drag Mode`; editor vẫn ổn định, không xuất hiện `Discard`, rồi tắt lại `Free Drag Mode` để cleanup state. |
+| `TC-BUILDER-032` | P1 | Add panel hiển thị section/element library | `Auto PASS 2026-07-22` | `Add` mở danh sách sections và elements: Hero, CTA, Content Cards, Heading, Text, Image, Collection... mà không mutate draft. |
+| `TC-BUILDER-033` | P1 | Design/Media/Assistant panels | `Auto PASS 2026-07-22` | Design quay về page sections, Media có Upload/empty library, Assistant có diff-preview copy và `Send` disabled khi chưa nhập. |
+| `TC-BUILDER-034` | P0 | Duplicate/Undo/Redo/Delete/Discard section | `Auto PASS 2026-07-22` | Duplicate tạo draft, Undo/Redo đổi đúng state, Delete section đưa count về baseline, Discard cleanup sạch draft. |
+| `TC-BUILDER-035` | P1 | Icon buttons đạt target size tối thiểu | `Auto PASS 2026-07-22` | Đo toolbar, rail, help, duplicate/delete section controls; không có button nào dưới 24x24px. |
+| `TC-BUILDER-036` | P0 | Content tab hiển thị field editable | `Auto PASS 2026-07-22` | Chọn Hero section và verify Content tab có inputs/textareas/selects cho Eyebrow, Headline, Tagline, CTA... |
+| `TC-BUILDER-037` | P1 | Data tab hướng dẫn binding source | `Auto PASS 2026-07-22` | Data tab hiển thị workflow add Collection/pick Source/bind field và source thật `riffables`, `riffs`, `articles`. |
+| `TC-BUILDER-038` | P1 | Theme tab có style controls hợp lệ | `Auto PASS 2026-07-22` | Verify color swatch/text field, spacing, font controls; không expose arbitrary style editor. |
+| `TC-BUILDER-039` | P1 | Theme edit tạo draft và discard cleanup | `Auto PASS 2026-07-22` | Sửa tạm `Page background`, thấy `Discard`, confirm cleanup draft thành công. |
+| `TC-BUILDER-040` | P1 | Media panel upload constraints | `Auto PASS 2026-07-22` | Media panel có Upload/empty state; file input accept PNG/JPEG/WebP/GIF và multiple upload. |
+| `TC-BUILDER-041` | P1 | Assistant prompt enable Send | `Auto PASS 2026-07-22` | Empty prompt thì `Send` disabled; nhập prompt thì `Send` enabled, chưa tạo draft khi chưa gửi. |
+| `TC-BUILDER-042` | P1 | Help tour editor mở và điều hướng được | `Auto PASS 2026-07-22` | Help tour mở step `1 of 6`, Next sang `2 of 6`, Back về `1 of 6`, đóng được. |
 
 ## Console / Home / A11Y / Onboarding
 

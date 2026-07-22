@@ -13,9 +13,9 @@ qa-ai-workflow/test-cases/riffables-master.test-cases.md
 Current status:
 
 - 74/74 included requirement IDs are covered.
-- 384 draft test cases.
+- 400 draft test cases.
 - Foundation smoke cases cover authentication, protected routes, workspace context, password visibility, Google OAuth start/error states, and YouTube source connection.
-- All 384 cases use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
+- All 400 cases use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
 - Acceptance-criteria execution cases add missing depth from the first draft.
 - The latest update adds focused coverage for Baohan site creation, editor editing, publish lifecycle, Baohan public-site verification, site-editor Assistant diffs, onboarding consent, console backend API wiring, public labels, and audience chat.
 

@@ -104,16 +104,32 @@ The first smoke flow covers:
 | `TC-CONSOLE-041` | Baohan site exists and `/sites` loads the `Manage & publish` state. |
 | `TC-CONSOLE-042` | Baohan manage/publish state is tenant scoped and no Sunday fixture data is visible. |
 | `TC-CONSOLE-043`, `TC-BUILDER-020` | Opening the Baohan editor from `/sites` keeps authenticated context, loads Page sections, Section settings, Preview, Publish, and survives refresh. |
-| `TC-BUILDER-021` | Fails on the current final run because the editor does not expose an editable field after section selection. |
-| `TC-BUILDER-022` | Fails/blocked by draft persistence: a marker previously reverted after reload; final run skipped persistence because edit setup failed. |
+| `TC-BUILDER-021` | Content field edit accepts a marker, creates draft state, and Discard cleans the draft. |
+| `TC-BUILDER-022` | Expected-fail: content edit is accepted before reload but still reverts after reload in the current UI. |
 | `TC-BUILDER-023` | Editor Preview opens from the Baohan editor without publishing. Draft-vs-live marker assertions need a controlled draft mutation fixture. |
 | `TC-BUILDER-024`, `TC-PUBLIC-022` | Baohan site publishes and `https://baohan.apps.riffables.com/` loads. |
 | `TC-BUILDER-025` | Invalid publish subdomain with spaces/special characters is rejected or kept non-live. |
-| `TC-CONSOLE-044` to `TC-CONSOLE-048` | Blocked until lifecycle controls or a lower-privilege/disposable fixture are available. |
+| `TC-CONSOLE-044`, `TC-CONSOLE-045` | Pass. `/sites` exposes `Unpublish`; automation confirmed the site goes offline and then republished the same `baohan.apps.riffables.com` URL from the editor. |
+| `TC-CONSOLE-046` | Pass. Editor `Discard` appears after an unpublished draft change, confirmation reverts the draft to the live snapshot, and the live public site remains published. |
+| `TC-CONSOLE-047` | Pass. `Delete` modal cancels safely, confirm-delete removes the current site, the old public URL returns no published site, and Template/editor recreates and republishes the configured site. |
+| `TC-CONSOLE-048` | Skipped/blocked until a lower-privilege Baohan role fixture is available. |
 | `TC-BUILDER-026`, `TC-BUILDER-027` | Layers/section selection and inspector tabs are visible and usable for the Baohan editor. |
 | `TC-BUILDER-029`, `TC-PUBLIC-023` | Fail because the published public site still shows template placeholders and `/search?q=test` returns `No matches`. |
 | `TC-PUBLIC-024` | Partial pass for root-level Sunday probe; full Sunday-only query coverage remains. |
 | `TC-BUILDER-030` | Assistant entrypoint opens without auto-publish. Prompt-level safety remains manual until QA approves an AI mutation fixture. |
+| `TC-BUILDER-031` | Viewport toolbar controls `Tablet`, `Mobile`, `Desktop`, `Fit View`, and `Free Drag Mode` are usable without creating draft state, then clean up view mode. |
+| `TC-BUILDER-032` | Add panel exposes section and element libraries without mutating the draft. |
+| `TC-BUILDER-033` | Design, Media, and Assistant side panels expose the expected empty/input states. |
+| `TC-BUILDER-034` | Section duplicate, undo, redo, delete, and discard are reversible and clean up draft state. |
+| `TC-BUILDER-035` | Editor toolbar, rail, help, duplicate, and delete icon controls meet the 24px minimum pointer target check. |
+| `TC-BUILDER-036` | Selected section Content tab exposes editable fields and structured controls. |
+| `TC-BUILDER-037` | Selected section Data tab explains binding workflow and real collections. |
+| `TC-BUILDER-038` | Selected section Theme tab exposes allowed color, spacing, and font controls. |
+| `TC-BUILDER-039` | Theme field edit creates draft state and Discard cleans it up. |
+| `TC-BUILDER-040` | Media panel exposes upload empty state and image file constraints. |
+| `TC-BUILDER-041` | Assistant prompt input enables Send without creating a draft before submission. |
+| `TC-BUILDER-042` | Editor Help tour opens, navigates Next/Back, and closes. |
+| `TC-BUILDER-043` to `TC-BUILDER-046` | Manual/gated coverage for drag/drop section insertion, element insertion, valid media upload/application, and invalid media validation. |
 
 ## Setup
 
@@ -280,13 +296,22 @@ npm run test:site
 Latest Baohan site/editor staging check:
 
 ```text
-11 Playwright checks
-7 passed
-2 failed
-2 skipped
+playwright test automation/tests/console/sites-editor.spec.ts --grep "TC-BUILDER-" --workers=1
+21 Playwright checks
+20 passed
+1 skipped/guarded
 ```
 
-The live Baohan public URL is `https://baohan.apps.riffables.com/`. Current failures are editor field editing/persistence and Baohan public content/search binding.
+The live Baohan public URL is `https://baohan.apps.riffables.com/`. `TC-BUILDER-022` is tracked as an expected-fail for the current draft persistence bug after reload. Baohan public content/search binding remains a product/data issue in `TC-BUILDER-029` / `TC-PUBLIC-023`.
+
+Latest detailed editor re-check:
+
+```text
+playwright test automation/tests/console/sites-editor.spec.ts --grep "TC-BUILDER-" --workers=1
+21 Playwright checks
+20 passed
+1 skipped/guarded
+```
 
 Latest source staging check with no-source workspace fixture:
 

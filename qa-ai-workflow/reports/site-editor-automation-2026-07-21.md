@@ -50,16 +50,67 @@ SITE_LIFECYCLE_MUTATION_ENABLED=true
 
 | Test case(s) | Reason |
 | --- | --- |
-| `TC-BUILDER-021` | After selecting a section, the editor still showed `Select a section...`; no editable text field was exposed in the final run. |
-| `TC-BUILDER-022` | In an earlier mutation run, a draft marker was accepted before reload but reverted to `A library of conversations` after reload. In the final run it was skipped because `TC-BUILDER-021` could not create the marker. |
 | `TC-BUILDER-029`, `TC-PUBLIC-023` | Public Baohan site still shows placeholder content such as `Sample Studio`/`Local sample`, and `/search?q=test` returns `No matches`. |
 
 ## Skipped Or Blocked
 
 | Test case(s) | Reason |
 | --- | --- |
-| `TC-CONSOLE-044` to `TC-CONSOLE-048` | Lifecycle mutation was enabled, but the current UI did not expose unpublish/delete controls and no lower-privilege fixture is available. |
+| `TC-CONSOLE-048` | No lower-privilege Baohan role fixture is available for UI/API authorization verification. |
 | `TC-PUBLIC-024` | Root-level negative probe for `Sunday Okay` passed, but full Sunday-only query coverage was not executed. |
+
+## Lifecycle Re-check - 2026-07-22
+
+Command:
+
+```powershell
+playwright test console/sites-editor.spec.ts --grep "TC-CONSOLE-04[4-8]" --workers=1
+```
+
+Result:
+
+```text
+4 Playwright checks
+3 passed
+1 skipped
+```
+
+| Test case(s) | Result |
+| --- | --- |
+| `TC-CONSOLE-044`, `TC-CONSOLE-045` | Pass. `/sites` exposes `Unpublish`; automation confirmed the site becomes offline, the public URL returns `NOT FOUND`/no published site, then publishing from the editor restores the same `baohan.apps.riffables.com` URL. |
+| `TC-CONSOLE-046` | Pass. `Discard` appears in the editor after an unpublished draft change is created by duplicating a section; confirming `Discard changes` reverts the draft to the live snapshot and keeps the public URL published. |
+| `TC-CONSOLE-047` | Pass. Delete cancel preserves the site; confirm-delete removes the current site, the old public URL returns no published site, and Template/editor recreates and republishes the configured site. |
+| `TC-CONSOLE-048` | Skipped/blocked. Requires a lower-privilege Baohan role fixture. |
+
+Requirement note: PRD issue `#54` and `REQ-CONSOLE-012` define lifecycle actions on the current site, not on multiple simultaneous template cards. The current UI exposes one `Your audience site` card; `Template`/`New Template` routes to `/sites/editor` and behaves as the path to start or replace/recreate that current site.
+
+## Detailed Editor Re-check - 2026-07-22
+
+Command:
+
+```powershell
+playwright test automation/tests/console/sites-editor.spec.ts --grep "TC-BUILDER-" --workers=1
+```
+
+Result:
+
+```text
+21 Playwright checks
+20 passed
+1 skipped/guarded
+```
+
+| Test case(s) | Result |
+| --- | --- |
+| `TC-BUILDER-021` | Pass. Selected Hero content field accepted a QA marker, created draft state, and Discard cleaned the draft. |
+| `TC-BUILDER-022` | Expected fail. The field edit is accepted before reload but reverts to `A library of conversations` after reload in the current UI. |
+| `TC-BUILDER-031` | Pass. Viewport toolbar controls `Tablet`, `Mobile`, `Desktop`, `Fit View`, and `Free Drag Mode` stayed usable, did not create draft state, and cleaned up view mode. |
+| `TC-BUILDER-032` | Pass. Add panel exposed supported sections and elements without mutating the draft. |
+| `TC-BUILDER-033` | Pass. Design, Media, and Assistant panels exposed expected states, including Upload/empty media library and disabled Assistant Send with no input. |
+| `TC-BUILDER-034` | Pass. Section duplicate, undo, redo, delete, and discard were reversible and cleaned up draft state. |
+| `TC-BUILDER-035` | Pass. Toolbar, rail, help, duplicate, and delete controls satisfied the 24px target-size check. |
+| `TC-BUILDER-036` to `TC-BUILDER-042` | Pass. Content, Data, Theme, Media upload constraints, Assistant prompt input, and Help tour checks passed. |
+| `TC-BUILDER-043` to `TC-BUILDER-046` | Manual/gated. Drag/drop insertion and real media upload validation need stable fixtures/selectors. |
 
 ## Notes
 

@@ -230,18 +230,19 @@ TC-PUBLIC-014 - Sunday public page still exposes template/demo placeholder copy 
 Latest Baohan site/editor run:
 
 ```text
-npm run test:site
-11 Playwright checks
-7 passed
-2 failed
-2 skipped
+playwright test automation/tests/console/sites-editor.spec.ts --grep "TC-BUILDER-" --workers=1
+21 Playwright checks
+20 passed
+1 skipped/guarded
 ```
 
-Pass coverage: Baohan `/sites` manage/publish state, editor entry from `/sites`, authenticated editor context, editor refresh, Preview button, publish to `https://baohan.apps.riffables.com/`, invalid publish subdomain guard, layers/section selection, inspector tabs, and Assistant entrypoint.
+Pass coverage: Baohan `/sites` manage/publish state, editor entry from `/sites`, authenticated editor context, editor refresh, Preview button, publish to `https://baohan.apps.riffables.com/`, invalid publish subdomain guard, layers/section selection, inspector tabs, Content field edit/discard, detailed Content/Data/Theme/Media/Assistant/Help surfaces, and Assistant entrypoint.
 
-Failures: `TC-BUILDER-021` could not expose an editable text field after section selection, and `TC-BUILDER-029` / `TC-PUBLIC-023` failed because the Baohan public site still shows template placeholders and `/search?q=test` returns `No matches`.
+Failures: `TC-BUILDER-029` / `TC-PUBLIC-023` failed because the Baohan public site still shows template placeholders and `/search?q=test` returns `No matches`.
 
-Skipped/blocked coverage: `TC-BUILDER-022` did not run in the final pass because the edit marker was not created, and lifecycle cases `TC-CONSOLE-044` to `TC-CONSOLE-048` still need exposed unpublish/delete controls or role fixtures.
+Skipped/blocked coverage: `TC-BUILDER-022` is now an expected-fail for the current draft persistence bug: the editor accepts the edit before reload but reverts after reload. Lifecycle was re-checked on 2026-07-22: `TC-CONSOLE-044`/`TC-CONSOLE-045` pass, `TC-CONSOLE-046` pass for editor Discard, `TC-CONSOLE-047` pass for delete/recreate, and `TC-CONSOLE-048` still needs a lower-privilege role fixture.
+
+Detailed editor coverage was re-checked on 2026-07-22: `TC-BUILDER-021` to `TC-BUILDER-042` ran with `20 passed, 1 skipped/guarded` for the `TC-BUILDER-` suite. `TC-BUILDER-036` to `TC-BUILDER-042` add Content, Data, Theme, Media, Assistant input, and Help tour coverage.
 
 Automation flow mapping is documented in:
 
