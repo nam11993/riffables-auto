@@ -10,11 +10,19 @@ Current automated coverage:
 
 ```text
 TC-AUTH-001
+TC-AUTH-002
 TC-AUTH-003
 TC-AUTH-004
+TC-AUTH-008
+TC-AUTH-009
+TC-AUTH-013
+TC-AUTH-014
+TC-AUTH-015
 TC-AUTH-023
 TC-AUTH-024
 TC-AUTH-025
+TC-AUTH-034
+TC-AUTH-043
 TC-AUTH-044
 TC-AUTH-045
 TC-AUTH-046
@@ -139,6 +147,16 @@ TC-SOURCE-018
 
 These represent current source-input validation gaps on staging.
 
+Latest auth negative/password run:
+
+```text
+pnpm run test:auth:negative -- --reporter=line
+7 Playwright checks
+7 passed
+```
+
+Pass coverage: wrong-password rejection, unknown-email login rejection, blank email/password submit guards, password show/hide behavior, password reveal reset after returning to email step, password toggle accessibility, forgot-password unknown email anti-enumeration copy, and signed-out `/settings` protection.
+
 Latest connected-source no-data run:
 
 ```text
@@ -249,6 +267,7 @@ Automation flow mapping is documented in:
 ```text
 qa-ai-workflow/automation/smoke-flow.md
 qa-ai-workflow/automation/auth-account-flow.md
+qa-ai-workflow/automation/auth-negative-password-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md

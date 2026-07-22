@@ -7,6 +7,7 @@ Flow-to-testcase mapping is tracked in:
 ```text
 qa-ai-workflow/automation/smoke-flow.md
 qa-ai-workflow/automation/auth-account-flow.md
+qa-ai-workflow/automation/auth-negative-password-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
@@ -27,6 +28,18 @@ The first smoke flow covers:
 | `TC-SOURCE-007` | Source connection entry point opens when present. |
 | `TC-AUTH-004` | Sign out blocks protected route again. |
 | `TC-PUBLIC-009` | Published public site loads when `PUBLIC_SITE_URL` is provided. |
+
+## Current Auth Negative/Password Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-AUTH-002`, `TC-AUTH-008` | Wrong password and generated unknown email are rejected with generic `Invalid email or password`; no protected session is created. |
+| `TC-AUTH-009` | Blank email and blank password states keep submit disabled and protected route remains gated. |
+| `TC-AUTH-013` | Password visibility toggle reveals and masks without changing typed value or submitting the form. |
+| `TC-AUTH-014` | Returning from password step to email step resets the next password step to masked state. |
+| `TC-AUTH-015` | Password toggle has accessible label, keyboard operation, `aria-pressed`, and 24x24 px target baseline. |
+| `TC-AUTH-034` | Forgot-password request for generated unknown email returns generic confirmation without account-existence leak. |
+| `TC-AUTH-043` | Signed-out `/settings` is gated and cannot trigger `Change password`. |
 
 ## Current Source Scope
 
@@ -244,6 +257,12 @@ Auth account flows:
 npm run test:auth
 ```
 
+Auth negative/password focused run:
+
+```powershell
+pnpm run test:auth:negative
+```
+
 Latest smoke staging check:
 
 ```text
@@ -256,10 +275,12 @@ The skipped test is `TC-PUBLIC-009`, which requires `PUBLIC_SITE_URL`.
 Latest auth account staging check:
 
 ```text
-8 tests passed
+15 Playwright tests
+7 auth-negative/password checks passed
+8 account/setup checks previously passed
 ```
 
-The auth account suite covers `TC-AUTH-023`, `TC-AUTH-024`, `TC-AUTH-025`, and setup-organization cases `TC-AUTH-044` through `TC-AUTH-048`. Password reset/change completion cases are split into `TC-AUTH-026` through `TC-AUTH-043` and require mailbox or reset-link capture before they can be automated.
+The auth suite covers login rejection, blank validation, password visibility/accessibility, unknown-email forgot-password safety, signed-out settings protection, `TC-AUTH-023`, `TC-AUTH-024`, `TC-AUTH-025`, and setup-organization cases `TC-AUTH-044` through `TC-AUTH-048`. Password reset/change completion cases that require mailbox or reset-link capture remain manual/gated.
 
 Latest workspace/account staging check:
 

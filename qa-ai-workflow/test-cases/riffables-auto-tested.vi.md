@@ -11,8 +11,8 @@ Nguồn gốc:
 | File gốc | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
 | Phạm vi lọc | Các testcase có cột `Status` bắt đầu bằng `Auto` |
 | Tổng số testcase trong master | `400` |
-| Số testcase có automation status | `146` |
-| Ngày tổng hợp | `2026-07-21` |
+| Số testcase có automation status | `129` |
+| Ngày tổng hợp | `2026-07-22` |
 
 Quy ước status:
 
@@ -30,20 +30,20 @@ Tổng hợp nhanh:
 
 | Nhóm status | Số lượng |
 | --- | ---: |
-| PASS | 75 |
+| PASS | 100 |
 | PARTIAL PASS | 15 |
 | PARTIAL | 1 |
-| BLOCKED | 7 |
-| EXPECTED FAIL | 4 |
-| FAIL | 4 |
+| BLOCKED | 3 |
+| EXPECTED FAIL | 5 |
+| FAIL | 2 |
 | SKIP | 3 |
-| Tổng | 109 |
+| Tổng | 129 |
 
 ## Tổng Hợp Theo Module
 
 | Module | Số case auto | Ghi chú |
 | --- | ---: | --- |
-| Auth / Account / Workspace | 15 | Login, logout, signup, forgot/change password request, setup organization, workspace/account menu. |
+| Auth / Account / Workspace | 23 | Login, logout, negative auth validation, password UX/a11y, signup, forgot/change password request, setup organization, workspace/account menu. |
 | Source / YouTube | 32 | Source UI, OAuth boundary, connected source, catalog entry points, selected ingest entry points. |
 | Ingestion | 3 | Queued, ready/transcript coverage, permanent failure/no-transcript terminal state. |
 | Catalog | 9 | Metadata, exact selected ingest, search, selectability, failed retry. |
@@ -60,11 +60,19 @@ Tổng hợp nhanh:
 | ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
 | --- | --- | --- | --- | --- |
 | `TC-AUTH-001` | P0 | Đăng nhập thành công và vào đúng workspace/tenant | `Auto PASS 2026-07-16` | Kiểm tra direct email/password, chọn organization nếu cần, vào console đã authenticated. |
+| `TC-AUTH-002` | P0 | Login sai thông tin bị reject an toàn | `Auto PASS 2026-07-22` | Wrong password và unknown email đều trả `Invalid email or password`, không tạo session, không leak account existence. |
 | `TC-AUTH-003` | P0 | User chưa đăng nhập không được vào route bảo vệ | `Auto PASS 2026-07-16` | Mở `/sources` khi signed out và xác nhận bị gate/redirect về sign-in. |
 | `TC-AUTH-004` | P1 | Đăng xuất kết thúc session | `Auto PASS 2026-07-16` | Sau sign out, mở lại route bảo vệ phải quay về sign-in. |
+| `TC-AUTH-008` | P0 | Wrong password login rejection | `Auto PASS 2026-07-22` | Nhập email hợp lệ + password sai, verify lỗi generic và route bảo vệ vẫn bị chặn. |
+| `TC-AUTH-009` | P1 | Blank login validation | `Auto PASS 2026-07-22` | Email blank và password blank đều giữ submit disabled, không tạo session. |
+| `TC-AUTH-013` | P0 | Toggle hiện/ẩn password | `Auto PASS 2026-07-22` | `Show password` đổi field sang text, `Hide password` đổi lại masked, giữ nguyên typed value. |
+| `TC-AUTH-014` | P0 | Password reveal reset khi quay lại email step | `Auto PASS 2026-07-22` | Sau khi show password, bấm `Back to email`, continue lại thì field trở về masked và `aria-pressed=false`. |
+| `TC-AUTH-015` | P0 | Password toggle accessibility | `Auto PASS 2026-07-22` | Verify label Show/Hide password, keyboard Enter/Space, `aria-pressed`, target size tối thiểu 24x24 px. |
 | `TC-AUTH-023` | P0 | Tạo account mới và đến màn setup organization | `Auto PASS 2026-07-16` | Signup creator mới thành công, không leak tenant khác. |
 | `TC-AUTH-024` | P1 | Forgot password gửi yêu cầu reset link | `Auto PASS 2026-07-16` | Chỉ verify app hiện confirmation an toàn, chưa verify email/reset link thật. |
 | `TC-AUTH-025` | P1 | User đã login yêu cầu change-password email link | `Auto PASS 2026-07-16` | Vào Account Settings, bấm Change password, verify confirmation gửi email. |
+| `TC-AUTH-034` | P1 | Forgot-password unknown email không leak account tồn tại | `Auto PASS 2026-07-22` | Unknown email vẫn nhận generic confirmation, không hiện not-found/no-account copy, không tạo session. |
+| `TC-AUTH-043` | P1 | Signed-out user không request được change-password từ settings | `Auto PASS 2026-07-22` | Mở `/settings` khi signed out bị gate về sign-in và không thấy Account Settings/Change password. |
 | `TC-AUTH-044` | P0 | Existing creator vào được màn select organization sau login | `Auto PASS 2026-07-16` | Verify `/setup-organization`, danh sách workspace và action Select. |
 | `TC-AUTH-045` | P0 | Existing creator chọn được organization có sẵn | `Auto PASS 2026-07-16` | Sau khi select organization, console load đúng tenant. |
 | `TC-AUTH-046` | P1 | Setup organization validate blank và auto-generate slug | `Auto PASS 2026-07-16` | Nút tạo disabled khi blank, nhập name thì sinh slug hợp lệ. |
