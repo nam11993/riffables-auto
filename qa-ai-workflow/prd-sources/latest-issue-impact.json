@@ -1,267 +1,131 @@
 {
-  "generated_at": "2026-07-16T03:04:09.506Z",
-  "source": "github-web-browser-session",
+  "synced_at": "2026-07-23 14:58:42 +07:00",
   "repository": "speedrun-labs/riffables-prd",
-  "previous_snapshot": "C:\\Users\\namnh189.FSOFT.FPT.VN\\Documents\\Riffables\\qa-ai-workflow\\prd-sources\\snapshots\\issues-20260713-093244.json",
-  "current_snapshot": "C:\\Users\\namnh189.FSOFT.FPT.VN\\Documents\\Riffables\\qa-ai-workflow\\prd-sources\\snapshots\\issues-20260716-100409.json",
-  "current_total": 71,
-  "current_open": 21,
-  "current_closed": 50,
-  "compare_policy": "browser fallback: title/state/new/removed only; rendered body and labels ignored to avoid API-vs-browser false positives",
+  "current_snapshot": "qa-ai-workflow/prd-sources/snapshots/issues-20260723-145842.json",
+  "previous_snapshot": "qa-ai-workflow/prd-sources/snapshots/issues-previous-for-20260723-145842.json",
+  "report": "qa-ai-workflow/prd-sources/change-reports/issue-change-impact-20260723-145842.md",
+  "has_previous": true,
+  "total_issues": 73,
+  "open_issues": 21,
+  "closed_issues": 52,
   "new_issues": [
     {
-      "number": 66,
-      "title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
+      "number": 73,
+      "title": "Task: [frontend] Set or reset a password — account Settings + forgot-password",
+      "state": "closed",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/73",
+      "labels": [],
+      "created_at": "2026-07-16T04:09:40.000Z",
+      "updated_at": "",
+      "closed_at": "2026-07-16T04:10:29.000Z",
+      "author": "sunday19x3",
+      "body": "sunday19x3\nopened\nSource\nParent: Vision: Creator Console Dashboard (Vision: Creator Console Dashboard #15)\nRelated: Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in #72 (Continue-with-Google wiring) — this closes the gap that flow opened.\nGoal\n\nAn operator can give their account a password and recover a forgotten one, without ever being forced to.\n\nWhy\n\nTwo holes appeared once Google sign-in shipped:\n\nA Google sign-up has no password at all, so email/password sign-in is permanently closed to them — with no way to open it. If they ever lose access to the Google account, they lose the workspace.\nThe sign-in form had no recovery path — a forgotten password locked you out with nothing to click.\n\nA rejected alternative: forcing a password at Google sign-up. That defeats the point of social login (the user picked Google precisely to avoid a password), and it weakens security rather than strengthening it — a Google account is already protected by Google's 2FA/risk checks, while a coerced password is the kind that gets reused or written down. The password stays optional.\n\nMechanic\n\nNo new backend endpoint. BetterAuth has no self-serve set-password route, but its /reset-password creates the credential account when one is missing (api/routes/password.mjs) — which is exactly the \"add a password\" case. So one emailed round-trip serves all three needs: add a first password, change an existing one, recover a forgotten one. Proof of identity is the mailbox — already verified by Google.\n\nExample of done\nSettings → Password reads /list-accounts and offers Add a password (Google-only) or Change password, emailing a link to the account address.\nThe link lands on /reset-password: ?token= shows the form (8-character minimum, show/hide toggle); ?error=INVALID_TOKEN explains the link expired and points back to Settings.\nSign-in → password step offers Forgot password?, emailing the same link (sign-in only — a sign-up has no password to recover).\nSigning in with Google never forces a password.\nShipped\n\nOn riffables-monorepo main:\n\n2f6061e — /settings + /reset-password, plus the auth-proxy allowlist for list-accounts (GET), request-password-reset and reset-password (POST). Settings is reachable from the workspace switcher; the sidebar keeps its four product surfaces.\n4840b4f — forgot-password on the sign-in form.\nNote for dev/infra\n\nredirectTo is validated against BETTER_AUTH_TRUSTED_ORIGINS, which currently lists only https://riffables.speedrunlabs.ai. The flow therefore works on the deployed console but returns \"Invalid redirectURL\" when exercised from http://localhost:3000. If local testing of this flow is wanted, add the localhost origin to that env — no code change needed.\n\nVerified\n\nPreview: both /reset-password states (valid token → form; expired → recovery copy) render and gate correctly; the forgot-password click reaches the backend through the proxy allowlist. eslint + production build pass. The full mail round-trip needs the deployed origin.",
+      "body_hash": "386891d9aa59969049bbb13b399022f35ade9c3cff71335ce86bb5fe0e4c3ecd",
+      "content_hash": "b66b63e1618e47ee8cdd08d069d06058b1df7c7dd3f240baca7bc90257a1f19e"
+    },
+    {
+      "number": 74,
+      "title": "Epic: Operator image asset library — images for site & article content",
       "state": "open",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/66"
-    },
-    {
-      "number": 67,
-      "title": "Task: Relocate Pipeline Card for Visibility",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/67"
-    },
-    {
-      "number": 68,
-      "title": "Task: Ask first-time users before auto-running onboarding tours",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/68"
-    },
-    {
-      "number": 69,
-      "title": "Task: Show/hide password toggle on the sign-in form",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/69"
-    },
-    {
-      "number": 70,
-      "title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/70"
-    },
-    {
-      "number": 71,
-      "title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
-      "state": "open",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/71"
-    },
-    {
-      "number": 72,
-      "title": "Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/72"
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/74",
+      "labels": [],
+      "created_at": "2026-07-16T07:10:43.000Z",
+      "updated_at": "",
+      "closed_at": "",
+      "author": "phanhoc",
+      "body": "phanhoc\nopened\nParent Vision\n\nDecomposes #16 (Public Audience Site) — the images operators place in their site and article content.\n\nMilestone\n\nV1\n\nMechanic\n\nAn operator uploads an image (a logo, a hero image, an in-article picture) and the platform hands back a permanent public URL they can drop into their site or article content. Uploading the same image again returns the same URL instead of piling up duplicates. Each operator keeps a private library of their own uploads they can browse, label, and remove; removing an image takes it out of the library while any site or article already using it keeps rendering. Images are the operator's own — one operator never sees or touches another's uploads.\n\noperator picks an image ─▶ upload ─▶ gets a permanent public URL\n                                        │\n       same image again ────────────────┘ (same URL, no duplicate)\n\nlibrary:  browse my images · label · remove (embeds already placed keep working)\n\nWhat an operator can do\nAction\tOutcome\nUpload an image\tReceives a permanent public URL usable anywhere (site content, articles, embeds)\nRe-upload the same image\tGets the same URL back — no duplicate is created\nBrowse their library\tSees only the images they uploaded, newest first\nLabel an image\tGives an image a human-readable name / alt text\nRemove an image\tDrops it from the library; already-placed copies keep loading\nAcceptance criteria\nAn operator can upload a PNG, JPEG, WebP, or GIF and immediately receive a public URL that loads the image in any browser.\nAn upload larger than 10 MB is rejected with a clear error and nothing is stored.\nA non-image file — or an SVG — is rejected; only raster images are accepted (the check does not trust the client-declared file type).\nRe-uploading a byte-for-byte identical image returns the same existing URL rather than creating a second copy.\nAn operator listing their images sees only images they uploaded; another operator's images are never listed or reachable through their account.\nEach image carries its original filename, type, size, and an editable label.\nAn operator with many images can page through the full library.\nRemoving an image takes it out of the operator's library, but a site or article that already embedded that image still renders it (the URL keeps resolving).\nLocked constants\nMax upload size: 10 MiB\nAllowed types: PNG, JPEG, WebP, GIF (raster only; SVG excluded)\nOwnership: per-operator (an operator manages only their own uploads), tenant-isolated\nURLs: permanent and public — safe to embed in published content\nRemove is soft: the stored image stays reachable so already-placed embeds never break\nBackend dependencies\nPublic object storage (the same S3-compatible store — MinIO in dev / R2 in prod — already used to hold ingested audio in Pillar A), configured with a public bucket + public base URL.\nOut of scope\nConsole UI for uploading and picking images inside the site/article editor (a separate frontend Task).\nImage processing — resizing, thumbnails, re-encoding, EXIF stripping.\nAudience-side uploads (only operators upload; the audience only views).\nNon-image assets (documents, video, audio).\nReclaiming storage for removed images / CDN cache purge.\nSource\nParent Vision: Vision: Public Audience Site #16 (Public Audience Site)\nPRD: PRD.md § 4 High-level design (Creator Console surface; audience site content)\nImplementation (separate repo): riffables-monorepo PR Task: Offer a 'View live site' action right after publishing #47 — design + plan at docs/superpowers/specs/2026-07-15-image-asset-upload-design.md",
+      "body_hash": "86c2e08926250346f5edd2ebd60821b60c27b207e3da83ff6a13e22aab0a78e8",
+      "content_hash": "0b4f9cb2b132c70092a40bdf3e9431c4ce4982d2efedaf5516c34a32af3043d1"
     }
   ],
   "changed_issues": [
     {
-      "number": 18,
-      "title": "Vision: Controlled ingestion for large channels",
+      "number": 66,
+      "title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
       "state": "closed",
-      "previous_title": "Vision: Controlled ingestion for large channels",
-      "previous_state": "open",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/66",
       "changed_fields": [
-        "state"
+        "state",
+        "labels"
       ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/18"
+      "previous_hash": "0a25f49dd74af90dd3fb39c3323daa0e018af28193317cfe12384dfe028b88ff",
+      "current_hash": "59da135afb43d7176d605c773b0f875e6679e300e5da104fc67dbcb3b59aec4b",
+      "previous_date": "",
+      "current_date": ""
     },
     {
-      "number": 19,
-      "title": "Epic: Ingest mode selection (auto vs manual)",
-      "state": "closed",
-      "previous_title": "Epic: Ingest mode selection (auto vs manual)",
-      "previous_state": "open",
+      "number": 70,
+      "title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
+      "state": "open",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/70",
       "changed_fields": [
         "state"
       ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/19"
+      "previous_hash": "15e0214b394cde4220f95c634aa95dd5830c74568ac5eeb75590fc2c844e1996",
+      "current_hash": "f84612a8c0351b33e1d078f0307495ada387f9835288b61f204aa14acce567d9",
+      "previous_date": "",
+      "current_date": ""
     },
     {
-      "number": 20,
-      "title": "Epic: Channel video catalog & curation",
+      "number": 71,
+      "title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
       "state": "closed",
-      "previous_title": "Epic: Channel video catalog & curation",
-      "previous_state": "open",
+      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/71",
       "changed_fields": [
         "state"
       ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/20"
-    },
-    {
-      "number": 21,
-      "title": "Task: Fix Sources Page Crawl Feedback UI",
-      "state": "closed",
-      "previous_title": "Task: Fix Sources Page Crawl Feedback UI",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/21"
-    },
-    {
-      "number": 22,
-      "title": "Epic: Crawl progress, cancellation, and fair processing",
-      "state": "closed",
-      "previous_title": "Epic: Crawl progress, cancellation, and fair processing",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/22"
-    },
-    {
-      "number": 23,
-      "title": "Task: Creator picks ingest mode when connecting a channel",
-      "state": "closed",
-      "previous_title": "Task: Creator picks ingest mode when connecting a channel",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/23"
-    },
-    {
-      "number": 24,
-      "title": "Task: Manual-mode channel refuses every automatic ingest",
-      "state": "closed",
-      "previous_title": "Task: Manual-mode channel refuses every automatic ingest",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/24"
-    },
-    {
-      "number": 25,
-      "title": "Task: Creator switches a channel between auto and manual",
-      "state": "closed",
-      "previous_title": "Task: Creator switches a channel between auto and manual",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/25"
-    },
-    {
-      "number": 26,
-      "title": "Task: Connecting a channel builds a browsable video catalog",
-      "state": "closed",
-      "previous_title": "Task: Connecting a channel builds a browsable video catalog",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/26"
-    },
-    {
-      "number": 27,
-      "title": "Task: Catalog shows each video's ingest state",
-      "state": "closed",
-      "previous_title": "Task: Catalog shows each video's ingest state",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/27"
-    },
-    {
-      "number": 28,
-      "title": "Task: Creator selects catalog videos and ingests just those",
-      "state": "closed",
-      "previous_title": "Task: Creator selects catalog videos and ingests just those",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/28"
-    },
-    {
-      "number": 29,
-      "title": "Task: Refreshing the catalog picks up new uploads",
-      "state": "closed",
-      "previous_title": "Task: Refreshing the catalog picks up new uploads",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/29"
-    },
-    {
-      "number": 30,
-      "title": "Task: Live progress for a running crawl",
-      "state": "closed",
-      "previous_title": "Task: Live progress for a running crawl",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/30"
-    },
-    {
-      "number": 31,
-      "title": "Task: Creator cancels a running crawl",
-      "state": "closed",
-      "previous_title": "Task: Creator cancels a running crawl",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/31"
-    },
-    {
-      "number": 32,
-      "title": "Task: Large backfill runs in bounded batches without blocking fresh videos",
-      "state": "closed",
-      "previous_title": "Task: Large backfill runs in bounded batches without blocking fresh videos",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/32"
-    },
-    {
-      "number": 34,
-      "title": "Task: Redesign Content Page Filter UI",
-      "state": "closed",
-      "previous_title": "Task: Redesign Content Page Filter UI",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/34"
-    },
-    {
-      "number": 45,
-      "title": "Epic: Console UX & accessibility hardening",
-      "state": "closed",
-      "previous_title": "Epic: Console UX & accessibility hardening",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/45"
-    },
-    {
-      "number": 51,
-      "title": "Epic: Console — wire the remaining backend APIs",
-      "state": "closed",
-      "previous_title": "Epic: Console — wire the remaining backend APIs",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/51"
-    },
-    {
-      "number": 59,
-      "title": "Task: Replace the synthetic guest/show labels on the audience site",
-      "state": "closed",
-      "previous_title": "Task: Replace the synthetic guest/show labels on the audience site",
-      "previous_state": "open",
-      "changed_fields": [
-        "state"
-      ],
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/59"
+      "previous_hash": "59f8c6fa59e6a1fbd8c065e640d4dc4eece5adc14249638ca377bf0646031e07",
+      "current_hash": "d74f576e8c56a6cf6c934a68d91e03d956e7ce15086c5b9455c21b208cedeb30",
+      "previous_date": "",
+      "current_date": ""
     }
   ],
-  "removed_issues": []
+  "removed_issues": [],
+  "impacted_artifacts": [
+    {
+      "issue_number": 66,
+      "issue_title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
+      "files": [
+        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
+        "qa-ai-workflow/requirements/site-builder-onboarding.requirements.yaml",
+        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
+      ]
+    },
+    {
+      "issue_number": 70,
+      "issue_title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
+      "files": [
+        "qa-ai-workflow/requirements/creator-console.requirements.yaml",
+        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
+        "qa-ai-workflow/test-plans/riffables-master.test-plan.md",
+        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
+      ]
+    },
+    {
+      "issue_number": 71,
+      "issue_title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
+      "files": [
+        "qa-ai-workflow/requirements/creator-console.requirements.yaml",
+        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
+        "qa-ai-workflow/test-plans/riffables-master.test-plan.md",
+        "qa-ai-workflow/test-cases/riffables-master.test-cases.md",
+        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
+      ]
+    },
+    {
+      "issue_number": 73,
+      "issue_title": "Task: [frontend] Set or reset a password — account Settings + forgot-password",
+      "files": []
+    },
+    {
+      "issue_number": 74,
+      "issue_title": "Epic: Operator image asset library — images for site & article content",
+      "files": []
+    }
+  ],
+  "browser_intake_normalization": [
+    "Ignored UI-only line: Create sub-issue",
+    "Ignored UI-only line prefix: Last edited by ...",
+    "Ignored whitespace-only rendering changes"
+  ]
 }

@@ -3,8 +3,8 @@ source_prd:
   title: "Creator Console Dashboard and Curation UI"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues/15"
-  version_or_commit: "github-issues-read-2026-07-16"
-  last_reviewed_at: "2026-07-16"
+  version_or_commit: "github-issues-read-2026-07-23"
+  last_reviewed_at: "2026-07-23"
   related_issues:
     - id: "#15"
       title: "Vision: Creator Console Dashboard"
@@ -36,6 +36,9 @@ source_prd:
     - id: "#72"
       title: "Task: Continue with Google button starts real social sign-in"
       url: "https://github.com/speedrun-labs/riffables-prd/issues/72"
+    - id: "#73"
+      title: "Task: Set or reset a password - account Settings + forgot-password"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/73"
 
 requirements:
   - id: "REQ-CONSOLE-001"
@@ -225,9 +228,9 @@ requirements:
       - "If the social route is unavailable or config is missing, the UI shows an inline error instead of silently failing."
       - "The Google sign-in start flow does not expose protected console data before a valid session exists."
     assumptions:
-      - "Full end-to-end Google round-trip depends on backend provider and redirect URI readiness."
+      - "Full end-to-end Google round-trip depends on backend provider and redirect URI readiness; issue #71 is closed in the 2026-07-23 intake, while issue #70 is open again."
     open_questions:
-      - "Should QA treat full Google round-trip as blocked until #71 is closed?"
+      - "Should QA treat full Google round-trip as blocked until #70 callback/environment readiness is confirmed?"
     related_requirements:
       - "REQ-CONSOLE-010"
       - "REQ-CONSOLE-011"
@@ -241,7 +244,7 @@ requirements:
       - "#71"
     priority: "must"
     type: "integration"
-    status: "draft"
+    status: "regression_baseline_draft"
     acceptance_criteria:
       - "Auth options include socialProviders.google only when both GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET are configured."
       - "Google login requests only openid, email, and profile scopes for operator sign-in."
@@ -274,10 +277,10 @@ requirements:
       - "A brand-new Google account is routed to organization setup after successful login."
       - "An existing operator email can sign in through Google without creating a duplicate tenant/operator identity."
     assumptions:
-      - "Issue #70 is closed, but issue #71 was still open in the 2026-07-16 intake."
+      - "Issue #71 is closed in the 2026-07-23 intake, but issue #70 is open again; callback/environment readiness still gates full OAuth round-trip testing."
     open_questions:
       - "Is the current callback host api-riffables.speedrunlabs.ai or api.riffables.com for the QA environment?"
-      - "Can QA execute full Google OAuth round-trip now, or should it remain a blocked test until #71 lands?"
+      - "Can QA execute full Google OAuth round-trip now, or should it remain a blocked test until #70 callback/environment readiness is confirmed?"
     related_requirements:
       - "REQ-CONSOLE-009"
       - "REQ-CONSOLE-010"
@@ -308,6 +311,35 @@ requirements:
       - "REQ-INGEST-003"
       - "REQ-PUBLIC-001"
 
+  - id: "REQ-CONSOLE-013"
+    title: "Operators can add, change, and recover passwords through the BetterAuth reset-link flow"
+    description: "The console must let operators add a first password for a Google-only account, change an existing password, or recover a forgotten password through the same email reset-link flow without forcing a password during Google sign-in."
+    prd_section: "Issue #73 Goal; Issue #73 Mechanic; Issue #73 Example of done"
+    source_issues:
+      - "#73"
+    priority: "must"
+    type: "functional-security"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Settings reads the account sign-in methods and shows Add a password for a Google-only operator account."
+      - "Settings shows Change password for an operator account that already has a password sign-in method."
+      - "Add a password, Change password, and Forgot password send an email reset link to the account email without exposing or changing the password immediately."
+      - "The reset link opens /reset-password with a token form that enforces an 8-character minimum and includes show/hide password control."
+      - "The /reset-password invalid-token state explains that the link expired and gives a safe recovery path back to Settings or sign-in."
+      - "The sign-in password step shows Forgot password, while sign-up and Google sign-in do not force or imply password recovery."
+      - "Reset-link requests do not create an authenticated session before the token is completed successfully."
+      - "redirectTo is limited by BETTER_AUTH_TRUSTED_ORIGINS; deployed console origin is supported and localhost requires explicit environment configuration."
+    assumptions:
+      - "BetterAuth /reset-password creates the credential account when one is missing, so the same emailed proof-of-mailbox flow supports add, change, and recover password."
+      - "Full email round-trip validation requires deployed-origin mail delivery or a test mailbox fixture."
+    open_questions:
+      - "Which QA mailbox or email-capture service should be used for full reset-link execution?"
+      - "Should localhost be added to BETTER_AUTH_TRUSTED_ORIGINS for local QA, or should password reset be deployed-only?"
+    related_requirements:
+      - "REQ-CONSOLE-001"
+      - "REQ-CONSOLE-008"
+      - "REQ-CONSOLE-009"
+
 review_notes:
   status: "draft"
   recommended_reviewers:
@@ -319,5 +351,6 @@ review_notes:
     - "Confirm console route/module names."
     - "Confirm curation editable fields."
     - "Confirm crawl feedback data contract."
-    - "Confirm Google OAuth readiness because #70 is closed while #71 remains open in the latest PRD intake."
+    - "Confirm Google OAuth readiness because #71 is closed while #70 callback/environment readiness is open in the latest PRD intake."
+    - "Confirm password reset mailbox/test origin strategy for #73."
     - "Confirm console API wiring acceptance paths for #51."

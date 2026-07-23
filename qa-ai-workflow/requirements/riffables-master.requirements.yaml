@@ -3,8 +3,8 @@ source_prd:
   title: "Riffables PRD issue set"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues"
-  version_or_commit: "github-issues-read-2026-07-16"
-  last_reviewed_at: "2026-07-16"
+  version_or_commit: "github-issues-read-2026-07-23"
+  last_reviewed_at: "2026-07-23"
 
 purpose: "Curated master requirement set used as the input for test plan and test case generation."
 status: "draft_for_qa_review"
@@ -39,10 +39,10 @@ test_plan_generation_order:
   - "accessibility-ux"
 
 scope_summary:
-  total_included_requirements: 74
+  total_included_requirements: 78
   excluded_governance_requirements: 4
-  release_scope_requirements: 33
-  regression_baseline_requirements: 41
+  release_scope_requirements: 34
+  regression_baseline_requirements: 44
   notes:
     - "Closed PRD issues are kept as regression baseline when they describe behavior already delivered or previously fixed."
     - "Open PRD issues are treated as release scope unless the item is explicitly marked could/deferred by priority."
@@ -255,7 +255,7 @@ modules:
   - key: "search-public-site"
     name: "Hybrid search and public audience site"
     source_file: "qa-ai-workflow/requirements/search-public-site.requirements.yaml"
-    source_issues: ["#8", "#4", "#16", "#14", "#17", "#59"]
+    source_issues: ["#8", "#4", "#16", "#14", "#17", "#59", "#74"]
     test_scope: "mixed_release_and_regression"
     qa_priority: "P0"
     requirements:
@@ -304,11 +304,26 @@ modules:
         priority: "must"
         type: "functional"
         test_design_action: "include_regression_with_agent_or_stub_oracle"
+      - id: "REQ-PUBLIC-007"
+        title: "Operator image uploads return permanent public URLs for site and article content"
+        priority: "must"
+        type: "functional"
+        test_design_action: "include_api_backend_and_public_url_validation"
+      - id: "REQ-PUBLIC-008"
+        title: "Operator image library validates files, de-duplicates identical uploads, and supports metadata management"
+        priority: "must"
+        type: "data-integrity"
+        test_design_action: "include_negative_boundary_and_library_tests"
+      - id: "REQ-PUBLIC-009"
+        title: "Operator image library is tenant-isolated and soft remove preserves existing embeds"
+        priority: "must"
+        type: "security-data-integrity"
+        test_design_action: "include_security_and_soft_delete_regression"
 
   - key: "creator-console"
     name: "Creator console, sources, and curation UI"
     source_file: "qa-ai-workflow/requirements/creator-console.requirements.yaml"
-    source_issues: ["#15", "#13", "#21", "#34", "#51", "#67", "#69", "#70", "#71", "#72"]
+    source_issues: ["#15", "#13", "#21", "#34", "#51", "#67", "#69", "#70", "#71", "#72", "#73"]
     test_scope: "mixed_release_and_regression"
     qa_priority: "P0"
     requirements:
@@ -372,6 +387,11 @@ modules:
         priority: "must"
         type: "integration"
         test_design_action: "include_regression"
+      - id: "REQ-CONSOLE-013"
+        title: "Operators can add, change, and recover passwords through the BetterAuth reset-link flow"
+        priority: "must"
+        type: "functional-security"
+        test_design_action: "include_auth_reset_link_and_origin_tests"
 
   - key: "site-builder-onboarding"
     name: "Visual site builder and guided onboarding"
@@ -513,13 +533,15 @@ open_questions_to_resolve_before_approval:
       - "Is audience member gating in scope for this release?"
       - "What timestamp tolerance is acceptable for citation playback?"
       - "Which creator or tenant fields should be used when the public site needs guest/show labels?"
+      - "What are the image asset API routes, public URL pattern, and ownership rule for operator uploads from #74?"
   - module: "creator-console"
     questions:
       - "What is the final list of top-level console routes for V1?"
       - "Which curation fields are editable?"
-      - "Is Google OAuth fully testable in QA while issue #71 is still open, or should full round-trip remain blocked?"
+      - "Is Google OAuth fully testable in QA while issue #70 callback/environment readiness is open, or should full round-trip remain blocked?"
       - "What environment host and callback URI should QA use for deployed Google OAuth validation?"
       - "What exact backend API routes should be exposed in the console for #51 acceptance?"
+      - "Which QA mailbox or email-capture service should be used for full add/change/forgot password reset-link execution?"
   - module: "site-builder-onboarding"
     questions:
       - "Which natural-language edit operations are supported by the site-editor Assistant for issue #66?"

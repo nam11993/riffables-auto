@@ -3,8 +3,8 @@ source_prd:
   title: "Visual Site Builder and Guided Onboarding"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues/35"
-  version_or_commit: "github-issues-read-2026-07-16"
-  last_reviewed_at: "2026-07-16"
+  version_or_commit: "github-issues-read-2026-07-23"
+  last_reviewed_at: "2026-07-23"
   related_issues:
     - id: "#35"
       title: "Epic: Visual site builder - bind sections to live catalog data"
@@ -34,7 +34,7 @@ source_prd:
       title: "Task: Guided tour for the site editor"
       url: "https://github.com/speedrun-labs/riffables-prd/issues/43"
     - id: "#66"
-      title: "Task: Let the site-editor Assistant propose previewable public-site diffs"
+      title: "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)"
       url: "https://github.com/speedrun-labs/riffables-prd/issues/66"
     - id: "#68"
       title: "Task: Ask first-time users before auto-running onboarding tours"
@@ -50,7 +50,7 @@ requirements:
       - "#37"
     priority: "should"
     type: "functional"
-    status: "draft"
+    status: "regression_baseline_draft"
     acceptance_criteria:
       - "The editor provides a Collection element or equivalent repeated-section control."
       - "The creator can choose a supported source such as riffables, riffs, or articles."
@@ -212,8 +212,8 @@ requirements:
       - "Unsupported, ambiguous, unsafe, or out-of-scope edit requests are refused or require clarification."
       - "The Assistant cannot bypass allowed editor fields, tenant boundaries, or publication permissions."
     assumptions:
-      - "The exact supported edit operation list is not confirmed in the 2026-07-16 PRD intake."
-      - "Previewable diff is the QA oracle until Product/Engineering defines more precise pass/fail criteria."
+      - "Issue #66 is closed in the 2026-07-23 PRD intake and is tracked as regression baseline."
+      - "Previewable diff remains the QA oracle until Product/Engineering defines more precise pass/fail criteria."
     open_questions:
       - "Which public-site edit operations are in scope for #66: copy, layout, theme, component visibility, ordering, data binding, or publish settings?"
       - "What fields may an AI-generated diff modify?"

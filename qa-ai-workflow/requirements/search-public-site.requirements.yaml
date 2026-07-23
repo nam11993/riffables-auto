@@ -3,8 +3,8 @@ source_prd:
   title: "Hybrid Discovery Engine and Public Audience Site"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues/8"
-  version_or_commit: "github-issues-read-2026-07-16"
-  last_reviewed_at: "2026-07-16"
+  version_or_commit: "github-issues-read-2026-07-23"
+  last_reviewed_at: "2026-07-23"
   related_issues:
     - id: "#8"
       title: "Vision: Hybrid Discovery Engine"
@@ -24,6 +24,9 @@ source_prd:
     - id: "#59"
       title: "Task: Replace the synthetic guest/show labels on the audience site"
       url: "https://github.com/speedrun-labs/riffables-prd/issues/59"
+    - id: "#74"
+      title: "Epic: Operator image asset library - images for site & article content"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/74"
 
 requirements:
   - id: "REQ-SEARCH-001"
@@ -225,6 +228,79 @@ requirements:
       - "REQ-AI-003"
       - "REQ-TENANT-001"
 
+  - id: "REQ-PUBLIC-007"
+    title: "Operator image uploads return permanent public URLs for site and article content"
+    description: "Operators must be able to upload supported raster image assets and receive a permanent public URL that can be embedded in published site or article content."
+    prd_section: "Issue #74 Mechanic; Issue #74 Acceptance criteria; Issue #74 Locked constants"
+    source_issues:
+      - "#74"
+    priority: "must"
+    type: "functional"
+    status: "draft"
+    acceptance_criteria:
+      - "Uploading a PNG, JPEG, WebP, or GIF image up to 10 MiB succeeds."
+      - "A successful upload immediately returns a permanent public URL."
+      - "The returned public URL loads the image in a normal browser without requiring operator authentication."
+      - "The stored asset preserves original filename, type, size, and URL metadata."
+      - "The image URL is safe to embed in published site content and article content."
+    assumptions:
+      - "Console UI for uploading or picking images inside the editor is tracked separately and is not required for this backend/library requirement."
+    open_questions:
+      - "What is the canonical public asset URL pattern in QA and production?"
+    related_requirements:
+      - "REQ-PUBLIC-001"
+      - "REQ-BUILDER-002"
+
+  - id: "REQ-PUBLIC-008"
+    title: "Operator image library validates files, de-duplicates identical uploads, and supports metadata management"
+    description: "The image library must reject invalid uploads, avoid duplicate storage for identical files, and let operators browse and label their own assets."
+    prd_section: "Issue #74 What an operator can do; Issue #74 Acceptance criteria; Issue #74 Locked constants"
+    source_issues:
+      - "#74"
+    priority: "must"
+    type: "data-integrity"
+    status: "draft"
+    acceptance_criteria:
+      - "Uploads larger than 10 MiB are rejected with a clear error and nothing is stored."
+      - "Non-image files and SVG files are rejected server-side without trusting only the client-declared MIME type."
+      - "Re-uploading a byte-for-byte identical image returns the same existing URL instead of creating a duplicate library record."
+      - "The library lists the operator's images newest first."
+      - "Each image has an editable human-readable label or alt text."
+      - "An operator with many images can page through the full library."
+    assumptions:
+      - "Image resizing, thumbnails, re-encoding, EXIF stripping, and non-image asset handling are out of scope for #74."
+    open_questions:
+      - "What exact API error codes/copy should QA assert for invalid type and oversize uploads?"
+      - "What page size should QA use for pagination boundary testing?"
+    related_requirements:
+      - "REQ-PUBLIC-007"
+      - "REQ-A11Y-005"
+
+  - id: "REQ-PUBLIC-009"
+    title: "Operator image library is tenant-isolated and soft remove preserves existing embeds"
+    description: "Operators must only manage their own uploaded images, and removing an image from the library must not break already-published site or article embeds."
+    prd_section: "Issue #74 Mechanic; Issue #74 Acceptance criteria; Issue #74 Locked constants"
+    source_issues:
+      - "#74"
+    priority: "must"
+    type: "security-data-integrity"
+    status: "draft"
+    acceptance_criteria:
+      - "An operator listing images sees only images uploaded by that operator or tenant context."
+      - "Another operator's images are not listed and cannot be updated or removed through direct ID/API manipulation."
+      - "Removing an image hides it from the operator's active library."
+      - "The removed image's public URL continues to resolve so already-placed site or article embeds keep rendering."
+      - "Removed-image behavior does not leak private library metadata to another operator."
+    assumptions:
+      - "Remove is soft for published embed stability; storage reclamation and CDN cache purge are out of scope."
+    open_questions:
+      - "Is ownership scoped per operator user, per tenant, or both when multiple operators belong to one workspace?"
+    related_requirements:
+      - "REQ-PUBLIC-007"
+      - "REQ-PUBLIC-008"
+      - "REQ-TENANT-001"
+      - "REQ-TENANT-002"
+
 review_notes:
   status: "draft"
   recommended_reviewers:
@@ -236,3 +312,4 @@ review_notes:
     - "Confirm public site domain pattern."
     - "Confirm audience auth and gating scope."
     - "Confirm public-site label source fields and the QA oracle for audience chat real-agent responses."
+    - "Confirm image asset API routes, public URL pattern, and per-operator/per-tenant ownership rule for #74."
