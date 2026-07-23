@@ -11,8 +11,8 @@ Nguồn gốc:
 | File gốc | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
 | Phạm vi lọc | Các testcase có cột `Status` bắt đầu bằng `Auto` |
 | Tổng số testcase trong master | `400` |
-| Số testcase có automation status | `129` |
-| Ngày tổng hợp | `2026-07-22` |
+| Số testcase có automation status | `152` |
+| Ngày tổng hợp | `2026-07-23` |
 
 Quy ước status:
 
@@ -30,21 +30,22 @@ Tổng hợp nhanh:
 
 | Nhóm status | Số lượng |
 | --- | ---: |
-| PASS | 100 |
-| PARTIAL PASS | 15 |
+| PASS | 115 |
+| PARTIAL PASS | 17 |
 | PARTIAL | 1 |
 | BLOCKED | 3 |
-| EXPECTED FAIL | 5 |
+| EXPECTED FAIL | 11 |
 | FAIL | 2 |
 | SKIP | 3 |
-| Tổng | 129 |
+| Tổng | 152 |
 
 ## Tổng Hợp Theo Module
 
 | Module | Số case auto | Ghi chú |
 | --- | ---: | --- |
-| Auth / Account / Workspace | 23 | Login, logout, negative auth validation, password UX/a11y, signup, forgot/change password request, setup organization, workspace/account menu. |
-| Source / YouTube | 32 | Source UI, OAuth boundary, connected source, catalog entry points, selected ingest entry points. |
+| Auth / Account / Workspace | 27 | Login, logout, protected-route/session handling, negative auth validation, password UX/a11y, signup, forgot/change password request, setup organization, workspace/account menu. |
+| Source / YouTube | 36 | Source UI, OAuth boundary, connected source, catalog entry points, selected ingest entry points, delete cancel, mode switch, Manual schedule guard. |
+| Ingest Mode | 5 | Auto preselected, source mode display, Auto/Manual switch, Manual hides Run/Backfill, idle mode-switch side effect guard. |
 | Ingestion | 3 | Queued, ready/transcript coverage, permanent failure/no-transcript terminal state. |
 | Catalog | 9 | Metadata, exact selected ingest, search, selectability, failed retry. |
 | Crawl | 3 | Progress done/total và total khớp selected input. |
@@ -52,7 +53,7 @@ Tổng hợp nhanh:
 | Search | 7 | Keyword search, exact quoted search, result limit, empty/long input boundary. |
 | Public Site | 13 | Sunday public site load/search plus Baohan public-site publish/search fixture gates. |
 | Site Builder / Editor | 22 | Baohan editor chrome, preview, invalid publish guard, layers/inspector, Assistant entrypoint, content edit, draft persistence expected-fail, viewport toolbar, Add library, side panels, section actions, theme, media, help tour, icon target size. |
-| Accessibility | 1 | Heading structure cơ bản. |
+| Accessibility | 11 | Target size, editor headings, landmarks/names/alt baseline, focus indicator, validation alert semantics, icon-button names, keyboard navigation. |
 | Onboarding | 1 | First authenticated onboarding dialog. |
 
 ## Auth / Account / Workspace
@@ -63,8 +64,12 @@ Tổng hợp nhanh:
 | `TC-AUTH-002` | P0 | Login sai thông tin bị reject an toàn | `Auto PASS 2026-07-22` | Wrong password và unknown email đều trả `Invalid email or password`, không tạo session, không leak account existence. |
 | `TC-AUTH-003` | P0 | User chưa đăng nhập không được vào route bảo vệ | `Auto PASS 2026-07-16` | Mở `/sources` khi signed out và xác nhận bị gate/redirect về sign-in. |
 | `TC-AUTH-004` | P1 | Đăng xuất kết thúc session | `Auto PASS 2026-07-16` | Sau sign out, mở lại route bảo vệ phải quay về sign-in. |
+| `TC-AUTH-007` | P0 | Creator login hợp lệ vào đúng tenant context | `Auto PASS 2026-07-23` | Login clean session, chọn workspace nếu cần, dismiss onboarding, verify nav/workspace switch/Sign out. |
 | `TC-AUTH-008` | P0 | Wrong password login rejection | `Auto PASS 2026-07-22` | Nhập email hợp lệ + password sai, verify lỗi generic và route bảo vệ vẫn bị chặn. |
 | `TC-AUTH-009` | P1 | Blank login validation | `Auto PASS 2026-07-22` | Email blank và password blank đều giữ submit disabled, không tạo session. |
+| `TC-AUTH-010` | P0 | Protected route bị chặn khi chưa đăng nhập | `Auto PASS 2026-07-23` | Signed-out mở `/sources` bị gate; authenticated state mở `/sources` thấy console controls. |
+| `TC-AUTH-011` | P1 | Sign out invalidates Back/direct/refresh access | `Auto PASS 2026-07-23` | Sau sign out, browser Back, direct `/sources`, refresh đều không expose protected data. |
+| `TC-AUTH-012` | P1 | Removed session handling | `Auto PARTIAL PASS 2026-07-23` | Clear cookie/localStorage/sessionStorage rồi refresh/direct route bị gate; chưa giả lập server-side expired/revoked token. |
 | `TC-AUTH-013` | P0 | Toggle hiện/ẩn password | `Auto PASS 2026-07-22` | `Show password` đổi field sang text, `Hide password` đổi lại masked, giữ nguyên typed value. |
 | `TC-AUTH-014` | P0 | Password reveal reset khi quay lại email step | `Auto PASS 2026-07-22` | Sau khi show password, bấm `Back to email`, continue lại thì field trở về masked và `aria-pressed=false`. |
 | `TC-AUTH-015` | P0 | Password toggle accessibility | `Auto PASS 2026-07-22` | Verify label Show/Hide password, keyboard Enter/Space, `aria-pressed`, target size tối thiểu 24x24 px. |
@@ -104,6 +109,10 @@ Tổng hợp nhanh:
 | `TC-SOURCE-024` | P0 | Connected Auto source card hiện metadata và actions | `Auto PASS 2026-07-17` | Verify metadata, controls, pipeline cards, recent runs. |
 | `TC-SOURCE-025` | P0 | Source Details modal hiện diagnostic metadata scoped đúng tenant | `Auto PASS 2026-07-17` | Details có source id/type/status/created/updated/last run/backend config. |
 | `TC-SOURCE-026` | P1 | Details modal View crawled content route về content context | `Auto PASS 2026-07-17` | Điều hướng từ Details sang Content nếu CTA có sẵn. |
+| `TC-SOURCE-027` | P0 | Hủy confirmation xóa source không làm thay đổi dữ liệu | `Auto PASS 2026-07-23` | Mở Delete cho `@nhnbaohan`, verify dialog đúng source, cancel/close, reload và xác nhận source/mode/run count/pipeline giữ nguyên. |
+| `TC-SOURCE-029` | P0 | Auto source chuyển sang Manual không tự chạy/hủy ingest | `Auto PASS 2026-07-23` | Switch Auto -> Manual, Run crawl và Backfill bị ẩn, recent run không đổi. Schedule Manual được tách ở `TC-SOURCE-033`. |
+| `TC-SOURCE-030` | P0 | Manual source chuyển lại Auto và khôi phục controls | `Auto PASS 2026-07-23` | Switch Manual -> Auto, Run crawl/Backfill/Schedule hiển thị lại, không tự start crawl, fixture được restore về Auto. |
+| `TC-SOURCE-033` | P0 | Manual source không được tạo automatic schedule | `Auto EXPECTED FAIL 2026-07-23` | Staging hiện vẫn hiển thị `Schedule` ở Manual mode và mở recurring schedule dialog; cần fix để UI/API fail closed. |
 | `TC-SOURCE-031` | P1 | Schedule modal hiện recurring crawl cadence options | `Auto PASS 2026-07-17` | Chỉ review modal, không tạo schedule. |
 | `TC-SOURCE-034` | P0 | Run crawl interactive cập nhật progress | `Auto PARTIAL 2026-07-17` | Selected-ingest thành công với 1 clip đạt `1/1`; full Run crawl multi-item vẫn cần fixture mới. |
 | `TC-SOURCE-034A` | P0 | Run crawl khi không có eligible data | `Auto PARTIAL PASS 2026-07-17` | UI/action path ổn định; backend job/content count cần thêm observability. |
@@ -119,6 +128,16 @@ Tổng hợp nhanh:
 | `TC-SOURCE-044` | P0 | State của catalog row điều khiển selectability | `Auto PARTIAL PASS 2026-07-17` | Đã cover fresh/selectable, Failed selectable, Queued transition, No insights disabled; còn thiếu Processing/Riffed fixtures. |
 | `TC-SOURCE-045` | P0 | Ingest selected chỉ queue đúng các video đã chọn | `Auto PASS 2026-07-20` | Chọn 2 video; video không chọn không bị ingest; run `2/2`; selected rows sau đó `No insights`, không phải generated-riffable success. |
 | `TC-SOURCE-045A` | P0 | Ingest selected với 0 item/empty catalog bị block an toàn | `Auto PARTIAL PASS 2026-07-17` | UI/action path verified; cần backend job/content count để kết luận đầy đủ. |
+
+## Ingest Mode
+
+| ID | Priority | Tên testcase tiếng Việt | Kết quả automation | Ghi chú đọc nhanh |
+| --- | --- | --- | --- | --- |
+| `TC-INGEST-MODE-006` | P0 | Source card hiển thị đúng mode hiện tại | `Auto PASS 2026-07-23` | Switch Auto -> Manual -> Auto, verify badge/action/control tương ứng; Manual schedule tách riêng ở `TC-SOURCE-033`. |
+| `TC-INGEST-MODE-007` | P0 | Switch mode chỉ đổi setting, không sinh side effect | `Auto PARTIAL PASS 2026-07-23` | Idle fixture không tạo recent run mới khi switch mode; vẫn cần fixture crawl chạy lâu để cover in-flight crawl. |
+| `TC-INGEST-MODE-011` | P0 | Auto được preselect trên form connect source | `Auto PASS 2026-07-23` | Form Sources hiển thị Auto crawl/Manual selection; Auto active trước và sau khi nhập `@nhnbaohan`. |
+| `TC-INGEST-MODE-014` | P0 | Manual source ẩn Run crawl | `Auto PASS 2026-07-23` | Sau khi switch Manual, `Run crawl` không còn trên source card và không sinh recent run mới. |
+| `TC-INGEST-MODE-015` | P0 | Manual source ẩn Backfill | `Auto PASS 2026-07-23` | Sau khi switch Manual, `Backfill` không còn trên source card và không sinh backfill/recent run mới. |
 
 ## Ingestion / Catalog / Crawl
 
@@ -211,7 +230,17 @@ Tổng hợp nhanh:
 | `TC-CONSOLE-024` | P1 | Home Overview summary modules điều hướng đúng trang | `Auto PASS 2026-07-16` | Click module -> `/sources`, `/content`, `/sites` đúng tenant. |
 | `TC-CONSOLE-025` | P1 | Home Next step CTA route đến Sources workflow | `Auto PASS 2026-07-16` | CTA Open sources/recommendation đưa đến `/sources`. |
 | `TC-CONSOLE-026` | P2 | Home How it works hiện đúng core workflow | `Auto PASS 2026-07-16` | 3 bước: connect source, extract ideas, publish library/site. |
+| `TC-A11Y-001` | P1 | Target size control tối thiểu 24x24 px | `Auto EXPECTED FAIL 2026-07-23` | Editor `Open the live site` hiện chỉ `171x20`, thấp hơn baseline 24px. |
+| `TC-A11Y-002` | P1 | Đo actual hit-area thay vì chỉ nhìn icon | `Auto EXPECTED FAIL 2026-07-23` | Đo actual clickable target; `Open the live site` vẫn không đủ chiều cao 24px. |
+| `TC-A11Y-004` | P1 | Publish error không hiện View live site action | `Auto PASS 2026-07-23` | Invalid publish/domain path có error/validation và không hiện action live-site success; không publish thật. |
 | `TC-A11Y-005` | P1 | Mỗi screen có heading structure hợp lý | `Auto PASS 2026-07-16` | Kiểm tra h1/heading order cơ bản. |
+| `TC-A11Y-006` | P1 | Editor có heading/region navigable | `Auto PASS 2026-07-23` | Site Editor có `Page sections`, `Section settings`, Preview, Publish, và navigation landmark. |
+| `TC-A11Y-007` | P1 | Baseline accessibility cũ vẫn giữ | `Auto EXPECTED FAIL 2026-07-23` | Sources backfill date input `#since-*` chưa có accessible name; contrast vẫn cần manual/dedicated tool. |
+| `TC-A11Y-008` | P1 | Focus order usable và visible | `Auto EXPECTED FAIL 2026-07-23` | Keyboard reach được controls nhưng focus indicator chưa đo được trên core console controls. |
+| `TC-A11Y-009` | P1 | Error có alert/live semantics | `Auto PASS 2026-07-23` | Wrong-password error nằm trong alert/live region và sau lỗi vẫn tab tới named visible control. |
+| `TC-A11Y-010` | P1 | Icon-only controls có accessible name | `Auto PASS 2026-07-23` | Icon buttons/editor controls có text/ARIA/title/labelling và focus có name. |
+| `TC-A11Y-011` | P1 | Target size critical controls | `Auto EXPECTED FAIL 2026-07-23` | Cùng gap `Open the live site` `171x20`; cần fix target/hit-area. |
+| `TC-A11Y-012` | P1 | Keyboard navigation core workflow | `Auto PASS 2026-07-23` | Tab qua core console, focus `Videos`, Enter mở Channel Videos dialog, không ingest. |
 | `TC-ONBOARD-007` | P1 | Lần authenticated đầu tiên hỏi user mới/cũ | `Auto PASS 2026-07-16` | Onboarding consent dialog có choice cho new/returning user. |
 
 ## Các Điểm Cần Lưu Ý Khi QA Review
@@ -220,7 +249,7 @@ Tổng hợp nhanh:
 2. `No insights` sau khi ingest không phải bug của 2 case trên. Nó chỉ nói rằng video đã xử lý xong nhưng không tạo riffable/insight. Nếu muốn test AI tạo insight thành công, cần testcase/fixture riêng có expected `Riffed` hoặc generated insight.
 3. Google OAuth hiện là boundary lớn nhất: các case full connect Auto/Manual vẫn bị blocked nếu không có manual consent, storage state, hoặc staging bypass.
 4. Các case partial về crawl/backfill/catalog cần thêm backend observability hoặc fixture có state `Processing`, `Riffed`, long-running crawl, large/backfill.
-5. Các `EXPECTED FAIL` là bug/behavior hiện tại của staging về validation input source: automation đang ghi nhận để dev fix sau.
+5. Các `EXPECTED FAIL` là bug/behavior hiện tại của staging, gồm validation input source, Manual Schedule guard, public placeholder, draft persistence, và A11Y gaps như target size/focus indicator/accessible name.
 6. Public site batch đã chuyển `TC-PUBLIC-009` từ skip sang pass nhờ URL Sunday thật.
 7. `TC-PUBLIC-014` đang expected-fail vì public page còn hiện placeholder/demo labels; đây là gap cần dev/product xác nhận hoặc fix.
 8. `TC-PUBLIC-005`, `TC-PUBLIC-002`, `TC-PUBLIC-016` chưa pass vì thiếu clickable citation timestamp hoặc Tenant B public fixture.

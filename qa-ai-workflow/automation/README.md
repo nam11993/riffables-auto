@@ -13,8 +13,12 @@ TC-AUTH-001
 TC-AUTH-002
 TC-AUTH-003
 TC-AUTH-004
+TC-AUTH-007
 TC-AUTH-008
 TC-AUTH-009
+TC-AUTH-010
+TC-AUTH-011
+TC-AUTH-012
 TC-AUTH-013
 TC-AUTH-014
 TC-AUTH-015
@@ -54,7 +58,11 @@ TC-SOURCE-023
 TC-SOURCE-024
 TC-SOURCE-025
 TC-SOURCE-026
+TC-SOURCE-027
+TC-SOURCE-029
+TC-SOURCE-030
 TC-SOURCE-031
+TC-SOURCE-033
 TC-SOURCE-034A
 TC-SOURCE-036
 TC-SOURCE-037
@@ -67,6 +75,11 @@ TC-SOURCE-043
 TC-SOURCE-044
 TC-SOURCE-045
 TC-SOURCE-045A
+TC-INGEST-MODE-006
+TC-INGEST-MODE-007
+TC-INGEST-MODE-011
+TC-INGEST-MODE-014
+TC-INGEST-MODE-015
 TC-CATALOG-001
 TC-CATALOG-010
 TC-CATALOG-013
@@ -116,7 +129,17 @@ TC-BUILDER-026
 TC-BUILDER-027
 TC-BUILDER-029
 TC-BUILDER-030
+TC-A11Y-001
+TC-A11Y-002
+TC-A11Y-004
 TC-A11Y-005
+TC-A11Y-006
+TC-A11Y-007
+TC-A11Y-008
+TC-A11Y-009
+TC-A11Y-010
+TC-A11Y-011
+TC-A11Y-012
 TC-ONBOARD-007
 ```
 
@@ -143,9 +166,15 @@ Known expected-fail checks counted as passed by Playwright:
 TC-SOURCE-016
 TC-SOURCE-017
 TC-SOURCE-018
+TC-SOURCE-033
+TC-A11Y-001
+TC-A11Y-002
+TC-A11Y-007
+TC-A11Y-008
+TC-A11Y-011
 ```
 
-These represent current source-input validation gaps on staging.
+These represent current source-input validation gaps, the current Manual-source schedule guard gap, and current A11Y baseline gaps on staging.
 
 Latest auth negative/password run:
 
@@ -156,6 +185,30 @@ pnpm run test:auth:negative -- --reporter=line
 ```
 
 Pass coverage: wrong-password rejection, unknown-email login rejection, blank email/password submit guards, password show/hide behavior, password reveal reset after returning to email step, password toggle accessibility, forgot-password unknown email anti-enumeration copy, and signed-out `/settings` protection.
+
+Latest auth session/protected-route run:
+
+```text
+pnpm run test:auth:session -- --reporter=line
+4 Playwright checks
+4 passed
+```
+
+Pass coverage: valid creator login, signed-out protected-route gate, authenticated `/sources` access, logout invalidation across browser Back/direct/refresh, and removed local session handling. `TC-AUTH-012` is marked partial because server-side expired/revoked token simulation is still gated.
+
+Latest A11Y baseline run:
+
+```text
+npm run test:a11y -- --reporter=line
+7 Playwright checks
+4 normal pass checks
+3 expected-fail checks
+0 unexpected failures
+```
+
+Pass coverage: editor heading/region structure, invalid publish error guard with no live-site success action, alert/live semantics for sign-in validation error, named icon controls, and keyboard reachability from Sources to Channel Videos without ingestion.
+
+Expected-fail coverage: `TC-A11Y-001`, `TC-A11Y-002`, and `TC-A11Y-011` because editor `Open the live site` is `171x20`; `TC-A11Y-007` because the Sources backfill date input has no accessible name; `TC-A11Y-008` because core console focus stops lack a measurable visible focus indicator.
 
 Latest connected-source no-data run:
 
@@ -174,6 +227,19 @@ npm run test:sources:action-no-data
 ```
 
 Per-case QA status for `TC-SOURCE-034A`, `TC-SOURCE-038A`, `TC-SOURCE-042A`, and `TC-SOURCE-045A` is partial until backend job/content count assertions are added.
+
+Latest connected-source management/mode-switch run:
+
+```text
+npm run test:sources:management
+4 Playwright checks passed
+3 normal pass checks
+1 expected-fail check
+```
+
+Pass coverage: delete confirmation cancel, Auto-to-Manual switch, Manual-to-Auto switch, current mode display, Manual hiding `Run crawl`, Manual hiding `Backfill`, Auto preselected on the connect form, and mode switching with no new recent run on the idle fixture.
+
+Expected-fail coverage: `TC-SOURCE-033` because current staging still exposes `Schedule` on a Manual source and opens the recurring schedule dialog. `TC-INGEST-MODE-007` remains partial because the current automation covers idle/no-side-effect switching; a long-running crawl fixture is still needed for in-flight crawl behavior.
 
 Latest connected-source populated crawl-data run:
 
@@ -268,9 +334,11 @@ Automation flow mapping is documented in:
 qa-ai-workflow/automation/smoke-flow.md
 qa-ai-workflow/automation/auth-account-flow.md
 qa-ai-workflow/automation/auth-negative-password-flow.md
+qa-ai-workflow/automation/auth-session-security-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
+qa-ai-workflow/automation/a11y-baseline-flow.md
 qa-ai-workflow/automation/source-flow.md
 qa-ai-workflow/automation/public-site-flow.md
 qa-ai-workflow/automation/site-editor-flow.md

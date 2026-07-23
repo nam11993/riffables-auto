@@ -8,9 +8,11 @@ Flow-to-testcase mapping is tracked in:
 qa-ai-workflow/automation/smoke-flow.md
 qa-ai-workflow/automation/auth-account-flow.md
 qa-ai-workflow/automation/auth-negative-password-flow.md
+qa-ai-workflow/automation/auth-session-security-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
+qa-ai-workflow/automation/a11y-baseline-flow.md
 qa-ai-workflow/automation/source-flow.md
 qa-ai-workflow/automation/public-site-flow.md
 qa-ai-workflow/automation/site-editor-flow.md
@@ -41,6 +43,15 @@ The first smoke flow covers:
 | `TC-AUTH-034` | Forgot-password request for generated unknown email returns generic confirmation without account-existence leak. |
 | `TC-AUTH-043` | Signed-out `/settings` is gated and cannot trigger `Change password`. |
 
+## Current Auth Session Security Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-AUTH-007` | Valid creator login reaches authenticated tenant console with navigation, workspace switch, and `Sign out`. |
+| `TC-AUTH-010` | Signed-out protected route is gated before authenticated access to `/sources` succeeds. |
+| `TC-AUTH-011` | Sign out blocks browser Back, direct protected route, and refresh access. |
+| `TC-AUTH-012` | Removed local session is gated after cookie/localStorage/sessionStorage clearing; server-side expired/revoked token remains gated. |
+
 ## Current Source Scope
 
 | Test Case ID | Coverage |
@@ -58,6 +69,9 @@ The first smoke flow covers:
 | `TC-SOURCE-023` | No-source workspace shows first-source empty state and no ingestion runs. |
 | `TC-SOURCE-024`, `TC-SOURCE-039` | Connected Auto source card, metadata, crawl controls, pipeline, and recent runs are visible before crawl data exists. |
 | `TC-SOURCE-025`, `TC-SOURCE-026` | Source Details modal and details-to-content navigation stay scoped to the active workspace/source. |
+| `TC-SOURCE-027` | Delete source confirmation can be opened and cancelled without changing source status, mode, recent runs, or pipeline state. |
+| `TC-SOURCE-029`, `TC-SOURCE-030` | Connected source switches Auto -> Manual -> Auto and is restored to the configured target mode after the mutating run. |
+| `TC-SOURCE-033` | Manual-source schedule guard. Expected-fail on current staging because `Schedule` is still visible in Manual mode and opens the recurring schedule dialog. |
 | `TC-SOURCE-031` | Schedule modal exposes recurring crawl cadence choices and closes without creating a schedule. |
 | `TC-SOURCE-036`, `TC-SOURCE-037` | Force rerun and backfill controls are visible without submitting run/backfill work. Partial pass until crawl data/job fixtures exist. |
 | `TC-SOURCE-040` | Page Refresh reloads visible state without changing connected source configuration. |
@@ -73,6 +87,7 @@ The first smoke flow covers:
 | `TC-INGEST-018`, `TC-CRAWL-013` | Successful audio clip content shows transcript after ingest. |
 | `TC-SOURCE-045`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-CRAWL-013`, `TC-INGEST-018` | Exact selected two-video ingest completed with `2/2` run total and transcript content. |
 | `TC-SOURCE-034`, `TC-CRAWL-002`, `TC-CRAWL-010`, `TC-INGEST-018` | Full populated Run crawl success contract. Current staging fails because the audio fixture returns provider `Video unavailable`. |
+| `TC-INGEST-MODE-006`, `TC-INGEST-MODE-007`, `TC-INGEST-MODE-011`, `TC-INGEST-MODE-014`, `TC-INGEST-MODE-015` | Source mode display, Auto preselection, Manual hiding Run/Backfill, and idle no-side-effect mode switching. `TC-INGEST-MODE-007` remains partial until a running-crawl fixture exists. |
 
 ## Current Home Scope
 
@@ -86,6 +101,19 @@ The first smoke flow covers:
 | `TC-CONSOLE-026` | Home How it works sequence explains connect, extract, and publish. |
 | `TC-A11Y-005` | Dashboard screens have one visible `h1` and ordered headings. |
 | `TC-ONBOARD-007` | First authenticated Home visit asks whether the user is new. |
+
+## Current A11Y Baseline Scope
+
+| Test Case ID | Coverage |
+| --- | --- |
+| `TC-A11Y-001`, `TC-A11Y-002`, `TC-A11Y-011` | Expected-fail target-size baseline. Current staging has editor `Open the live site` at `171x20`, below the 24px height requirement. |
+| `TC-A11Y-004` | Invalid publish/domain path does not expose `View live site` success action and makes no publish mutation. |
+| `TC-A11Y-006` | Site Editor exposes `Page sections`, `Section settings`, Preview, Publish, and navigation landmark structure. |
+| `TC-A11Y-007` | Expected-fail accessibility baseline. Current staging exposes the Sources backfill date input without an accessible name. |
+| `TC-A11Y-008` | Expected-fail visible focus indicator baseline. Keyboard reaches controls, but focus indicators are not measurable on core console stops. |
+| `TC-A11Y-009` | Wrong-password validation error uses alert/live semantics and keeps keyboard focus usable. |
+| `TC-A11Y-010` | Icon-only buttons and representative editor controls expose accessible names. |
+| `TC-A11Y-012` | Keyboard reaches core console controls and opens the Sources Channel Videos dialog without ingestion. |
 
 ## Current Workspace/Account Scope
 
@@ -210,6 +238,12 @@ SOURCE_CRAWL_WAIT_MS
 SOURCE_EXACT_SELECTED_TITLES
 SOURCE_EXACT_SELECTED_EXPECTED_TOTAL
 SOURCE_EXACT_SELECTED_EXPECTED_TRANSCRIPT_COUNT
+SOURCE_MODE_MUTATION_ENABLED
+SOURCE_MODE_RESTORE_TARGET
+SOURCE_MANUAL_SCHEDULE_GAP
+A11Y_TARGET_SIZE_GAP
+A11Y_ACCESSIBLE_NAME_GAP
+A11Y_FOCUS_INDICATOR_GAP
 ```
 
 The sign-in page also has a `Continue with Google` option, but this smoke suite prioritizes the direct email/password form submit. If a future account is routed through Google OAuth, Playwright may be blocked by Google's browser automation protections. In that case the authenticated smoke tests are skipped with an explicit reason. To run that OAuth variant, provide one of these:
@@ -263,6 +297,12 @@ Auth negative/password focused run:
 pnpm run test:auth:negative
 ```
 
+Auth session/protected-route focused run:
+
+```powershell
+pnpm run test:auth:session
+```
+
 Latest smoke staging check:
 
 ```text
@@ -275,12 +315,13 @@ The skipped test is `TC-PUBLIC-009`, which requires `PUBLIC_SITE_URL`.
 Latest auth account staging check:
 
 ```text
-15 Playwright tests
+19 Playwright tests
 7 auth-negative/password checks passed
+4 auth-session/protected-route checks passed
 8 account/setup checks previously passed
 ```
 
-The auth suite covers login rejection, blank validation, password visibility/accessibility, unknown-email forgot-password safety, signed-out settings protection, `TC-AUTH-023`, `TC-AUTH-024`, `TC-AUTH-025`, and setup-organization cases `TC-AUTH-044` through `TC-AUTH-048`. Password reset/change completion cases that require mailbox or reset-link capture remain manual/gated.
+The auth suite covers login rejection, blank validation, password visibility/accessibility, unknown-email forgot-password safety, signed-out settings protection, session invalidation, removed local session handling, `TC-AUTH-023`, `TC-AUTH-024`, `TC-AUTH-025`, and setup-organization cases `TC-AUTH-044` through `TC-AUTH-048`. Password reset/change completion cases that require mailbox or reset-link capture remain manual/gated.
 
 Latest workspace/account staging check:
 

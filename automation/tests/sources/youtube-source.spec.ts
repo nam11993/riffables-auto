@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import {
   dismissOnboardingIfPresent,
   hasCredentials,
@@ -250,6 +250,125 @@ test.describe('YouTube source connection flows', () => {
     expect(after.hasRunCrawl).toBe(before.hasRunCrawl);
     expect(after.hasBackfill).toBe(before.hasBackfill);
     expect(after.hasPipeline).toBe(true);
+  });
+
+  test.describe.serial('Connected source management and mode switch', () => {
+    let context: BrowserContext;
+    let page: Page;
+    let source: YouTubeSource;
+    let initialMode: SourceMode;
+    let restoreMode: SourceMode;
+
+    test.beforeAll(async ({ browser }) => {
+      const config = smokeConfig();
+      test.skip(!hasCredentials(config), 'Set SMOKE_EMAIL and SMOKE_PASSWORD to run source management automation.');
+
+      source = youtubeSource();
+      context = await browser.newContext({ baseURL: config.baseURL });
+      page = await context.newPage();
+      await openConnectedSources(page, source.handle);
+      initialMode = await connectedSourceMode(page);
+      restoreMode = sourceModeRestoreTarget();
+    });
+
+    test.afterAll(async () => {
+      if (page && initialMode && sourceModeMutationEnabled()) {
+        await page.goto('/sources');
+        await page.waitForLoadState('networkidle').catch(() => undefined);
+        await dismissOnboardingIfPresent(page);
+        if (await hasConnectedSource(page, source.handle)) {
+          await switchConnectedSourceMode(page, restoreMode);
+        }
+      }
+
+      await context?.close();
+    });
+
+    test('TC-INGEST-MODE-011 @source-management Auto option is preselected before source connection completes', async () => {
+      await openConnectedSources(page, source.handle);
+
+      const sourceInput = youtubeSourceInput(page);
+      const autoModeButton = modeChoiceButton(page, 'Auto crawl');
+      const manualModeButton = modeChoiceButton(page, 'Manual selection');
+
+      await expect(autoModeButton).toBeVisible();
+      await expect(manualModeButton).toBeVisible();
+      await expect(autoModeButton).toHaveClass(/bg-zinc-100/);
+      await expect(page.getByText(/Latest and new videos are ingested automatically/i)).toBeVisible();
+
+      await sourceInput.fill(source.handle);
+      await expect(sourceInput).toHaveValue(source.handle);
+      await expect(autoModeButton).toHaveClass(/bg-zinc-100/);
+      await expect(verifyWithGoogleButton(page)).toBeEnabled();
+    });
+
+    test('TC-SOURCE-027 @source-management Delete source confirmation can be cancelled without side effects', async () => {
+      await openConnectedSources(page, source.handle);
+      const before = await connectedSourceBaseline(page, source.handle);
+      const beforeRunCount = await sourceRunCount(page);
+      const beforeMode = await connectedSourceMode(page);
+
+      await sourceActionButton(page, 'Delete').click();
+
+      const dialog = await visibleDialog(page);
+      await expect(dialog).toContainText(/delete/i);
+      await expect(dialog).toContainText(source.handle);
+
+      await cancelOrCloseDialog(page, dialog);
+      await page.goto('/sources');
+      await page.waitForLoadState('networkidle').catch(() => undefined);
+      await dismissOnboardingIfPresent(page);
+
+      const after = await connectedSourceBaseline(page, source.handle);
+      expect(after.handleVisible).toBe(true);
+      expect(after.statusVisible).toBe(before.statusVisible);
+      expect(await connectedSourceMode(page)).toBe(beforeMode);
+      expect(await sourceRunCount(page)).toBe(beforeRunCount);
+      expect(after.hasPipeline).toBe(true);
+    });
+
+    test('TC-SOURCE-029 TC-SOURCE-030 TC-INGEST-MODE-006 TC-INGEST-MODE-007 TC-INGEST-MODE-014 TC-INGEST-MODE-015 @source-management source mode switch is reversible and side-effect free', async () => {
+      test.skip(!sourceModeMutationEnabled(), 'Set SOURCE_MODE_MUTATION_ENABLED=true to run reversible source mode switch automation.');
+
+      await openConnectedSources(page, source.handle);
+      const beforeRunCount = await sourceRunCount(page);
+      const beforeLatestRun = latestRecentRunText(await sourceScreenText(page));
+
+      await switchConnectedSourceMode(page, 'Auto');
+      await expectConnectedSourceMode(page, 'Auto');
+      await expect(sourceActionButton(page, 'Run crawl')).toBeVisible();
+      await expect(sourceActionButton(page, 'Backfill')).toBeVisible();
+      await expect(sourceActionButton(page, 'Schedule')).toBeVisible();
+
+      await switchConnectedSourceMode(page, 'Manual');
+      await expectConnectedSourceMode(page, 'Manual');
+      await expect(sourceActionButton(page, 'Run crawl')).toHaveCount(0);
+      await expect(sourceActionButton(page, 'Backfill')).toHaveCount(0);
+
+      expect(await sourceRunCount(page)).toBe(beforeRunCount);
+      expect(latestRecentRunText(await sourceScreenText(page))).toBe(beforeLatestRun);
+
+      await switchConnectedSourceMode(page, restoreMode);
+      await expectConnectedSourceMode(page, restoreMode);
+    });
+
+    test('TC-SOURCE-033 @source-management manual source cannot create automatic schedule', async () => {
+      test.skip(!sourceModeMutationEnabled(), 'Set SOURCE_MODE_MUTATION_ENABLED=true to verify Manual-mode schedule guard.');
+      test.fail(
+        sourceManualScheduleGapExpected(),
+        'Current staging still exposes Schedule for Manual sources and opens the recurring schedule dialog.'
+      );
+
+      await openConnectedSources(page, source.handle);
+      await switchConnectedSourceMode(page, 'Manual');
+      await expectConnectedSourceMode(page, 'Manual');
+      const beforeRunCount = await sourceRunCount(page);
+      const beforeLatestRun = latestRecentRunText(await sourceScreenText(page));
+
+      await expect(sourceActionButton(page, 'Schedule')).toHaveCount(0);
+      expect(await sourceRunCount(page)).toBe(beforeRunCount);
+      expect(latestRecentRunText(await sourceScreenText(page))).toBe(beforeLatestRun);
+    });
   });
 
   test('TC-SOURCE-041 TC-SOURCE-043 @connected-no-data Channel Videos panel handles empty catalog search and pagination without ingest', async ({
@@ -910,6 +1029,8 @@ type YouTubeSource = {
   url: string;
 };
 
+type SourceMode = 'Auto' | 'Manual';
+
 const futureSourceTypes = ['YouTube video', 'Spotify show', 'Spotify episode', 'Blog RSS', 'Blog URL'];
 
 const malformedYouTubeHandles = ['@', '@@bad', '@bad handle', 'youtube.com/@', '@bad!handle'];
@@ -960,9 +1081,111 @@ function verifyWithGoogleButton(page: Page): Locator {
   return page.getByRole('button', { name: /verify with google/i });
 }
 
+function modeChoiceButton(page: Page, label: 'Auto crawl' | 'Manual selection'): Locator {
+  return page.locator('main button').filter({ hasText: new RegExp(`^${escapeRegExp(label)}$`, 'i') }).first();
+}
+
+function sourceActionButton(page: Page, label: string): Locator {
+  return page.locator('main button').filter({ hasText: new RegExp(`^${escapeRegExp(label)}$`, 'i') });
+}
+
+async function connectedSourceMode(page: Page): Promise<SourceMode> {
+  await dismissBlockingSourceDialogIfPresent(page);
+
+  if (await sourceActionButton(page, 'Switch to auto').first().isVisible().catch(() => false)) {
+    return 'Manual';
+  }
+
+  if (await sourceActionButton(page, 'Switch to manual').first().isVisible().catch(() => false)) {
+    return 'Auto';
+  }
+
+  return /\bManual\b/.test(await sourceScreenText(page)) ? 'Manual' : 'Auto';
+}
+
+async function expectConnectedSourceMode(page: Page, mode: SourceMode): Promise<void> {
+  await expect(page.getByText(mode, { exact: true }).first()).toBeVisible();
+
+  if (mode === 'Auto') {
+    await expect(sourceActionButton(page, 'Switch to manual').first()).toBeVisible();
+    await expect(sourceActionButton(page, 'Run crawl')).toHaveCount(1);
+    await expect(sourceActionButton(page, 'Backfill')).toHaveCount(1);
+    return;
+  }
+
+  await expect(sourceActionButton(page, 'Switch to auto').first()).toBeVisible();
+  await expect(sourceActionButton(page, 'Run crawl')).toHaveCount(0);
+  await expect(sourceActionButton(page, 'Backfill')).toHaveCount(0);
+}
+
+async function switchConnectedSourceMode(page: Page, mode: SourceMode): Promise<void> {
+  await dismissBlockingSourceDialogIfPresent(page);
+  if ((await connectedSourceMode(page)) === mode) {
+    return;
+  }
+
+  const action = mode === 'Auto' ? sourceActionButton(page, 'Switch to auto').first() : sourceActionButton(page, 'Switch to manual').first();
+  await expect(action).toBeVisible();
+  await action.click();
+
+  const dialog = page.locator('[role="dialog"]:visible, dialog:visible').first();
+  if (await dialog.isVisible().catch(() => false)) {
+    const confirm = dialog
+      .locator('button')
+      .filter({ hasText: new RegExp(`switch to ${mode.toLowerCase()}|confirm|save|update|continue`, 'i') })
+      .filter({ hasNotText: /cancel|close/i })
+      .first();
+
+    if (await confirm.isVisible().catch(() => false)) {
+      await confirm.click();
+    }
+  }
+
+  await waitForSourceActionFeedback(page);
+  await page.goto('/sources');
+  await page.waitForLoadState('networkidle').catch(() => undefined);
+  await dismissBlockingSourceDialogIfPresent(page);
+  await expectConnectedSourceMode(page, mode);
+}
+
+async function visibleDialog(page: Page): Promise<Locator> {
+  const dialog = page.locator('[role="dialog"]:visible, dialog:visible').first();
+  await expect(dialog).toBeVisible();
+
+  return dialog;
+}
+
+async function cancelOrCloseDialog(page: Page, dialog: Locator): Promise<void> {
+  const cancel = dialog.locator('button').filter({ hasText: /cancel|close/i }).first();
+  if (await cancel.isVisible().catch(() => false)) {
+    await cancel.click();
+  } else {
+    await page.keyboard.press('Escape');
+  }
+
+  await expect(dialog).toBeHidden();
+}
+
+async function dismissBlockingSourceDialogIfPresent(page: Page): Promise<void> {
+  const dialog = page.locator('[role="dialog"]:visible, dialog:visible').first();
+  if (!(await dialog.isVisible().catch(() => false))) {
+    return;
+  }
+
+  const dismiss = dialog.getByRole('button', { name: /I've been here before|Close/i }).or(
+    dialog.locator('button').filter({ hasText: /I've been here before|Close/i })
+  );
+
+  if (await dismiss.first().isVisible().catch(() => false)) {
+    await dismiss.first().click();
+    await dialog.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => undefined);
+  }
+}
+
 async function openConnectedSources(page: Page, handle: string): Promise<void> {
   await openSources(page);
   await expectSourceManagement(page);
+  await dismissBlockingSourceDialogIfPresent(page);
 
   test.skip(
     !(await hasConnectedSource(page, handle)),
@@ -1182,6 +1405,18 @@ function emptyBackfillDate(): string {
 
 function sourceActionNoDataEnabled(): boolean {
   return process.env.SOURCE_ACTION_NO_DATA === 'true';
+}
+
+function sourceModeMutationEnabled(): boolean {
+  return process.env.SOURCE_MODE_MUTATION_ENABLED === 'true';
+}
+
+function sourceModeRestoreTarget(): SourceMode {
+  return process.env.SOURCE_MODE_RESTORE_TARGET === 'Manual' ? 'Manual' : 'Auto';
+}
+
+function sourceManualScheduleGapExpected(): boolean {
+  return process.env.SOURCE_MANUAL_SCHEDULE_GAP !== 'false';
 }
 
 type CrawlDataFixture = {

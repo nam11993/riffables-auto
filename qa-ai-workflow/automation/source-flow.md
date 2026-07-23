@@ -48,6 +48,20 @@ automation/tests/sources/youtube-source.spec.ts
 | Result | `4 Playwright checks passed in 44.0s; per-case QA status is partial because backend job/content counts were not observable in this run.` |
 | Covered cases | `TC-SOURCE-034A`, `TC-SOURCE-038A`, `TC-SOURCE-042A`, `TC-SOURCE-045A` |
 
+## Latest Connected Source Management / Mode Switch Run
+
+| Field | Value |
+| --- | --- |
+| Run date | `2026-07-23` |
+| Environment | `https://riffables.speedrunlabs.ai` |
+| Browser | `Playwright Chromium` |
+| Fixture | Connected YouTube source `@nhnbaohan` |
+| Command | `npm run test:sources:management` with `SOURCE_MODE_MUTATION_ENABLED=true` and `SOURCE_MODE_RESTORE_TARGET=Auto` |
+| Result | `4 Playwright checks passed: 3 normal pass checks and 1 expected-fail schedule guard check.` |
+| Covered cases | `TC-SOURCE-027`, `TC-SOURCE-029`, `TC-SOURCE-030`, `TC-SOURCE-033`, `TC-INGEST-MODE-006`, `TC-INGEST-MODE-007`, `TC-INGEST-MODE-011`, `TC-INGEST-MODE-014`, `TC-INGEST-MODE-015` |
+| Product gap | `TC-SOURCE-033` is expected-fail because current staging still exposes `Schedule` for Manual sources and opens the recurring schedule dialog. |
+| Restore check | `npm run test:sources:connected` passed after the suite, confirming the source was restored to Auto with crawl controls visible. |
+
 ## Latest Connected Source Crawl-Data Run
 
 | Field | Value |
@@ -113,6 +127,9 @@ automation/tests/sources/youtube-source.spec.ts
 | Connected YouTube channel is active with crawl controls | `TC-SOURCE-014` | `Auto PASS 2026-07-17` | Rerun after source connection verified `@nhnbaohan` under connected sources as an active Auto YouTube channel. Mutating actions such as `Run crawl`, `Force rerun`, and `Backfill` are checked for presence but not clicked. |
 | Connected source card and pipeline are visible before crawl data exists | `TC-SOURCE-024`, `TC-SOURCE-039` | `Auto PASS 2026-07-17` | Verifies the active YouTube source card, Auto mode, metadata, controls, crawl modifiers, pipeline cards, and recent runs area without submitting crawl/backfill work. |
 | Connected source details and content navigation stay tenant-scoped | `TC-SOURCE-025`, `TC-SOURCE-026` | `Auto PASS 2026-07-17` | Opens Details, verifies diagnostic metadata and close behavior, then verifies `View crawled content` keeps the selected source/workspace context when the CTA is available. |
+| Delete source confirmation cancel | `TC-SOURCE-027` | `Auto PASS 2026-07-23` | Opens Delete confirmation for `@nhnbaohan`, verifies the dialog identifies the source, cancels it, reloads `/sources`, and confirms status, mode, run count, and pipeline state remain stable. |
+| Source Auto/Manual mode switch | `TC-SOURCE-029`, `TC-SOURCE-030`, `TC-INGEST-MODE-006`, `TC-INGEST-MODE-007`, `TC-INGEST-MODE-014`, `TC-INGEST-MODE-015` | `Auto PASS/PARTIAL PASS 2026-07-23` | Switches Auto -> Manual -> Auto, verifies Manual hides `Run crawl`/`Backfill`, Auto restores `Run crawl`/`Backfill`/`Schedule`, and checks mode switching does not create a new recent run. `TC-INGEST-MODE-007` remains partial until a long-running crawl fixture is available. |
+| Manual source schedule guard | `TC-SOURCE-033` | `Auto EXPECTED FAIL 2026-07-23` | Current staging still shows `Schedule` on Manual source and opens the recurring schedule dialog. The automation marks this as expected-fail until UI/API fail closed for Manual automatic scheduling. |
 | Recurring schedule modal can be reviewed without creating a schedule | `TC-SOURCE-031` | `Auto PASS 2026-07-17` | Opens Schedule, verifies cadence choices and actions, then closes the modal without saving. |
 | Force rerun and backfill controls are visible but not submitted in no-data run | `TC-SOURCE-036`, `TC-SOURCE-037` | `Auto PARTIAL PASS 2026-07-17` | Verifies control visibility and no-submit guard only. Full force-rerun semantics and backfill validation still require approved data and job observability. |
 | Run crawl with no eligible data | `TC-SOURCE-034A` | `Auto PARTIAL PASS 2026-07-17` | Clicks `Run crawl` on the connected no-data fixture and verifies the source remains connected, the page exposes source feedback areas, and the UI does not render broken values. Backend job/content counts still need observability. |
@@ -175,12 +192,8 @@ TC-SOURCE-012
 TC-SOURCE-019
 TC-SOURCE-020
 TC-SOURCE-021
-TC-SOURCE-027
 TC-SOURCE-028
-TC-SOURCE-029
-TC-SOURCE-030
 TC-SOURCE-032
-TC-SOURCE-033
 TC-SOURCE-034
 TC-SOURCE-035
 TC-SOURCE-038

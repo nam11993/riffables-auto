@@ -37,7 +37,7 @@ Forgot password sends a reset link to the target mailbox. Authenticated change p
 
 The email-link completion coverage is intentionally split into separate testcase IDs:
 
-- Forgot-password reset completion and related negative/security cases: `TC-AUTH-026` through `TC-AUTH-034`.
-- Change-password completion and related negative/security cases: `TC-AUTH-035` through `TC-AUTH-043`.
+- Forgot-password reset completion and related negative/security cases that need mailbox/reset-link capture: `TC-AUTH-026` through `TC-AUTH-033`. Unknown-email request safety is covered in `auth-negative-password-flow.md`.
+- Change-password completion and related negative/security cases that need mailbox/reset-link capture: `TC-AUTH-035` through `TC-AUTH-042`. Signed-out settings protection is covered in `auth-session-security-flow.md`.
 
 Until mailbox access or reset-link capture is available, Playwright does not automate those completion cases.

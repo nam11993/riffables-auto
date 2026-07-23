@@ -14,11 +14,11 @@ Current status:
 
 - 74/74 included requirement IDs are covered.
 - 400 total test cases.
-- 129 test cases currently have automation status.
+- 152 test cases currently have automation status.
 - Foundation smoke cases cover authentication, protected routes, workspace context, password visibility, Google OAuth start/error states, and YouTube source connection.
 - All 400 cases use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
 - Acceptance-criteria execution cases add missing depth from the first draft.
-- The latest update adds focused coverage for Baohan site creation, editor editing, publish lifecycle, Baohan public-site verification, site-editor Assistant diffs, onboarding consent, console backend API wiring, public labels, and audience chat.
+- The latest update adds A11Y baseline automation for target size, editor headings, landmarks/names/alt baseline, visible focus indicator, validation alert semantics, icon-button names, and keyboard navigation.
 
 Covered modules:
 
