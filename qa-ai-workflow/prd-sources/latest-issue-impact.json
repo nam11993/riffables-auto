@@ -1,131 +1,2016 @@
-{
-  "synced_at": "2026-07-23 14:58:42 +07:00",
-  "repository": "speedrun-labs/riffables-prd",
-  "current_snapshot": "qa-ai-workflow/prd-sources/snapshots/issues-20260723-145842.json",
-  "previous_snapshot": "qa-ai-workflow/prd-sources/snapshots/issues-previous-for-20260723-145842.json",
-  "report": "qa-ai-workflow/prd-sources/change-reports/issue-change-impact-20260723-145842.md",
-  "has_previous": true,
-  "total_issues": 73,
-  "open_issues": 21,
-  "closed_issues": 52,
-  "new_issues": [
-    {
-      "number": 73,
-      "title": "Task: [frontend] Set or reset a password — account Settings + forgot-password",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/73",
-      "labels": [],
-      "created_at": "2026-07-16T04:09:40.000Z",
-      "updated_at": "",
-      "closed_at": "2026-07-16T04:10:29.000Z",
-      "author": "sunday19x3",
-      "body": "sunday19x3\nopened\nSource\nParent: Vision: Creator Console Dashboard (Vision: Creator Console Dashboard #15)\nRelated: Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in #72 (Continue-with-Google wiring) — this closes the gap that flow opened.\nGoal\n\nAn operator can give their account a password and recover a forgotten one, without ever being forced to.\n\nWhy\n\nTwo holes appeared once Google sign-in shipped:\n\nA Google sign-up has no password at all, so email/password sign-in is permanently closed to them — with no way to open it. If they ever lose access to the Google account, they lose the workspace.\nThe sign-in form had no recovery path — a forgotten password locked you out with nothing to click.\n\nA rejected alternative: forcing a password at Google sign-up. That defeats the point of social login (the user picked Google precisely to avoid a password), and it weakens security rather than strengthening it — a Google account is already protected by Google's 2FA/risk checks, while a coerced password is the kind that gets reused or written down. The password stays optional.\n\nMechanic\n\nNo new backend endpoint. BetterAuth has no self-serve set-password route, but its /reset-password creates the credential account when one is missing (api/routes/password.mjs) — which is exactly the \"add a password\" case. So one emailed round-trip serves all three needs: add a first password, change an existing one, recover a forgotten one. Proof of identity is the mailbox — already verified by Google.\n\nExample of done\nSettings → Password reads /list-accounts and offers Add a password (Google-only) or Change password, emailing a link to the account address.\nThe link lands on /reset-password: ?token= shows the form (8-character minimum, show/hide toggle); ?error=INVALID_TOKEN explains the link expired and points back to Settings.\nSign-in → password step offers Forgot password?, emailing the same link (sign-in only — a sign-up has no password to recover).\nSigning in with Google never forces a password.\nShipped\n\nOn riffables-monorepo main:\n\n2f6061e — /settings + /reset-password, plus the auth-proxy allowlist for list-accounts (GET), request-password-reset and reset-password (POST). Settings is reachable from the workspace switcher; the sidebar keeps its four product surfaces.\n4840b4f — forgot-password on the sign-in form.\nNote for dev/infra\n\nredirectTo is validated against BETTER_AUTH_TRUSTED_ORIGINS, which currently lists only https://riffables.speedrunlabs.ai. The flow therefore works on the deployed console but returns \"Invalid redirectURL\" when exercised from http://localhost:3000. If local testing of this flow is wanted, add the localhost origin to that env — no code change needed.\n\nVerified\n\nPreview: both /reset-password states (valid token → form; expired → recovery copy) render and gate correctly; the forgot-password click reaches the backend through the proxy allowlist. eslint + production build pass. The full mail round-trip needs the deployed origin.",
-      "body_hash": "386891d9aa59969049bbb13b399022f35ade9c3cff71335ce86bb5fe0e4c3ecd",
-      "content_hash": "b66b63e1618e47ee8cdd08d069d06058b1df7c7dd3f240baca7bc90257a1f19e"
-    },
-    {
-      "number": 74,
-      "title": "Epic: Operator image asset library — images for site & article content",
-      "state": "open",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/74",
-      "labels": [],
-      "created_at": "2026-07-16T07:10:43.000Z",
-      "updated_at": "",
-      "closed_at": "",
-      "author": "phanhoc",
-      "body": "phanhoc\nopened\nParent Vision\n\nDecomposes #16 (Public Audience Site) — the images operators place in their site and article content.\n\nMilestone\n\nV1\n\nMechanic\n\nAn operator uploads an image (a logo, a hero image, an in-article picture) and the platform hands back a permanent public URL they can drop into their site or article content. Uploading the same image again returns the same URL instead of piling up duplicates. Each operator keeps a private library of their own uploads they can browse, label, and remove; removing an image takes it out of the library while any site or article already using it keeps rendering. Images are the operator's own — one operator never sees or touches another's uploads.\n\noperator picks an image ─▶ upload ─▶ gets a permanent public URL\n                                        │\n       same image again ────────────────┘ (same URL, no duplicate)\n\nlibrary:  browse my images · label · remove (embeds already placed keep working)\n\nWhat an operator can do\nAction\tOutcome\nUpload an image\tReceives a permanent public URL usable anywhere (site content, articles, embeds)\nRe-upload the same image\tGets the same URL back — no duplicate is created\nBrowse their library\tSees only the images they uploaded, newest first\nLabel an image\tGives an image a human-readable name / alt text\nRemove an image\tDrops it from the library; already-placed copies keep loading\nAcceptance criteria\nAn operator can upload a PNG, JPEG, WebP, or GIF and immediately receive a public URL that loads the image in any browser.\nAn upload larger than 10 MB is rejected with a clear error and nothing is stored.\nA non-image file — or an SVG — is rejected; only raster images are accepted (the check does not trust the client-declared file type).\nRe-uploading a byte-for-byte identical image returns the same existing URL rather than creating a second copy.\nAn operator listing their images sees only images they uploaded; another operator's images are never listed or reachable through their account.\nEach image carries its original filename, type, size, and an editable label.\nAn operator with many images can page through the full library.\nRemoving an image takes it out of the operator's library, but a site or article that already embedded that image still renders it (the URL keeps resolving).\nLocked constants\nMax upload size: 10 MiB\nAllowed types: PNG, JPEG, WebP, GIF (raster only; SVG excluded)\nOwnership: per-operator (an operator manages only their own uploads), tenant-isolated\nURLs: permanent and public — safe to embed in published content\nRemove is soft: the stored image stays reachable so already-placed embeds never break\nBackend dependencies\nPublic object storage (the same S3-compatible store — MinIO in dev / R2 in prod — already used to hold ingested audio in Pillar A), configured with a public bucket + public base URL.\nOut of scope\nConsole UI for uploading and picking images inside the site/article editor (a separate frontend Task).\nImage processing — resizing, thumbnails, re-encoding, EXIF stripping.\nAudience-side uploads (only operators upload; the audience only views).\nNon-image assets (documents, video, audio).\nReclaiming storage for removed images / CDN cache purge.\nSource\nParent Vision: Vision: Public Audience Site #16 (Public Audience Site)\nPRD: PRD.md § 4 High-level design (Creator Console surface; audience site content)\nImplementation (separate repo): riffables-monorepo PR Task: Offer a 'View live site' action right after publishing #47 — design + plan at docs/superpowers/specs/2026-07-15-image-asset-upload-design.md",
-      "body_hash": "86c2e08926250346f5edd2ebd60821b60c27b207e3da83ff6a13e22aab0a78e8",
-      "content_hash": "0b4f9cb2b132c70092a40bdf3e9431c4ce4982d2efedaf5516c34a32af3043d1"
-    }
-  ],
-  "changed_issues": [
-    {
-      "number": 66,
-      "title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/66",
-      "changed_fields": [
-        "state",
-        "labels"
-      ],
-      "previous_hash": "0a25f49dd74af90dd3fb39c3323daa0e018af28193317cfe12384dfe028b88ff",
-      "current_hash": "59da135afb43d7176d605c773b0f875e6679e300e5da104fc67dbcb3b59aec4b",
-      "previous_date": "",
-      "current_date": ""
-    },
-    {
-      "number": 70,
-      "title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
-      "state": "open",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/70",
-      "changed_fields": [
-        "state"
-      ],
-      "previous_hash": "15e0214b394cde4220f95c634aa95dd5830c74568ac5eeb75590fc2c844e1996",
-      "current_hash": "f84612a8c0351b33e1d078f0307495ada387f9835288b61f204aa14acce567d9",
-      "previous_date": "",
-      "current_date": ""
-    },
-    {
-      "number": 71,
-      "title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
-      "state": "closed",
-      "html_url": "https://github.com/speedrun-labs/riffables-prd/issues/71",
-      "changed_fields": [
-        "state"
-      ],
-      "previous_hash": "59f8c6fa59e6a1fbd8c065e640d4dc4eece5adc14249638ca377bf0646031e07",
-      "current_hash": "d74f576e8c56a6cf6c934a68d91e03d956e7ce15086c5b9455c21b208cedeb30",
-      "previous_date": "",
-      "current_date": ""
-    }
-  ],
-  "removed_issues": [],
-  "impacted_artifacts": [
-    {
-      "issue_number": 66,
-      "issue_title": "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
-      "files": [
-        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
-        "qa-ai-workflow/requirements/site-builder-onboarding.requirements.yaml",
-        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
-      ]
-    },
-    {
-      "issue_number": 70,
-      "issue_title": "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
-      "files": [
-        "qa-ai-workflow/requirements/creator-console.requirements.yaml",
-        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
-        "qa-ai-workflow/test-plans/riffables-master.test-plan.md",
-        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
-      ]
-    },
-    {
-      "issue_number": 71,
-      "issue_title": "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
-      "files": [
-        "qa-ai-workflow/requirements/creator-console.requirements.yaml",
-        "qa-ai-workflow/requirements/riffables-master.requirements.yaml",
-        "qa-ai-workflow/test-plans/riffables-master.test-plan.md",
-        "qa-ai-workflow/test-cases/riffables-master.test-cases.md",
-        "qa-ai-workflow/traceability/riffables-master.testcase-coverage-audit.md"
-      ]
-    },
-    {
-      "issue_number": 73,
-      "issue_title": "Task: [frontend] Set or reset a password — account Settings + forgot-password",
-      "files": []
-    },
-    {
-      "issue_number": 74,
-      "issue_title": "Epic: Operator image asset library — images for site & article content",
-      "files": []
-    }
-  ],
-  "browser_intake_normalization": [
-    "Ignored UI-only line: Create sub-issue",
-    "Ignored UI-only line prefix: Last edited by ...",
-    "Ignored whitespace-only rendering changes"
-  ]
+﻿{
+    "synced_at":  "2026-07-28 13:53:17 +07:00",
+    "repository":  "speedrun-labs/riffables-prd",
+    "current_snapshot":  ".\\qa-ai-workflow\\prd-sources\\snapshots\\issues-20260728-135317.json",
+    "previous_snapshot":  ".\\qa-ai-workflow\\prd-sources\\snapshots\\issues-previous-for-20260728-135317.json",
+    "report":  ".\\qa-ai-workflow\\prd-sources\\change-reports\\issue-change-impact-20260728-135317.md",
+    "has_previous":  true,
+    "total_issues":  88,
+    "open_issues":  23,
+    "closed_issues":  65,
+    "new_issues":  [
+                       {
+                           "number":  75,
+                           "title":  "Epic: Canvas site template — operators pick a second template, edit it, and publish it",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/75",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:34:38Z",
+                           "updated_at":  "2026-07-24T02:36:42Z",
+                           "closed_at":  "2026-07-24T02:36:42Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Vision\n\nDecomposes #15 (Creator Console Dashboard) — the \"Public Site Styling (Live Layout Customization)\" step of the creator flow, extended so styling now starts from a *choice* of template.\n\n## Milestone\n\nV1\n\n## Mechanic\n\nUntil now an operator\u0027s public site could only ever look one way: one built-in template. This Epic makes the template a choice. When an operator starts a site they see each available template as a real rendered preview rather than a name-only card, pick one, and land in the editor with that template\u0027s own sections, fields, and theme. The editor itself stops knowing anything template-specific — it reads whatever template the site was created with — and the public audience site renders that same template, so what the operator edits is what their audience gets.\n\n```\nstart a site ─▶ see real previews of each template ─▶ pick one\n                                                       │\n                    editor opens THAT template\u0027s sections + theme\n                                                       │\n                    publish ─▶ audience site renders the same template\n```\n\n## What an operator can do\n\n| Action | Outcome |\n|---|---|\n| Start a site | Sees each template as a real rendered preview, not a placeholder card |\n| Pick a template | The editor opens with that template\u0027s sections, fields, and theme |\n| Edit a section | The same editing surface works whichever template was chosen |\n| Publish | The audience site renders the chosen template, matching the editor |\n| Ask the agent to restyle | The agent applies a named theme preset; it cannot inject free-form styling |\n\n## Acceptance criteria\n\n- [ ] An operator starting a site sees more than one template, each shown as a real rendered preview.\n- [ ] Choosing a template opens the editor with that template\u0027s own section list and theme fields.\n- [ ] The chosen template is remembered across the app, so reopening the editor keeps the same template.\n- [ ] A site built on the second template renders on the public audience site with the layout and styling shown in the editor.\n- [ ] Every navigation link and call-to-action shipped in the template points at a page that exists — no link 404s.\n- [ ] Clicking an in-app link inside the editor preview moves the editor to that page instead of leaving the editor or showing a 404.\n- [ ] The agent can restyle a site by applying a named theme preset, and cannot introduce styling outside the template\u0027s tokens.\n\n## Locked constants\n\n- Templates available to operators: **2** (the original creator library + the new canvas library)\n- Agent styling is **preset/token only** — free-form CSS and per-element style overrides stay sealed\n- Editor and public site render from the **same** template definition, so parity is structural rather than hand-maintained\n\n## Backend dependencies\n\n- The generated site manifest must carry the template\u0027s theme presets so the agent can list and apply them.\n\n## Out of scope\n\n- A third template, or operator-authored templates.\n- Operator-uploaded fonts or stylesheets.\n- Section-level colour / typography controls — those are their own Epic.\n\n## Source\n\n- **Parent Vision**: #15\n- **PRD**: PRD.md § Design § Creator Console\n\n---\n\n*Recorded retroactively — this capability shipped 2026-07-21 → 2026-07-23 in `speedrun-labs/riffables-monorepo` (PRs #51, #52 plus follow-up fixes on `main`). Filed so the PRD reflects what is live.*\n",
+                           "body_hash":  "7e76b3342274394d5568621332a98c44322d2e6ad9cda828232e0be4f609a035",
+                           "content_hash":  "56c6233273565a72be95961fcdc632feddb75df86d8b519296896844196d54f4"
+                       },
+                       {
+                           "number":  76,
+                           "title":  "Epic: Section-level styling controls in the site editor",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/76",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:34:43Z",
+                           "updated_at":  "2026-07-24T02:36:43Z",
+                           "closed_at":  "2026-07-24T02:36:43Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Vision\n\nDecomposes #15 (Creator Console Dashboard) — the \"Public Site Styling (Live Layout Customization)\" step, taken down to the level of a single section.\n\n## Milestone\n\nV1\n\n## Mechanic\n\nAn operator could set a site-wide theme, but any individual section was take-it-or-leave-it: when the eyebrow, link, number, or button colour inside a section was wrong for their brand, there was nothing to change it with. This Epic gives each section its own styling controls — colour, size, and weight for the text roles that section actually contains, plus the button\u0027s own colours — and makes each control open showing the value the section is really rendering, so the operator adjusts from the current state instead of guessing at an empty field.\n\n## What an operator can do\n\n| Action | Outcome |\n|---|---|\n| Select a section | The inspector lists the styling controls that section actually supports |\n| Open a styling control | It shows the value currently rendering, not a blank field |\n| Change a colour | Only that section changes; the site-wide theme is untouched |\n| Style a button | Background and text colour are set independently |\n\n## Acceptance criteria\n\n- [ ] Selecting a section shows controls for the text roles it contains — heading, eyebrow, link, number, body — rather than one generic colour.\n- [ ] A section\u0027s button exposes background colour and text colour as separate controls.\n- [ ] Font size and font weight are adjustable per section.\n- [ ] Every styling control opens pre-filled with the value the section is currently rendering.\n- [ ] Changing one section\u0027s styling leaves every other section and the site-wide theme unchanged.\n- [ ] Each styling control shows its full human-readable name — no abbreviated or clipped labels.\n\n## Locked constants\n\n- Controls are **per-section** and scoped to that section only — they never rewrite the site theme.\n- Colour controls pick from the template\u0027s theme tokens rather than arbitrary hex, so sections stay on-brand.\n\n## Backend dependencies\n\n- The generated site manifest must carry each section\u0027s field definitions, including their defaults, so the inspector can pre-fill.\n\n## Out of scope\n\n- Site-wide theme editing (already available).\n- Per-element overrides inside a section\u0027s rich content.\n- Choosing images for a section — tracked under #74.\n\n## Source\n\n- **Parent Vision**: #15\n- **PRD**: PRD.md § Design § Creator Console\n\n---\n\n*Recorded retroactively — this capability shipped 2026-07-21 → 2026-07-23 in `speedrun-labs/riffables-monorepo` (PR #53 plus a follow-up fix on `main`). Filed so the PRD reflects what is live.*\n",
+                           "body_hash":  "d348834daa2c80afb6d525ab79ad66dfef0c9206275ab9fab356c92584766004",
+                           "content_hash":  "1301508ab06d97d60710466e713c6099560595df7f2c3cee7d047b9538bfbfdf"
+                       },
+                       {
+                           "number":  78,
+                           "title":  "Task: Curated theme presets so the agent restyles with tokens, not free-form styling",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/78",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:12Z",
+                           "updated_at":  "2026-07-24T02:36:14Z",
+                           "closed_at":  "2026-07-24T02:36:14Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #75.\n\n## Goal\n\nGive the site agent a curated set of named theme presets to restyle a site with, and seal off styling that bypasses them.\n\n## Why\n\nLetting the agent write styling freely means it can drift a site off-brand and produce looks no operator can reproduce or undo from the editor. Restricting it to named presets and the template\u0027s own tokens keeps agent-made changes inside the same design system an operator edits by hand.\n\n## Example of done\n\nThe agent can list the available theme presets and apply one by name, and the site visibly changes to that preset. An attempt to style a section with a free-form value instead of a token is refused rather than silently applied.\n\n## Out of scope\n\n- Operator-authored presets.\n- Per-section styling controls — Epic #76.\n\n## Source\n\n- **Parent Epic**: #75\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` PR #51 (2026-07-21).*\n",
+                           "body_hash":  "6bd6dfca65ea69afc48de23a1f9bd0729903553875ec5190d0a6d3657f080ffe",
+                           "content_hash":  "6d38d3f1eee337815face127a0bd59d3c517f057d82882bca3e772cebb852575"
+                       },
+                       {
+                           "number":  77,
+                           "title":  "Task: Make a second site template selectable, editable, and rendered publicly",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/77",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:09Z",
+                           "updated_at":  "2026-07-24T02:36:11Z",
+                           "closed_at":  "2026-07-24T02:36:11Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #75.\n\n## Goal\n\nLet an operator start a site on either of two templates, edit it in the console, and have the audience site render that same template.\n\n## Why\n\nBoth the console editor and the public site were hard-wired to a single template: its section list, its fields, its theme. Adding any second look meant forking the editor. Operators also picked a template from name-only cards, so the choice was effectively blind. This Task makes the template a value the site carries, and makes both surfaces read it.\n\n## Example of done\n\nStarting a site shows each available template as a real rendered preview. Picking one opens the editor with that template\u0027s own sections and theme fields, and the choice survives leaving and reopening the editor. Publishing that site renders the chosen template on the audience site with the layout shown in the editor.\n\n## Out of scope\n\n- Theme presets for the agent — separate Task in this Epic.\n- Per-section colour and typography controls — Epic #76.\n\n## Source\n\n- **Parent Epic**: #75\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` PR #52 (2026-07-21).*\n",
+                           "body_hash":  "4645921df9db701a97c9586d52e41ba6ea640a2b87a8fc68c668d0c7e4c04ef9",
+                           "content_hash":  "253ead8f4110b7ea3d17aa432d5ea257364f2833f76b049bc6b5ae9c48855a78"
+                       },
+                       {
+                           "number":  86,
+                           "title":  "Task: Getting-started checklist on the console home",
+                           "state":  "open",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/86",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T07:03:57Z",
+                           "updated_at":  "2026-07-24T07:03:57Z",
+                           "closed_at":  "",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #85.\n\n## Goal\n\nAdd a getting-started checklist to the console home that guides a brand-new tenant from an empty workspace to opening the site editor.\n\n## Why\n\nA tenant that has just signed up has nothing and no obvious first move. The home screen already computes a single \"next step\" nudge, but there is no cohesive, progress-tracked walkthrough of the path — connect a source, turn its videos into riffs, edit the site. This is separate from the existing screen tours, which teach controls rather than sequence the work.\n\n## Example of done\n\nA tenant with no source sees a checklist open on its own listing the three steps in order with the current one highlighted. Each step ticks itself from real state (a source exists; a crawl has run or riffs exist; a site exists). Queuing videos ticks the second step immediately without waiting on the pipeline. The checklist can be closed and reopened from home, remembers dismissal per operator per tenant, and stops auto-opening once all steps are done. It does not disturb the screen tours.\n\n## Out of scope\n\n- The screen/editor tours.\n- Changing the source-catalog pick-videos dialog or the site editor themselves.\n\n## Agent instructions\n\nReuse the existing home snapshot (sources/riffs/sites) and the `deriveNextStep` progression logic in `apps/console/src/components/app/app-home-page.tsx`; do not add new polling. Use the `ui/dialog` + `Button` primitives and match the compact type scale in `apps/console/AGENTS.md`. Key dismissal state in localStorage per user × active organization, mirroring `lib/tour/tour-controller.tsx`. Do NOT touch `lib/tour/`.\n\n## Source\n\n- **Parent Epic**: #85\n",
+                           "body_hash":  "7fa2c3f472a6ea048fd09d073a4461812a62438217d7274b009b1a56f2d01afb",
+                           "content_hash":  "0b09082f3e1e844664aa12a5d02cd8d737370e018d66eab670db2d2d93300ce8"
+                       },
+                       {
+                           "number":  85,
+                           "title":  "Epic: First-run getting-started checklist for a new tenant",
+                           "state":  "open",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/85",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T07:03:39Z",
+                           "updated_at":  "2026-07-24T07:03:39Z",
+                           "closed_at":  "",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Vision\n\nDecomposes #15 (Creator Console Dashboard) — the very first stretch of the creator flow, from an empty workspace to a first site worth editing.\n\n## Milestone\n\nV1\n\n## Mechanic\n\nA brand-new tenant lands in a console with nothing in it and no obvious first move. This Epic gives that empty state a guided, task-based **getting-started checklist** — distinct from the existing UI tour (which explains what the controls on a screen do). The checklist tracks real progress against the tenant\u0027s own data and walks the operator through the shortest path to a live library: connect a source, turn some of its videos into riffs, then open the site editor. It appears on its own for a tenant that has done nothing, can be dismissed and reopened at will, and never blocks — because turning videos into riffs runs through the async pipeline, the operator queues the work and moves on rather than waiting.\n\n```\nempty tenant ─▶ checklist opens\n   ① Connect a source ──▶ /sources\n   ② Turn videos into riffs ──▶ pick videos (queue) ; riffs arrive async\n   ③ Edit your site ──▶ site editor\n   all done ─▶ checklist retires itself\n```\n\n## What an operator sees\n\n| State | Behaviour |\n|---|---|\n| No source yet | The checklist opens on its own, offering step ① |\n| A step is complete | It shows as done and the next step becomes current |\n| Videos queued | Step ② counts as done immediately — no waiting on transcription |\n| All steps done | The checklist stops appearing on its own |\n| Any time | An operator can reopen or dismiss the checklist from the home screen |\n\n## Acceptance criteria\n\n- [ ] A tenant with no source sees the getting-started checklist without having to find it.\n- [ ] The checklist lists, in order: connect a source, turn videos into riffs, edit your site — with the current step made obvious.\n- [ ] Each step marks itself done from the tenant\u0027s real state (a source exists; a crawl has run or riffs exist; a site exists), not from a click alone.\n- [ ] Completing a step advances the current step to the next one.\n- [ ] Queuing videos satisfies the \"turn videos into riffs\" step immediately; the operator is not held waiting for the pipeline.\n- [ ] The checklist can be dismissed and reopened, and once every step is done it no longer opens by itself.\n- [ ] Dismissal is remembered per operator per tenant, so switching to a different empty tenant still offers the checklist.\n- [ ] The checklist is separate from the screen tours — dismissing or completing one has no effect on the other.\n\n## Locked constants\n\n- Auto-open trigger: **zero sources** on the active tenant.\n- \"Turn videos into riffs\" is satisfied by a **queued crawl** (`Source.lastRunAt` set) or any existing riff — not by waiting for a riff to be `ready`.\n- Dismissal state is keyed **per operator × per tenant** (localStorage), matching the tour\u0027s per-user keying.\n- Steps derive from the same home snapshot already fetched (sources · riffs · sites) — no new polling.\n\n## Backend dependencies\n\n- None. Every signal the checklist reads (sources, riffs, sites, `lastRunAt`) is already served by existing console APIs.\n\n## Out of scope\n\n- The screen/editor UI tours (already shipped) — this Epic does not touch them.\n- Rewriting the source-catalog \"pick videos\" dialog or the site editor — the checklist links to those existing surfaces.\n- Onboarding email or in-product messaging beyond the checklist.\n\n## Source\n\n- **Parent Vision**: #15\n- **PRD**: PRD.md § Design § Creator Console\n",
+                           "body_hash":  "743a799044e8405019c18609849a08b87e7d7567c3ba4a3d5fe41d4384dad858",
+                           "content_hash":  "0ec72b4981f8141bdbf60fb1954f565723573da55d40afd1f37b8bde4aa22228"
+                       },
+                       {
+                           "number":  87,
+                           "title":  "Epic: Attach an image to a builder-agent chat turn",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/87",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-27T03:53:33Z",
+                           "updated_at":  "2026-07-27T03:54:48Z",
+                           "closed_at":  "2026-07-27T03:54:48Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Vision\n\nDecomposes #9 (Conversational Customization) — the operator-side builder chat, extended so a turn can carry an image, not only words.\n\n## Milestone\n\nV1\n\n## Mechanic\n\nDescribing an image in words is a poor way to hand one over. An operator who wants their own picture on the site had to upload it in the asset library, find its URL, and paste it into the chat. This Epic lets them attach the image directly in the composer: pick a file (or paste a screenshot), see it as a thumbnail while it uploads into their asset library, and send it with — or instead of — a sentence. The assistant receives the image\u0027s permanent URL and can place it on the site the same way it sets any other section property.\n\n```\ncomposer ─▶ attach / paste image ─▶ uploads to the operator\u0027s asset library\n                                        │\n        thumbnail appears immediately, removable before sending\n                                        │\n        send ─▶ assistant gets the image URL ─▶ places it on a section\n```\n\n## What an operator can do\n\n| Action | Outcome |\n|---|---|\n| Attach an image | Thumbnail appears in the composer while it uploads |\n| Paste a screenshot | Same as attaching — no save-to-disk detour |\n| Remove an attachment | Drops it from the turn; the asset stays in their library |\n| Send with only an image | Allowed — no sentence required |\n| Attach an unsupported / oversized file | Rejected in the composer with the reason, before any upload |\n\n## Acceptance criteria\n\n- [ ] An operator can attach one or more images to a chat turn and sees each as a thumbnail before sending.\n- [ ] Pasting an image from the clipboard into the composer attaches it.\n- [ ] An attachment can be removed before sending, and removing it does not delete it from the operator\u0027s asset library.\n- [ ] A turn can be sent with an image and no text.\n- [ ] A file that is not a supported image, or is over the size cap, is refused in the composer with a stated reason and is never uploaded.\n- [ ] While an attachment is still uploading, sending is held until it finishes rather than dropping it from the turn.\n- [ ] After sending, the operator\u0027s message shows the images they attached.\n- [ ] The assistant can place an attached image on the site (e.g. as a section\u0027s image) in the same turn.\n\n## Locked constants\n\n- Accepted types and size cap are the asset library\u0027s: **PNG, JPEG, WebP, GIF**, max **10 MiB** (#74).\n- Attachments upload into the operator\u0027s existing asset library — no separate store, and dedup still applies.\n- Transport is the existing text-only agent chat: the image\u0027s URL is handed to the assistant in the prompt. The assistant is told explicitly that it cannot see the picture\u0027s contents.\n\n## Backend dependencies\n\n- None. The asset upload API (#74) and the builder-agent chat already exist.\n\n## Out of scope\n\n- The assistant *seeing* what an image depicts — that needs a different transport and is its own Epic.\n- Non-image attachments (PDF, video).\n- Attaching images in the audience-facing chat.\n\n## Source\n\n- **Parent Vision**: #9\n- **PRD**: PRD.md § Design § Creator Console\n",
+                           "body_hash":  "5ac40132bd64c58768e52792fa7f1a6e3f7fd2581093b4386ab8c049444d96b9",
+                           "content_hash":  "322e2434082612b1f464be76328cc0c43f58e06005fad57027770b1e630b97ec"
+                       },
+                       {
+                           "number":  89,
+                           "title":  "Task: Attach and paste images in the assistant composer",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/89",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-27T03:54:15Z",
+                           "updated_at":  "2026-07-27T03:54:46Z",
+                           "closed_at":  "2026-07-27T03:54:46Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #87.\n\n## Goal\n\nLet an operator attach images to a builder-assistant chat turn from the composer, and hand their URLs to the assistant.\n\n## Why\n\nGetting one\u0027s own picture onto the site meant leaving the conversation: upload in the asset library, copy the URL, paste it into the chat. The composer is where the operator is already describing what they want, so the image should go in there — attached or pasted — and the assistant should receive it as part of the same turn.\n\n## Example of done\n\nThe composer has an attach control and accepts pasted images. Each attachment appears as a thumbnail while it uploads to the operator\u0027s asset library, can be removed before sending, and a turn can be sent with an image and no text. Unsupported or oversized files are refused in the composer with the reason and never uploaded; sending waits for an in-flight upload rather than dropping it. The sent message shows the attached images, and the assistant receives their URLs and can place one on a section.\n\n## Out of scope\n\n- Making the assistant able to see image contents — #88.\n- Non-image attachments.\n\n## Agent instructions\n\nReuse `apps/console/src/lib/asset-client.ts` (`uploadAsset`, `MAX_UPLOAD_BYTES`, `ACCEPTED_IMAGE_TYPES`) rather than adding an upload path. Keep the attachment shape separate from its serialization so the vision follow-up (#88) can change transport without touching the composer. Match the console\u0027s compact type scale and double-quote hand formatting; do not run prettier over the file.\n\n## Source\n\n- **Parent Epic**: #87\n",
+                           "body_hash":  "f4a54f3a33443f1186d7ae33ddf59f1ac62ff392262b90b00d0fc86243fc0ffb",
+                           "content_hash":  "5355a4dfe8ebdbc93b79b450daf06f19b656a6d0e1da062b4920e243f14d4f0f"
+                       },
+                       {
+                           "number":  88,
+                           "title":  "Epic: The builder agent can see the images an operator attaches",
+                           "state":  "open",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/88",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-27T03:53:56Z",
+                           "updated_at":  "2026-07-27T03:53:56Z",
+                           "closed_at":  "",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Vision\n\nDecomposes #9 (Conversational Customization) — the follow-up to #87, which lets an operator attach an image but leaves the assistant unable to look at it.\n\n## Milestone\n\nV1.1\n\n## Mechanic\n\nToday an operator can attach an image to a builder chat turn, and the assistant can place it on the site — but it cannot see what the picture shows. So \"put this photo in the hero\" works, while \"match this layout\", \"use the colours from this screenshot\", or \"what\u0027s wrong with this section\" do not. This Epic closes that gap: the assistant gains a way to actually read an attached image, so it can answer about, and design from, what the operator shows it.\n\nThe constraint driving the work: the agent runtime\u0027s chat call is text-only — its request body carries no image field, so an attachment cannot ride along with the message. The image has to reach the assistant through a channel it can pull from during the turn instead.\n\n## What an operator can do\n\n| Ask | Outcome |\n|---|---|\n| \"Make the hero look like this\" | The assistant works from what the screenshot actually shows |\n| \"Use the colours in this image\" | It reads the palette off the image rather than guessing |\n| \"What\u0027s wrong with this section?\" | It can comment on a screenshot of the rendered page |\n| \"Put this photo in the hero\" | Still works exactly as it does today (#87) |\n\n## Acceptance criteria\n\n- [ ] An operator can attach an image and ask a question about its contents, and the answer demonstrably reflects the image rather than generic guessing.\n- [ ] The assistant can act on what it sees — e.g. asked to match a screenshot\u0027s layout, it proposes site changes consistent with that screenshot.\n- [ ] An image the operator did not attach to the conversation is never readable by the assistant, and one tenant\u0027s images are never reachable from another tenant\u0027s turn.\n- [ ] Placing an attached image on the site (#87) continues to work unchanged.\n- [ ] When an image cannot be read, the assistant says so instead of describing a picture it did not see.\n\n## Locked constants\n\n- Images stay in the operator\u0027s asset library (#74); this Epic adds a way to READ one during a turn, not a second store.\n- Tenant scoping is the existing per-turn, tenant-scoped agent credential — an image read is subject to the same isolation as every other tool call.\n\n## Backend dependencies\n\n- A way for the agent to receive image content during a turn (the agent runtime\u0027s chat body is text-only, so this cannot be solved in the console alone), plus whatever profile/permission change lets the builder assistant use it.\n\n## Out of scope\n\n- Attaching, previewing, and removing images in the composer — shipped in #87.\n- Non-image attachments.\n- Generating images.\n\n## Source\n\n- **Parent Vision**: #9\n- **Sibling**: #87 (attach + place — the capability this one extends)\n",
+                           "body_hash":  "23c144a6d26fc7947af3e464bdfff2016545f1e8356f1513d2a8f88fe02174fa",
+                           "content_hash":  "b10c15242868e8a7ed2a55fcbffcf1fb9f2ce2c3ecde6058d2539450ab638300"
+                       },
+                       {
+                           "number":  84,
+                           "title":  "Task: Pick an uploaded image for a section instead of pasting a URL",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/84",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:30Z",
+                           "updated_at":  "2026-07-24T02:36:32Z",
+                           "closed_at":  "2026-07-24T02:36:32Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #74.\n\n## Goal\n\nLet an operator choose an uploaded image for a section from the image picker, instead of pasting a URL by hand.\n\n## Why\n\nThe image asset API shipped — per-operator upload, deduplication, permanent public URL — but the site editor still presented a section\u0027s image as a plain URL text box. Operators had no way to get from an image they own to the place it is used without handling a URL themselves, which is exactly what the asset library exists to remove. This is the console-side Task this Epic lists as out of its own scope.\n\n## Example of done\n\nSelecting a section that carries an image shows an upload-and-pick control rather than a URL field. Choosing an image sets that section\u0027s image, and the operator never sees or types a URL.\n\n## Out of scope\n\n- Browsing, labelling, or removing images across the full library — still open in this Epic.\n- Images inside article content.\n\n## Source\n\n- **Parent Epic**: #74\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` — commit `05698ac` on `main` (2026-07-22).*\n",
+                           "body_hash":  "ac03c3f292a2b3e90eb4836af5b28b5a5d047d18fccc4eca216a950f2e553e73",
+                           "content_hash":  "c5f289f5f4fe43943e4c5e7a85a785034ba84bdf295663566232425585995e1b"
+                       },
+                       {
+                           "number":  80,
+                           "title":  "Task: Add an FAQ accordion section and per-track podcast links",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/80",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:18Z",
+                           "updated_at":  "2026-07-24T02:36:20Z",
+                           "closed_at":  "2026-07-24T02:36:20Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #75.\n\n## Goal\n\nAdd an FAQ section whose answers actually expand, and let each podcast track carry its own link.\n\n## Why\n\nThe template\u0027s question-and-answer block looked like an accordion but offered no field for the answer, so an operator could not use it as one. The podcast list showed tracks with no way to send a listener anywhere — each row was inert. Both are content an operator expects to fill in and point somewhere.\n\n## Example of done\n\nAn operator adds an FAQ section, enters question and answer pairs, and on the published page one answer is open at a time and clicking a question expands it. Each podcast track accepts its own link and becomes clickable when one is set.\n\n## Out of scope\n\n- Reordering or nesting FAQ entries beyond a flat list.\n\n## Source\n\n- **Parent Epic**: #75\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` — commits `a1eb6ea`, `c8ad8c4`, `18bc514` on `main` (2026-07-22).*\n",
+                           "body_hash":  "b020313eb0aec764b7ea6541a90a30368943f0285737bff536ce585c3b01c076",
+                           "content_hash":  "5816fe9626c96b3715cbffc02cd216659a3e5fcd389d5be9f24523141c3d4219"
+                       },
+                       {
+                           "number":  79,
+                           "title":  "Task: Fix the shipped template\u0027s dead links, placeholder data, and editor↔public style drift",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/79",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:15Z",
+                           "updated_at":  "2026-07-24T02:36:17Z",
+                           "closed_at":  "2026-07-24T02:36:17Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #75.\n\n## Goal\n\nFix the defects an audit of the newly shipped template found: links that go nowhere, sections showing sample text instead of real catalog data, controls that change nothing, and styling that differs between the editor and the published site.\n\n## Why\n\nThe template shipped with its sample content wired for looks, not for use. Navigation items and calls-to-action pointed at pages that don\u0027t exist, some sections rendered hardcoded placeholder values rather than the record they were bound to, a few inspector controls had no effect, and several sections rendered differently in the editor than on the public site — so what an operator approved was not what their audience saw.\n\n## Example of done\n\nEvery navigation item and call-to-action in the template resolves to a page that exists. Sections bound to catalog data show that record\u0027s own values. Every control shown in the inspector changes something on the canvas. A section styled in the editor looks the same on the published site.\n\n## Out of scope\n\n- New sections — separate Task in this Epic.\n- Section-level styling controls — Epic #76.\n\n## Source\n\n- **Parent Epic**: #75\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` — commits `95ad582`, `b298f92`, `76cccce`, `835b43c` on `main` (2026-07-22 → 2026-07-23).*\n",
+                           "body_hash":  "2954346e642e132d79a2241bc8daef3f1340ce299be1a5fdee9ca12ca983672f",
+                           "content_hash":  "ec3f386f2bb7890c31f250c3e758a4ec37e0cfce51ae239884f408d0bf1b1143"
+                       },
+                       {
+                           "number":  81,
+                           "title":  "Task: Follow in-app links in the editor preview instead of 404ing",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/81",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:22Z",
+                           "updated_at":  "2026-07-24T02:36:23Z",
+                           "closed_at":  "2026-07-24T02:36:23Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #75.\n\n## Goal\n\nMake an in-app link clicked inside the editor preview move the editor to that page, instead of navigating the console and landing on a 404.\n\n## Why\n\nPreviewing a site and clicking one of its own navigation links took the browser out of the editor entirely and showed a 404, because the console only serves editor routes — the site\u0027s pages don\u0027t exist there. An operator could not walk through their own site while previewing it, which is the main thing preview is for.\n\n## Example of done\n\nWhile previewing, clicking a link to another page of the site switches the editor to that page and stays in preview. A link whose page isn\u0027t part of the site does nothing rather than showing a 404. Links out to another site still open normally, and clicking a link while editing still selects the section rather than navigating.\n\n## Out of scope\n\n- Browser back/forward history for preview navigation.\n\n## Source\n\n- **Parent Epic**: #75\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` — commits `6311680`, `b46c025` on `main` (2026-07-23).*\n",
+                           "body_hash":  "965562559a1d182bab9d87d7951205084b70469b0a57c98fee06e41e3c1ab83d",
+                           "content_hash":  "341ce50f785f08cf01df8d1b0b6cf825a78ad2981268f4c3c2893297298de271"
+                       },
+                       {
+                           "number":  83,
+                           "title":  "Task: Show section colour control labels under their real name, in full",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/83",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:28Z",
+                           "updated_at":  "2026-07-24T02:36:29Z",
+                           "closed_at":  "2026-07-24T02:36:29Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #76.\n\n## Goal\n\nShow each section colour control under its real, fully visible name.\n\n## Why\n\nColour controls displayed a name derived from the underlying property instead of the label configured for them — an operator saw an abbreviation like \"Bg Color\" where the label reads \"Background colour\", and on other templates labels such as \"CTA button background\" surfaced as \"Cta Bg Color\". Once the correct label was shown it was then clipped by the control\u0027s narrow label column, so it still could not be read in full.\n\n## Example of done\n\nA section\u0027s background colour control reads its full configured label, entirely visible, laid out consistently with the other field labels in the inspector.\n\n## Out of scope\n\n- Renaming the labels themselves in the templates.\n\n## Source\n\n- **Parent Epic**: #76\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` — commit `0261476` on `main` (2026-07-23).*\n",
+                           "body_hash":  "09aed589131ce4b1a95ef361667744ee55f6669bc0f4b9278af2bf0e0e33759d",
+                           "content_hash":  "299b9f4b676dd78cf453c300e1c4563a3d8410b3f228ae511f7597bb1c96950b"
+                       },
+                       {
+                           "number":  82,
+                           "title":  "Task: Give sections colour, size, weight, and button controls with pre-filled defaults",
+                           "state":  "closed",
+                           "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/82",
+                           "labels":  {
+
+                                      },
+                           "created_at":  "2026-07-24T02:36:25Z",
+                           "updated_at":  "2026-07-24T02:36:26Z",
+                           "closed_at":  "2026-07-24T02:36:26Z",
+                           "author":  "sunday19x3",
+                           "body":  "## Parent Epic\n\nPart of #76.\n\n## Goal\n\nGive each section controls for the colour, size, and weight of the text roles it contains, plus its button\u0027s own colours, and open every control on the value the section is currently rendering.\n\n## Why\n\nAn operator could set a site-wide theme but could not touch an individual section. When a section\u0027s eyebrow, link, number, or button colour was wrong for their brand there was nothing to change it with, and the controls that did exist opened blank — so an operator had to guess the current value before they could adjust it.\n\n## Example of done\n\nSelecting a section shows controls for the text roles that section actually contains rather than one generic colour, its button exposes background and text colour separately, and font size and weight are adjustable. Every control opens showing the value currently rendering. Changing one section leaves the rest of the site and the site-wide theme untouched.\n\n## Out of scope\n\n- Site-wide theme editing.\n- Choosing images for a section — tracked under #74.\n\n## Source\n\n- **Parent Epic**: #76\n\n---\n\n*Shipped: `speedrun-labs/riffables-monorepo` PR #53 (2026-07-22).*\n",
+                           "body_hash":  "48e8ea7900bf72d7a6c7b80a32a55fa265242937b512d5ad53c99097ecc20b08",
+                           "content_hash":  "9765d2757180180e2ea0c002e63c735806a6e24b24f58199633f89211d3b1168"
+                       }
+                   ],
+    "changed_issues":  [
+                           {
+                               "number":  30,
+                               "title":  "Task: Live progress for a running crawl",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/30",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "1cdaed1a73e8267a23ecf99c9eee69bdbf1f697d849afe348b4600a5e5f2800a",
+                               "current_hash":  "36c9c3a892c9d1e680e476b389fcf35e9ce53054756067ebebba17c3d1aefd78",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:19Z"
+                           },
+                           {
+                               "number":  29,
+                               "title":  "Task: Refreshing the catalog picks up new uploads",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/29",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "a358dff039334ad6296bfa60bc4d2b08c9731edc033cdae414abd5121c726017",
+                               "current_hash":  "40ddffaa3ada84ebbb3b9833314ea346959fd15094f09cf017f6c6a9a4200e34",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:02Z"
+                           },
+                           {
+                               "number":  31,
+                               "title":  "Task: Creator cancels a running crawl",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/31",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "6100e866adedd69f5042b8a8e84aeebb0ec09a6bb41de2f274f2309d4aa7f8dd",
+                               "current_hash":  "dc8bacb393414024fa6e5edc94e9fc96d363c91dd9aaef5e710f4a5b798dbe4f",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:22Z"
+                           },
+                           {
+                               "number":  34,
+                               "title":  "Task: Redesign Content Page Filter UI",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/34",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "8c54f19d58a8986557056232222fdbe7c458244ecb938c9861fd6057a1a49328",
+                               "current_hash":  "a0c46bf012c6ae08151538421a00bec9338574fafe997936317449081b0d9963",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T02:47:37Z"
+                           },
+                           {
+                               "number":  32,
+                               "title":  "Task: Large backfill runs in bounded batches without blocking fresh videos",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/32",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d6138696a71a923addba6d08eada7c66fcb940aec404ec8274b4b87358a20e37",
+                               "current_hash":  "e19cad32ae39c8f7d8834bfc9fc4cf0cd6e216a66a2a3a9718a6082e53b76f67",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:24Z"
+                           },
+                           {
+                               "number":  28,
+                               "title":  "Task: Creator selects catalog videos and ingests just those",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/28",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "792e29080a5543d38d9a58838e866cdf11e35c496e35994ff737b626f8d6591f",
+                               "current_hash":  "6b9d64e3c4551f9e811e106f33668fbf2cc8e87ea04cc1a3e2e92bc703d82524",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:00Z"
+                           },
+                           {
+                               "number":  24,
+                               "title":  "Task: Manual-mode channel refuses every automatic ingest",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/24",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "022c80344637c67a81ed18a1ed789ab9194cc0b2e160448a1a96639c978b16ff",
+                               "current_hash":  "2143adfe48c47d887e9c32cae0c1125cd9a227eb73ae5425aae881f5d0ec855d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:29:39Z"
+                           },
+                           {
+                               "number":  23,
+                               "title":  "Task: Creator picks ingest mode when connecting a channel",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/23",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "76990984e0fb61ec517189bc9f61b090288369255bb090bf766320ff3e7dc6c0",
+                               "current_hash":  "5d67dcbcc20d884e86f2a0e0465b79f0a79c6bf9335fb83f2dd54e3eb0d69053",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:29:36Z"
+                           },
+                           {
+                               "number":  25,
+                               "title":  "Task: Creator switches a channel between auto and manual",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/25",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "ceeb424ab507ae56b9672eb673c152a97d76a19f10e25bd4e58f47335d76cbfe",
+                               "current_hash":  "2db239e3eacd200c42a79c2d36e6a2b518019e75414ddf6f7bbdecc06f26de3c",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:29:41Z"
+                           },
+                           {
+                               "number":  27,
+                               "title":  "Task: Catalog shows each video\u0027s ingest state",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/27",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c1d76ef71977f252935a80392b148b296d94018d7bb998182f5a0f36508f908d",
+                               "current_hash":  "3ea96c1a0f6f86169349ab21726ddb08a77cd2ac9891a96906b3f0f17040e6e4",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T04:04:09Z"
+                           },
+                           {
+                               "number":  26,
+                               "title":  "Task: Connecting a channel builds a browsable video catalog",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/26",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "0ed6fa620c6bae1dfd1768ba248c9280dbf2c9bfb421b1275870222270b2e716",
+                               "current_hash":  "39a16c73073c53e7f5c7cff2afb5a4cf7e6e7727fbdbd3ba1730d54782acd427",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:29:57Z"
+                           },
+                           {
+                               "number":  42,
+                               "title":  "Test Plan",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/42",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "4362918ce106ff4efb5c54482245e1afcb417344e5790c8a9d69243952016656",
+                               "current_hash":  "963928018f6ea71f7d70c1e5dbdf61b66140af6893cddb6085e6a617d63298c5",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:26:56Z"
+                           },
+                           {
+                               "number":  41,
+                               "title":  "Task: Per-screen product tour for new creators",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/41",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "2cda0d88d831641ed9c80ab779068a1aebc38020c22f3aba12979739f6c5df2a",
+                               "current_hash":  "196e055b8896963fc7101287cca1dfa4263917f6bb02ed262d5ddffff7b701ff",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:12Z"
+                           },
+                           {
+                               "number":  43,
+                               "title":  "Task: Guided tour for the site editor",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/43",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "8975827cdc56442cee586b9cce3c07d85f4b88e15207dc77a1eb1596b0573102",
+                               "current_hash":  "1e50e4b63003bb2e52f1082ea7c73e262316b250ec2a96717cf16eb36e201af1",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:45:54Z"
+                           },
+                           {
+                               "number":  45,
+                               "title":  "Epic: Console UX \u0026 accessibility hardening",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/45",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "3faba9f4ce1002e69936dfa06419d6c4ec7c4fe0baf90f2a353541aa39d33f80",
+                               "current_hash":  "ed3afa50919d70c396965948530f8255b79b7e83ebfeedb9e33c3c79d0827e18",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T02:57:44Z"
+                           },
+                           {
+                               "number":  44,
+                               "title":  "Task: Fix the publish domain to a tenant subdomain",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/44",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "14a445238b54f31058aea6f21d09ac77e9d4b8b905bb5d47ecb2c3bed120401a",
+                               "current_hash":  "d2c107a15a74d60dd50724501f00ec838d220faff5edc3d4f184fc00a52df122",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T08:22:31Z"
+                           },
+                           {
+                               "number":  40,
+                               "title":  "Task: Scroll the editor canvas to a section when picked from the layers list",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/40",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d94a8fbd546587a86e4e1a5755d82622d09d46be2501b4f871d137e699f9238e",
+                               "current_hash":  "53e7961cf10cbe6887b354cc522d9c9576c69fd48c6913fe48c179c37686e3c8",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:10Z"
+                           },
+                           {
+                               "number":  36,
+                               "title":  "Epic: Guided onboarding tours for the console",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/36",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "202144b741026f831d2c551ddbc6da4aadbb7b94c9ed78d0e0d7ea75fd01c4a3",
+                               "current_hash":  "43a74e2261ac26b7b3575bbfd11ff472a3596eb04e065623f6ac3498d2c59c4e",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:49:43Z"
+                           },
+                           {
+                               "number":  35,
+                               "title":  "Epic: Visual site builder — bind sections to live catalog data",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/35",
+                               "changed_fields":  [
+                                                      "title",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "0385bcec24b7c95b2bfd78a869c156a21d993b2d10990efa3148ac90db4453b2",
+                               "current_hash":  "78af9e3ace36470b33f8a9f7bdced43e2266cfdbd7a2dd8cd1c76e6152b1b786",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:14Z"
+                           },
+                           {
+                               "number":  37,
+                               "title":  "Task: Repeat a section over a collection of catalog data",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/37",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "5bec9ba8c550efb020ec4361b780e72e5b403fdae9688bbb4ab970dd3f10a482",
+                               "current_hash":  "818996da175c0dd781d720e0e6728bab8a80b773032bdf6205a23a499665d63e",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:06Z"
+                           },
+                           {
+                               "number":  39,
+                               "title":  "Task: Guide creators to binding from the inspector\u0027s Data tab",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/39",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c72a58e9a257c64c674d13fbf1b8f5561ef82743fe925dafd1e04e61ba901b65",
+                               "current_hash":  "b9a1572d5babd9928133dd422cbe52b4d72951130f56c68d67b4ab790a8b7bbc",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:09Z"
+                           },
+                           {
+                               "number":  38,
+                               "title":  "Task: Bind a card\u0027s fields to the current item",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/38",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "fa23362bd58528f86e81783d3252e2dd13d668162626c86507b5d123156de582",
+                               "current_hash":  "336052cfb98b8c59fe61ba7a36b0b7ff05cee939db836075e253824cca48d76a",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-09T07:16:07Z"
+                           },
+                           {
+                               "number":  8,
+                               "title":  "Vision: Hybrid Discovery Engine",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/8",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "9d8984941662758c8d306b894c1103b191b07c8ac7f6fdda99a9a1bcf0b7b748",
+                               "current_hash":  "d3da355c5a56e44d92a9afe79aa98409137902b4b1d1154eaeee69eee59933fa",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:35:54Z"
+                           },
+                           {
+                               "number":  7,
+                               "title":  "Vision: Verifiable AI Extraction",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/7",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c71676ea3478de60ef22bdce07c40f7954921413453daa40770a148dea9745e8",
+                               "current_hash":  "08af277ed2e3cabdd4d003702377c34f777fc4f355c917345fd2b72998024645",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:00Z"
+                           },
+                           {
+                               "number":  9,
+                               "title":  "Vision: Conversational Customization",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/9",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "141216a5c716503812ab6f2acbdb92dbaf6573408b2e034321ad4ec6f3ffcc25",
+                               "current_hash":  "90a2bbe4058a5e391c5d29b4451c6b07906a945fd3c88852d650ac2f0a803bc5",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:35:35Z"
+                           },
+                           {
+                               "number":  11,
+                               "title":  "Vision: Overview",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/11",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "798cae4bdff4f99daf5fe252376cc65657d0a1a3b16fa2f1e3829d63049a67dd",
+                               "current_hash":  "0ef826b57444b0bf3ec967070e26d95c50bad88db88f269bc116c823fcc84693",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:41:27Z"
+                           },
+                           {
+                               "number":  10,
+                               "title":  "Vision: Multi-Tenant Isolation",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/10",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "feac25f5a7e0f64404c08bf8523558b88b40d93f34680591ebdcce29fb4a943f",
+                               "current_hash":  "05e731472e99251bda883dbf597b5f8f65434301d379b4a1e63a7c31826291cc",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:35:48Z"
+                           },
+                           {
+                               "number":  6,
+                               "title":  "Vision: Pluggable Ingestion Pipeline",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/6",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c56070de7fa196508718230b265d7d0c259fe56990801b26a57107be30ea5f98",
+                               "current_hash":  "62f1f50223fb40bab23f08c9a20ca580f41c8d3434be3d608716306b478fdb4b",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:05Z"
+                           },
+                           {
+                               "number":  2,
+                               "title":  "Epic: Verifiable Citation \u0026 Traceback Validation",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/2",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "82e7ebac4d3b2bae0aa1ba53df0c981d1a597978822339ec62f677775dbbcc05",
+                               "current_hash":  "c0e592dab55721834530cfba4ad71501f8226b3c3a8001c144ea86b7c6f9c3bb",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:46Z"
+                           },
+                           {
+                               "number":  1,
+                               "title":  "Epic: Automatic Feed Sync \u0026 Ingestion",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/1",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "fe388031b560c02e9818ca6c762ffc203ff755ce3c8de7ca3639d95681fb7d1a",
+                               "current_hash":  "af3e36cc538533ba2649361d49787aef02885f88fcf1010c15c745f4aa5c4857",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:41Z"
+                           },
+                           {
+                               "number":  3,
+                               "title":  "Epic: Self-Serve Re-extraction Console Endpoint",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/3",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "a5eeaf09d11f11345cfa35c608d62c95d5e41d8a9359f7bbe63fbd0adf8ad761",
+                               "current_hash":  "6f006b0958aeffd921b58a30e51300eeb51d2b939730f93ee18bf52dfcb56bc3",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:30Z"
+                           },
+                           {
+                               "number":  5,
+                               "title":  "Epic: Conversational Widget Theme Customizer",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/5",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "945725097c373d6de7758cb976f5a26195d0c272b8c71a95f82b3bd9ed9b4efe",
+                               "current_hash":  "05db713090ce87b2136d547cc96cbb3682af5ac6e6ad55da82d58c6dbd32d010",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:14Z"
+                           },
+                           {
+                               "number":  4,
+                               "title":  "Epic: Hybrid pgvector \u0026 RRF Discovery",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/4",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c0133e9c09211ed40d247cc48155c27fe21e2e5e83971fe541e174eb1c4871a3",
+                               "current_hash":  "c3673b3c31308b8e208aadf1c6496ae63e636cadff915634702c55ffb1d8e80d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-03T08:36:25Z"
+                           },
+                           {
+                               "number":  19,
+                               "title":  "Epic: Ingest mode selection (auto vs manual)",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/19",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "18f93e293199c557857599b0d5ce9bbea16abd449dca7fbf5c10ab4b77893c0d",
+                               "current_hash":  "3d1c45cada50ee1de77e143b92215feb802d78bb3bef882dec5bf13eb83bf80b",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:41Z"
+                           },
+                           {
+                               "number":  18,
+                               "title":  "Vision: Controlled ingestion for large channels",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/18",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "53137476fa58710183cf11f458cf94f467317a09a8b7fee76290f991dd224d6a",
+                               "current_hash":  "e6b0a6db3b5b2c8faa5050858a917539632c95fb36a0807f6298b8eddb4f2d66",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:48Z"
+                           },
+                           {
+                               "number":  20,
+                               "title":  "Epic: Channel video catalog \u0026 curation",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/20",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "7e362492946c4502b481f5f5fcbec5aa3193f8f073228007b4d97f85dc93cd8f",
+                               "current_hash":  "baddd4cfef92a5544a1eb0a429de1543a644ba96d064c48ce22d77b5d03d5403",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:44Z"
+                           },
+                           {
+                               "number":  22,
+                               "title":  "Epic: Crawl progress, cancellation, and fair processing",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/22",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "6a38f934139846e1ea47e20847eeb8f9278caf2f61d10f042cfebdf4407e5136",
+                               "current_hash":  "68e862e1d6202ceed24b391165de2046f1c4bcaefffe46b3d614f021ba3c9780",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T07:30:46Z"
+                           },
+                           {
+                               "number":  21,
+                               "title":  "Task: Fix Sources Page Crawl Feedback UI",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/21",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "23194423f4ab0c927db2ebcd305722f071119cfe6a3cb4c786fa7dda3bd17ca5",
+                               "current_hash":  "f8afb9d1f0f4d34846f75200cbbc8cef84150c0fd576da6d0fd0b56d8a827de6",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-15T02:54:16Z"
+                           },
+                           {
+                               "number":  17,
+                               "title":  "Task: Fix Published Public Site",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/17",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "104a7111f21a005c45063580c4fa42caa955682260ed4affa3178cf6815ed371",
+                               "current_hash":  "9b88aa1e2fadc5471f070474af19bc839004a0999fc998da5c13d81c637b4c9f",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T02:14:29Z"
+                           },
+                           {
+                               "number":  13,
+                               "title":  "Epic: Creator Console Dashboard",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/13",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d794a3b0f886ed12508a2758c78e19fba302afd0a499196d5d2dd8c22386c6b9",
+                               "current_hash":  "8f2db420c17390b08a1352a8b5fe6ef7dc5b188c63c2a46cd6bf23fc1bf7d005",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-08T07:20:51Z"
+                           },
+                           {
+                               "number":  12,
+                               "title":  "Vision: UI description",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/12",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d031f25a4df51e0e5b83f2f4f78eb84b45118ebcd3c845f752aaf921a12e2a3c",
+                               "current_hash":  "b8ea088d3eb93884d8b840de67c6f1b70b17d0e50dfb8bc7f5d556c9965318cf",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-08T07:08:40Z"
+                           },
+                           {
+                               "number":  14,
+                               "title":  "Epic: Public Audience Site",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/14",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "e98928e3fcbf6efbfe06459ba608f12ec536fca47af11f3dd2ee1ece460c4a3d",
+                               "current_hash":  "c2c6867f1cb4a8a05ea48e42d764643bd3d7ed27fb7d6508df06f1fa7e356215",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-08T07:20:52Z"
+                           },
+                           {
+                               "number":  16,
+                               "title":  "Vision: Public Audience Site",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/16",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "52afa621f11458c7e63f1590bd5887127393fefb0a68997e7e079e5e3bb65c19",
+                               "current_hash":  "e97bd8a080adf472a5db9a36719fe1064a97add6dd21ab1c5e63293ea1a1cebe",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-08T07:35:20Z"
+                           },
+                           {
+                               "number":  15,
+                               "title":  "Vision: Creator Console Dashboard",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/15",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "f899e8e54ae9f601f2e5d63e5b8cf765668802d3987c4fcbd0f5f5d896677904",
+                               "current_hash":  "45e46ffdb1341624bf6cb8e1c976bb763f507c1ae4983076d711ca092c123c24",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-08T07:35:19Z"
+                           },
+                           {
+                               "number":  74,
+                               "title":  "Epic: Operator image asset library — images for site \u0026 article content",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/74",
+                               "changed_fields":  [
+                                                      "title",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "0b4f9cb2b132c70092a40bdf3e9431c4ce4982d2efedaf5516c34a32af3043d1",
+                               "current_hash":  "f6f76d6c8d1b4a12e02fd4cfbdce2f75ce340472e17500d022567cb3389905c9",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-16T07:55:17Z"
+                           },
+                           {
+                               "number":  73,
+                               "title":  "Task: [frontend] Set or reset a password — account Settings + forgot-password",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/73",
+                               "changed_fields":  [
+                                                      "title",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "b66b63e1618e47ee8cdd08d069d06058b1df7c7dd3f240baca7bc90257a1f19e",
+                               "current_hash":  "1609c0c8773876b2ff82f5ab752d1e8b3700b0d7f32441daa160b7f5f47e850e",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-16T04:10:29Z"
+                           },
+                           {
+                               "number":  69,
+                               "title":  "Task: Show/hide password toggle on the sign-in form",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/69",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "56971fab38b3763da1ed9f86ce48d166da68e900673fcd6943e64d7a6a5ce13f",
+                               "current_hash":  "2a8215c1a5689ed733b843d098e8ffef3a966cc86a68c08883134d4c7f27323b",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-14T04:09:42Z"
+                           },
+                           {
+                               "number":  68,
+                               "title":  "Task: Ask first-time users before auto-running onboarding tours",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/68",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "a65c8095491cd3df5ae5f38b22f11ae9b52721b74d24098a17324c3b90b716c7",
+                               "current_hash":  "5ddbe60f4cce90430a89c0677dd0f567d377150581e94649c9435f04acb37cb2",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-14T04:09:40Z"
+                           },
+                           {
+                               "number":  70,
+                               "title":  "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/70",
+                               "changed_fields":  [
+                                                      "state",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "f84612a8c0351b33e1d078f0307495ada387f9835288b61f204aa14acce567d9",
+                               "current_hash":  "cbb0b371b989e8a8a98c46ede8fa707ee950523e71536f058e49beb585f916fb",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-15T02:52:10Z"
+                           },
+                           {
+                               "number":  72,
+                               "title":  "Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/72",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "b06f764a250a0d8034c030a3cf978f2cec18ae37471ea3d6d93c05ddfeffa97d",
+                               "current_hash":  "25c7642ce1539f690d338a1fd2c591ebcf04f35e9b80d46e8b10282760e54188",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-15T02:52:08Z"
+                           },
+                           {
+                               "number":  71,
+                               "title":  "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/71",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d74f576e8c56a6cf6c934a68d91e03d956e7ce15086c5b9455c21b208cedeb30",
+                               "current_hash":  "89b1863eba1e0341d93eb2b0a12182f602aeeb4432fede33ea3cbbd5ce32dd57",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-16T07:29:52Z"
+                           },
+                           {
+                               "number":  53,
+                               "title":  "Task: Add a UI for recurring crawl schedules",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/53",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "cfefdc4e7314cdbd24ffe504d3b2eb4041133a2355784dd28e47321ae6dfa122",
+                               "current_hash":  "237ee21bab99f4ca61a671ac773e8c50082d4c399d167c759007ed9fc1fa15ce",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T04:29:24Z"
+                           },
+                           {
+                               "number":  52,
+                               "title":  "Task: Use the backend hybrid search instead of client-side filtering",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/52",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "8241f198ec7fbae8567c94d34ef539a9445cf8ee43de89c6a2c2faeee8ddc1ff",
+                               "current_hash":  "944da3a03eb0ce19adec99794f1df591115233a67032fd3071bfb4038b4ebc2d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T09:14:51Z"
+                           },
+                           {
+                               "number":  54,
+                               "title":  "Task: Wire site unpublish, discard, and delete",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/54",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d4adf6460b91c0ecbf21568ccdaaa83c7fff49a06abc56f4c58cc4dc58e32a28",
+                               "current_hash":  "2ae6c4ae7e5a844efeba4fc510d10f3054427785b04b430f71fc76e8517a4354",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T03:54:28Z"
+                           },
+                           {
+                               "number":  56,
+                               "title":  "Task: Surface job/queue status in the console",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/56",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "a3d9243fb5ba73bfe4ef18d91fd3096decb06b79f7114fcfbe55c0971aaf7913",
+                               "current_hash":  "bd84dbdc8bb3c65ca6ca2733f04f8b3741ca0f44500da6af067df8b7a33c7a7d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T04:08:37Z"
+                           },
+                           {
+                               "number":  55,
+                               "title":  "Task: Let operators edit articles",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/55",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "286e64fe440ceb52510bc6a2f8299f125eb39f62f831b0c16d23385e17335699",
+                               "current_hash":  "4598becc940635de242f28e622dd81bb15fa75d9a8258e30aa4547963a091800",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T04:40:49Z"
+                           },
+                           {
+                               "number":  51,
+                               "title":  "Epic: Console — wire the remaining backend APIs",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/51",
+                               "changed_fields":  [
+                                                      "title",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "55ccfda716696559f1576cc4555ae8fc3718780b486a33d56b6e8ba16ecda716",
+                               "current_hash":  "f994c722613f4f5763b40a37347af62796eeeb30584a304fdb0f572e6b86567c",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T03:12:06Z"
+                           },
+                           {
+                               "number":  47,
+                               "title":  "Task: Offer a \u0027View live site\u0027 action right after publishing",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/47",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "d9f92209153ff7152fc9eb05aec13d846a21ebeee9534f5d29aa8c61fed5e8c0",
+                               "current_hash":  "3942c4423f134e3ef747cfe7ebff98d9ccaf9bc1ac9ff11d0c74b4741a8d3a82",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T07:21:17Z"
+                           },
+                           {
+                               "number":  46,
+                               "title":  "Task: Meet the 24px minimum tap-target size",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/46",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "5b0b962709ac4274484ec8af80d367359b6d3edbfafd447a1a1e156c72a9973e",
+                               "current_hash":  "377dffe81d23fa5af1224f8c93cc0aec1212f0cc8dc0df0ad39681c46a53e067",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T07:21:14Z"
+                           },
+                           {
+                               "number":  48,
+                               "title":  "Task: Give dashboard screens and the editor a real heading structure",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/48",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "b5bb606640cbfacfa4b835b8e9be34628755d48484e78ad732ca85116f57e0b2",
+                               "current_hash":  "c6f4d02be72be2b781f494ef7f2c34a2b64fc1e79e6e831bb3f515cdab47dd2d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T07:21:20Z"
+                           },
+                           {
+                               "number":  50,
+                               "title":  "Testcase",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/50",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "82d9ead41df3cea016dce667438e89b218606100ac09c8a1d5be2e0ae330cc60",
+                               "current_hash":  "b16fe3c0f96f0ae90bf60ee33b2608078e1c6478a339567c70a9bd3af346235a",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T08:29:23Z"
+                           },
+                           {
+                               "number":  49,
+                               "title":  "Task: Guard against template styles.css drifting from source",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/49",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "f68911e116e1f08fdd01c72ece9dad3bcd775877c373e8037e86d1bc5b2adcc4",
+                               "current_hash":  "5c3b0124bc85dcd13358399983f7b7e75167d615934233b1bd5fd721232abc0c",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T07:34:48Z"
+                           },
+                           {
+                               "number":  64,
+                               "title":  "Task: Link inspector fields to their text on the canvas (hover/focus highlight)",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/64",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "254e74fe07a4cd2efa92f09cfaec123bee46df9cb02abfff35d23324178d3d0d",
+                               "current_hash":  "0fd30b4d02135dd9cb68a08d9b1e37af2ef7f9152eddcaa722b3453cea11cf7d",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T02:40:36Z"
+                           },
+                           {
+                               "number":  63,
+                               "title":  "Task: Implement Editor Cross-Panel Highlighting",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/63",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "e85f0ef9d4f2346f94379aec9743a2efc6cf660417c6d4dcaee8198a52e7bf68",
+                               "current_hash":  "75a273968568d421fb5fa0d0709785d3bfcbb6a198eb50c1e988ebc0f39db8cc",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T03:16:21Z"
+                           },
+                           {
+                               "number":  65,
+                               "title":  "Task: Merge the Hero tagline + count line and align inspector defaults",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/65",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "3aca42510f42e3674d28fe599687c325c5282c132c97523a4dc8eb20fb4f5967",
+                               "current_hash":  "594047d5e158133b59b1304bd6242bba9882db8437369c3cf9f0111e4786521a",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-11T02:40:38Z"
+                           },
+                           {
+                               "number":  67,
+                               "title":  "Task: Relocate Pipeline Card for Visibility",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/67",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "99ebf454c4cc4104d0d3a0129f41a1cee17543a08d62352fcfcd31ed5a7e49b3",
+                               "current_hash":  "0c78edb7175ab4e7217dbc6d4d5889d852e4598c009bbc48cb667ba3e884860c",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-14T01:55:14Z"
+                           },
+                           {
+                               "number":  66,
+                               "title":  "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/66",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "59da135afb43d7176d605c773b0f875e6679e300e5da104fc67dbcb3b59aec4b",
+                               "current_hash":  "3156fcfe9d7e10d904b5b52cbedd997a228bfab2c2f6cc0a51b975de673f4709",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-16T10:12:05Z"
+                           },
+                           {
+                               "number":  62,
+                               "title":  "Bug: backend semantic/hybrid search returns 500 (keyword works)",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/62",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "c3f7aea48e67a18cfbb9f72a170a28c145dfa98e47c25fbac212a5ec30fac15d",
+                               "current_hash":  "d763a1ec0d49d660f2894c48a67a1cd8acf774a4c12c8be62ec0252a94643ec0",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T09:11:31Z"
+                           },
+                           {
+                               "number":  58,
+                               "title":  "Epic: Audience site — no placeholder identity or stubbed chat",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/58",
+                               "changed_fields":  [
+                                                      "title",
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "73bf13fd236b795f81d835a658da9ffe0d124521cc0f99ebb1d115d3a72723f5",
+                               "current_hash":  "05c88cc92679e75da5aec28a7eeef41dd815494e525d1ea80d7904fc1f109636",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T08:44:47Z"
+                           },
+                           {
+                               "number":  57,
+                               "title":  "Task: Remove the orphan /sites/temp and /sites/configuration routes",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/57",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "fbc3f8f3c58a761abb58d8eb024f8bfae2a122b532b94c60328b76af9f3a1615",
+                               "current_hash":  "edbc9f3a04a9f29b964053ddcc96f86cc1572844780a184e7f18c83e0ee89967",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T09:14:47Z"
+                           },
+                           {
+                               "number":  59,
+                               "title":  "Task: Replace the synthetic guest/show labels on the audience site",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/59",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "e43e8afbed2b383530bdd56d730c5b78c6a6ca21d40cceece01a480a814c2e10",
+                               "current_hash":  "3223da1efb2d35f8e6575f1dacfb1be341b9a7f91e8336157ca94c1f38bdedca",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-13T03:06:18Z"
+                           },
+                           {
+                               "number":  61,
+                               "title":  "Task: Operator takes a published site offline with a distinct \u0027unpublished\u0027 state",
+                               "state":  "closed",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/61",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "e4dba48f88502c447a39bbf9b924ecdf1c16b1f1d4658c4904b3ec5468dd0ff3",
+                               "current_hash":  "2152b098ca1f5c2674797b856c35134bd7b69e62ef0ff118231e416ac0aa42fe",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T09:12:27Z"
+                           },
+                           {
+                               "number":  60,
+                               "title":  "Task: Wire the real audience chat (replace the Echo stub)",
+                               "state":  "open",
+                               "html_url":  "https://github.com/speedrun-labs/riffables-prd/issues/60",
+                               "changed_fields":  [
+                                                      "labels",
+                                                      "body"
+                                                  ],
+                               "previous_hash":  "9cb98740567cfacac900d4e898684f41349c2fc1d3ecac904496352a304fab62",
+                               "current_hash":  "5bc2e53d4a67329f3840b697ae1866b65f9ca1145bdce85456349be14b570a39",
+                               "previous_date":  "",
+                               "current_date":  "2026-07-10T08:44:52Z"
+                           }
+                       ],
+    "removed_issues":  [
+
+                       ],
+    "impacted_artifacts":  [
+                               {
+                                   "issue_number":  1,
+                                   "issue_title":  "Epic: Automatic Feed Sync \u0026 Ingestion",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\ingestion-pipeline.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  2,
+                                   "issue_title":  "Epic: Verifiable Citation \u0026 Traceback Validation",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\ai-extraction-citation.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  3,
+                                   "issue_title":  "Epic: Self-Serve Re-extraction Console Endpoint",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\ai-extraction-citation.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  4,
+                                   "issue_title":  "Epic: Hybrid pgvector \u0026 RRF Discovery",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  5,
+                                   "issue_title":  "Epic: Conversational Widget Theme Customizer",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\theme-customization.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  6,
+                                   "issue_title":  "Vision: Pluggable Ingestion Pipeline",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\ingestion-pipeline.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  7,
+                                   "issue_title":  "Vision: Verifiable AI Extraction",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\ai-extraction-citation.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  8,
+                                   "issue_title":  "Vision: Hybrid Discovery Engine",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  9,
+                                   "issue_title":  "Vision: Conversational Customization",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\theme-customization.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  10,
+                                   "issue_title":  "Vision: Multi-Tenant Isolation",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\tenant-security.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  11,
+                                   "issue_title":  "Vision: Overview",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\global-context.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  12,
+                                   "issue_title":  "Vision: UI description",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\global-context.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  13,
+                                   "issue_title":  "Epic: Creator Console Dashboard",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  14,
+                                   "issue_title":  "Epic: Public Audience Site",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  15,
+                                   "issue_title":  "Vision: Creator Console Dashboard",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  16,
+                                   "issue_title":  "Vision: Public Audience Site",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  17,
+                                   "issue_title":  "Task: Fix Published Public Site",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  18,
+                                   "issue_title":  "Vision: Controlled ingestion for large channels",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  19,
+                                   "issue_title":  "Epic: Ingest mode selection (auto vs manual)",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  20,
+                                   "issue_title":  "Epic: Channel video catalog \u0026 curation",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  21,
+                                   "issue_title":  "Task: Fix Sources Page Crawl Feedback UI",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  22,
+                                   "issue_title":  "Epic: Crawl progress, cancellation, and fair processing",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  23,
+                                   "issue_title":  "Task: Creator picks ingest mode when connecting a channel",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  24,
+                                   "issue_title":  "Task: Manual-mode channel refuses every automatic ingest",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  25,
+                                   "issue_title":  "Task: Creator switches a channel between auto and manual",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  26,
+                                   "issue_title":  "Task: Connecting a channel builds a browsable video catalog",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  27,
+                                   "issue_title":  "Task: Catalog shows each video\u0027s ingest state",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  28,
+                                   "issue_title":  "Task: Creator selects catalog videos and ingests just those",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  29,
+                                   "issue_title":  "Task: Refreshing the catalog picks up new uploads",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  30,
+                                   "issue_title":  "Task: Live progress for a running crawl",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  31,
+                                   "issue_title":  "Task: Creator cancels a running crawl",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  32,
+                                   "issue_title":  "Task: Large backfill runs in bounded batches without blocking fresh videos",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\controlled-ingestion.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  34,
+                                   "issue_title":  "Task: Redesign Content Page Filter UI",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  35,
+                                   "issue_title":  "Epic: Visual site builder — bind sections to live catalog data",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  36,
+                                   "issue_title":  "Epic: Guided onboarding tours for the console",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  37,
+                                   "issue_title":  "Task: Repeat a section over a collection of catalog data",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  38,
+                                   "issue_title":  "Task: Bind a card\u0027s fields to the current item",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  39,
+                                   "issue_title":  "Task: Guide creators to binding from the inspector\u0027s Data tab",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  40,
+                                   "issue_title":  "Task: Scroll the editor canvas to a section when picked from the layers list",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  41,
+                                   "issue_title":  "Task: Per-screen product tour for new creators",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  42,
+                                   "issue_title":  "Test Plan",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\global-context.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\tenant-security.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  43,
+                                   "issue_title":  "Task: Guided tour for the site editor",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  44,
+                                   "issue_title":  "Task: Fix the publish domain to a tenant subdomain",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  45,
+                                   "issue_title":  "Epic: Console UX \u0026 accessibility hardening",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\accessibility-ux.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  46,
+                                   "issue_title":  "Task: Meet the 24px minimum tap-target size",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\accessibility-ux.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  47,
+                                   "issue_title":  "Task: Offer a \u0027View live site\u0027 action right after publishing",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\accessibility-ux.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  48,
+                                   "issue_title":  "Task: Give dashboard screens and the editor a real heading structure",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\accessibility-ux.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\README.md",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  49,
+                                   "issue_title":  "Task: Guard against template styles.css drifting from source",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  50,
+                                   "issue_title":  "Testcase",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  51,
+                                   "issue_title":  "Epic: Console — wire the remaining backend APIs",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  52,
+                                   "issue_title":  "Task: Use the backend hybrid search instead of client-side filtering",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  53,
+                                   "issue_title":  "Task: Add a UI for recurring crawl schedules",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  54,
+                                   "issue_title":  "Task: Wire site unpublish, discard, and delete",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  55,
+                                   "issue_title":  "Task: Let operators edit articles",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  56,
+                                   "issue_title":  "Task: Surface job/queue status in the console",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  57,
+                                   "issue_title":  "Task: Remove the orphan /sites/temp and /sites/configuration routes",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  58,
+                                   "issue_title":  "Epic: Audience site — no placeholder identity or stubbed chat",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  59,
+                                   "issue_title":  "Task: Replace the synthetic guest/show labels on the audience site",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  60,
+                                   "issue_title":  "Task: Wire the real audience chat (replace the Echo stub)",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  61,
+                                   "issue_title":  "Task: Operator takes a published site offline with a distinct \u0027unpublished\u0027 state",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  62,
+                                   "issue_title":  "Bug: backend semantic/hybrid search returns 500 (keyword works)",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  63,
+                                   "issue_title":  "Task: Implement Editor Cross-Panel Highlighting",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  64,
+                                   "issue_title":  "Task: Link inspector fields to their text on the canvas (hover/focus highlight)",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  65,
+                                   "issue_title":  "Task: Merge the Hero tagline + count line and align inspector defaults",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  66,
+                                   "issue_title":  "Task: Conversationally edit the public site with the builder agent (wire the site-editor Assistant)",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  67,
+                                   "issue_title":  "Task: Relocate Pipeline Card for Visibility",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  68,
+                                   "issue_title":  "Task: Ask first-time users before auto-running onboarding tours",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\site-builder-onboarding.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  69,
+                                   "issue_title":  "Task: Show/hide password toggle on the sign-in form",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  70,
+                                   "issue_title":  "Task: [infra] Register the BetterAuth Google callback so Continue-with-Google goes live",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  71,
+                                   "issue_title":  "Task: [backend] Wire BetterAuth Google social provider (socialProviders.google) for operator login",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\test-cases\\riffables-master.test-cases.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  72,
+                                   "issue_title":  "Task: [frontend] Wire the Continue-with-Google button to BetterAuth social sign-in",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  73,
+                                   "issue_title":  "Task: [frontend] Set or reset a password — account Settings + forgot-password",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\creator-console.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  74,
+                                   "issue_title":  "Epic: Operator image asset library — images for site \u0026 article content",
+                                   "files":  [
+                                                 ".\\qa-ai-workflow\\requirements\\riffables-master.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\requirements\\search-public-site.requirements.yaml",
+                                                 ".\\qa-ai-workflow\\test-plans\\riffables-master.test-plan.md",
+                                                 ".\\qa-ai-workflow\\traceability\\riffables-master.testcase-coverage-audit.md"
+                                             ]
+                               },
+                               {
+                                   "issue_number":  75,
+                                   "issue_title":  "Epic: Canvas site template — operators pick a second template, edit it, and publish it",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  76,
+                                   "issue_title":  "Epic: Section-level styling controls in the site editor",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  77,
+                                   "issue_title":  "Task: Make a second site template selectable, editable, and rendered publicly",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  78,
+                                   "issue_title":  "Task: Curated theme presets so the agent restyles with tokens, not free-form styling",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  79,
+                                   "issue_title":  "Task: Fix the shipped template\u0027s dead links, placeholder data, and editor↔public style drift",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  80,
+                                   "issue_title":  "Task: Add an FAQ accordion section and per-track podcast links",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  81,
+                                   "issue_title":  "Task: Follow in-app links in the editor preview instead of 404ing",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  82,
+                                   "issue_title":  "Task: Give sections colour, size, weight, and button controls with pre-filled defaults",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  83,
+                                   "issue_title":  "Task: Show section colour control labels under their real name, in full",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  84,
+                                   "issue_title":  "Task: Pick an uploaded image for a section instead of pasting a URL",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  85,
+                                   "issue_title":  "Epic: First-run getting-started checklist for a new tenant",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  86,
+                                   "issue_title":  "Task: Getting-started checklist on the console home",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  87,
+                                   "issue_title":  "Epic: Attach an image to a builder-agent chat turn",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  88,
+                                   "issue_title":  "Epic: The builder agent can see the images an operator attaches",
+                                   "files":  [
+
+                                             ]
+                               },
+                               {
+                                   "issue_number":  89,
+                                   "issue_title":  "Task: Attach and paste images in the assistant composer",
+                                   "files":  [
+
+                                             ]
+                               }
+                           ]
 }

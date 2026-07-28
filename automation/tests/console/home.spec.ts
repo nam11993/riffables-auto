@@ -184,6 +184,13 @@ test.describe('Home console flows', () => {
     await page.waitForLoadState('networkidle').catch(() => undefined);
 
     await expect(page).toHaveURL(/\/$/);
+    const checklist = page
+      .getByRole('dialog')
+      .filter({ hasText: /connect a source/i })
+      .filter({ hasText: /turn videos into riffs/i });
+    if (await checklist.isVisible().catch(() => false)) {
+      await checklist.getByRole('button', { name: /maybe later|close/i }).first().click();
+    }
     await expect(page.getByText(/first time in riffables/i)).toBeVisible();
     await expect(page.getByText(/new here/i)).toBeVisible();
     await expect(page.getByRole('button', { name: "I've been here before" })).toBeVisible();

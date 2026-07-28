@@ -16,9 +16,9 @@ Các file draft theo module vẫn giữ nguyên để chứa acceptance criteria
 
 | Nhóm | Số lượng | Cách dùng |
 | --- | ---: | --- |
-| Included requirements | 74 | Dùng để viết test plan/test case |
-| Release scope | 33 | Ưu tiên P0/P1 khi viết test plan |
-| Regression baseline | 41 | Viết regression/smoke sau release scope |
+| Included requirements | 88 | Dùng để viết test plan/test case |
+| Release scope | 35 | Ưu tiên P0/P1 khi viết test plan |
+| Regression baseline | 53 | Viết regression/smoke sau release scope |
 | Governance requirements | 4 | Không sinh test case trực tiếp |
 
 `REQ-GLOBAL-*` không phải requirement rác, nhưng không nên dùng để sinh test case chi tiết. Nhóm này dùng cho coverage governance và release quality gate.
@@ -35,7 +35,7 @@ Các file draft theo module vẫn giữ nguyên để chứa acceptance criteria
 | P1 | Creator console | Mixed | `REQ-CONSOLE-001` to `REQ-CONSOLE-012` | `creator-console.requirements.yaml` |
 | P1 | Theme customization | Release | `REQ-THEME-001` to `REQ-THEME-005` | `theme-customization.requirements.yaml` |
 | P1 | Accessibility/UX | Regression baseline | `REQ-A11Y-001` to `REQ-A11Y-005` | `accessibility-ux.requirements.yaml` |
-| P1/P2 | Site builder/onboarding | Mixed | `REQ-BUILDER-001` to `REQ-BUILDER-006`, `REQ-ONBOARD-001` to `REQ-ONBOARD-003` | `site-builder-onboarding.requirements.yaml` |
+| P1/P2 | Site builder/onboarding | Mixed | `REQ-BUILDER-001` to `REQ-BUILDER-015`, `REQ-ONBOARD-001` to `REQ-ONBOARD-004` | `site-builder-onboarding.requirements.yaml` |
 
 ## Review checklist trước test plan
 

@@ -12,13 +12,14 @@ qa-ai-workflow/test-cases/riffables-master.test-cases.md
 
 Current status:
 
-- 78/78 included requirement IDs are covered.
-- 418 total test cases.
+- 88/88 included requirement IDs are covered.
+- 466 total test cases.
 - 152 test cases currently have automation status.
 - Foundation smoke cases cover authentication, protected routes, workspace context, password visibility, Google OAuth start/error states, and YouTube source connection.
-- All 418 cases use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
+- All 466 cases use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
 - Acceptance-criteria execution cases add missing depth from the first draft.
 - The latest update adds A11Y baseline automation for target size, editor headings, landmarks/names/alt baseline, visible focus indicator, validation alert semantics, icon-button names, and keyboard navigation.
+- The 2026-07-28 PRD update adds atomic coverage for two site templates, editor/public parity, FAQ/podcast links, section styling, image picker, getting-started checklist, builder image attachments, and image-understanding security.
 
 Covered modules:
 

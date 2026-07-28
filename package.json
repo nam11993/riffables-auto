@@ -23,6 +23,8 @@
     "test:sources:exact-selected-mutation": "playwright test automation/tests/sources/youtube-source.spec.ts --grep @source-crawl-unselected-guard --workers=1",
     "test:public": "playwright test automation/tests/public --workers=1",
     "test:site": "playwright test automation/tests/console/sites-editor.spec.ts --workers=1",
+    "test:onboarding": "playwright test automation/tests/console/home.spec.ts automation/tests/console/onboarding.spec.ts --grep TC-ONBOARD- --workers=1",
+    "test:home:dynamic": "playwright test automation/tests/console/home-dynamic.spec.ts --workers=1",
     "source:oauth:manual": "powershell -ExecutionPolicy Bypass -File scripts/open-source-oauth-manual.ps1",
     "test:debug": "playwright test automation/tests/smoke --debug",
     "report": "playwright show-report",

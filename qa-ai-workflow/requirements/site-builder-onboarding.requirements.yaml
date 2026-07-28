@@ -3,8 +3,8 @@ source_prd:
   title: "Visual Site Builder and Guided Onboarding"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues/35"
-  version_or_commit: "github-issues-read-2026-07-23"
-  last_reviewed_at: "2026-07-23"
+  version_or_commit: "github-issues-read-2026-07-28"
+  last_reviewed_at: "2026-07-28"
   related_issues:
     - id: "#35"
       title: "Epic: Visual site builder - bind sections to live catalog data"
@@ -39,6 +39,51 @@ source_prd:
     - id: "#68"
       title: "Task: Ask first-time users before auto-running onboarding tours"
       url: "https://github.com/speedrun-labs/riffables-prd/issues/68"
+    - id: "#75"
+      title: "Epic: Canvas site template - operators pick a second template, edit it, and publish it"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/75"
+    - id: "#76"
+      title: "Epic: Section-level styling controls in the site editor"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/76"
+    - id: "#77"
+      title: "Task: Make a second site template selectable, editable, and rendered publicly"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/77"
+    - id: "#78"
+      title: "Task: Curated theme presets so the agent restyles with tokens, not free-form styling"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/78"
+    - id: "#79"
+      title: "Task: Fix the shipped template's dead links, placeholder data, and editor-public style drift"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/79"
+    - id: "#80"
+      title: "Task: Add an FAQ accordion section and per-track podcast links"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/80"
+    - id: "#81"
+      title: "Task: Follow in-app links in the editor preview instead of 404ing"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/81"
+    - id: "#82"
+      title: "Task: Give sections colour, size, weight, and button controls with pre-filled defaults"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/82"
+    - id: "#83"
+      title: "Task: Show section colour control labels under their real name, in full"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/83"
+    - id: "#84"
+      title: "Task: Pick an uploaded image for a section instead of pasting a URL"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/84"
+    - id: "#85"
+      title: "Epic: First-run getting-started checklist for a new tenant"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/85"
+    - id: "#86"
+      title: "Task: Getting-started checklist on the console home"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/86"
+    - id: "#87"
+      title: "Epic: Attach an image to a builder-agent chat turn"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/87"
+    - id: "#88"
+      title: "Epic: The builder agent can see the images an operator attaches"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/88"
+    - id: "#89"
+      title: "Task: Attach and paste images in the assistant composer"
+      url: "https://github.com/speedrun-labs/riffables-prd/issues/89"
 
 requirements:
   - id: "REQ-BUILDER-001"
@@ -248,6 +293,272 @@ requirements:
       - "REQ-ONBOARD-001"
       - "REQ-ONBOARD-002"
 
+  - id: "REQ-BUILDER-007"
+    title: "Operator can choose and retain one of two rendered site templates"
+    description: "Starting a site must show exactly two real rendered template previews, and the chosen template must drive the editor schema and remain selected across navigation and reload."
+    prd_section: "Issue #75 Mechanic and Acceptance criteria; Issue #77 Goal and Example of done"
+    source_issues:
+      - "#75"
+      - "#77"
+    priority: "must"
+    type: "functional"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The start-site surface shows exactly two available templates: the original creator library and the canvas library."
+      - "Each template choice is a real rendered preview rather than a name-only or placeholder card."
+      - "Choosing either template opens the editor with that template's own sections, fields, and theme."
+      - "The selected template persists after leaving, reopening, and refreshing the editor."
+      - "A site record cannot silently switch to the other template during save, publish, or reopen."
+    assumptions:
+      - "Issues #75 and #77 are closed and tracked as regression baseline."
+    open_questions: []
+    related_requirements:
+      - "REQ-BUILDER-005"
+      - "REQ-BUILDER-008"
+
+  - id: "REQ-BUILDER-008"
+    title: "Editor preview and public site preserve template data, links, and rendering parity"
+    description: "The selected template must use real catalog data, expose effective controls, keep editor and public rendering aligned, and route preview links without leaving the editor or producing avoidable 404 pages."
+    prd_section: "Issue #75 Acceptance criteria; Issue #79 Goal; Issue #81 Goal and Example of done"
+    source_issues:
+      - "#75"
+      - "#79"
+      - "#81"
+    priority: "must"
+    type: "integration-data-integrity"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "All shipped navigation items and calls-to-action resolve to pages that exist."
+      - "Catalog-bound sections render the selected record's values and do not retain shipped placeholder content."
+      - "Every inspector control exposed for the template changes the intended canvas output."
+      - "A section styled in the editor renders equivalently on the published public site."
+      - "In Preview mode, a valid internal link switches the editor to the target site page without leaving the editor."
+      - "In Preview mode, a missing internal page does not navigate to a console 404."
+      - "External links continue to open normally."
+      - "In Edit mode, clicking a link selects the editable section instead of navigating."
+    assumptions:
+      - "Browser back/forward history for preview navigation is out of scope."
+    open_questions:
+      - "What visual-diff tolerance is approved for editor versus public rendering parity?"
+    related_requirements:
+      - "REQ-BUILDER-002"
+      - "REQ-BUILDER-007"
+
+  - id: "REQ-BUILDER-009"
+    title: "Template supports interactive FAQ entries and per-track podcast links"
+    description: "Operators must be able to configure FAQ question-answer pairs and a link for each podcast track, with usable interactions on the published site."
+    prd_section: "Issue #80 Goal and Example of done"
+    source_issues:
+      - "#80"
+    priority: "should"
+    type: "functional-ui"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The editor exposes question and answer fields for each FAQ entry."
+      - "Published FAQ questions expand their answers when selected."
+      - "Only one FAQ answer is open at a time."
+      - "Each podcast track exposes its own link field."
+      - "A track with a valid link is clickable and opens the configured destination."
+      - "A track without a link does not expose a broken or misleading action."
+    assumptions:
+      - "FAQ entries remain a flat list; nested and reorder behavior is out of scope."
+    open_questions:
+      - "What validation applies to podcast track URLs?"
+    related_requirements:
+      - "REQ-BUILDER-008"
+
+  - id: "REQ-BUILDER-010"
+    title: "Section styling controls are scoped, pre-filled, and fully labelled"
+    description: "Each section must expose the style controls it supports, pre-filled from the rendered value, and changing a control must affect only that section."
+    prd_section: "Issue #76 Acceptance criteria; Issue #82 Goal; Issue #83 Goal"
+    source_issues:
+      - "#76"
+      - "#82"
+      - "#83"
+    priority: "should"
+    type: "ui-data-integrity"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The inspector shows controls for the text roles present in the selected section, including heading, eyebrow, link, number, or body where applicable."
+      - "Button background color and button text color are separate controls."
+      - "Font size and font weight are adjustable per section."
+      - "Each control opens pre-filled with the value currently rendered by that section."
+      - "Changing one section does not modify another section or the site-wide theme."
+      - "Each control uses its configured human-readable label rather than an implementation-derived abbreviation."
+      - "Labels remain fully readable without clipping at supported editor widths."
+      - "Color choices are limited to template theme tokens rather than arbitrary values."
+    assumptions:
+      - "Per-element rich-content overrides are out of scope."
+    open_questions:
+      - "Which editor widths are officially supported for label-layout assertions?"
+    related_requirements:
+      - "REQ-BUILDER-008"
+      - "REQ-BUILDER-012"
+
+  - id: "REQ-BUILDER-011"
+    title: "Operator can choose an uploaded image directly from a section image field"
+    description: "A section image field must provide an upload-and-pick control backed by the operator's image asset library instead of requiring manual URL entry."
+    prd_section: "Issue #74 scope; Issue #84 Goal and Example of done"
+    source_issues:
+      - "#74"
+      - "#84"
+    priority: "should"
+    type: "functional-integration"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Selecting a section with an image field exposes an upload-and-pick control."
+      - "The operator can browse or upload supported images without seeing or typing the permanent asset URL."
+      - "Choosing an asset updates only the selected section image."
+      - "The selected image appears in editor preview and remains associated with the draft after save/reopen."
+      - "Canceling the picker or discarding the draft leaves the previous section image unchanged."
+      - "The picker lists only images the active operator is allowed to use."
+    assumptions:
+      - "Full-library labelling, pagination, and removal remain covered by the image asset library requirements."
+    open_questions: []
+    related_requirements:
+      - "REQ-PUBLIC-007"
+      - "REQ-PUBLIC-008"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-BUILDER-012"
+    title: "Builder agent restyles sites only through named template presets and tokens"
+    description: "The builder agent must list and apply curated theme presets while refusing free-form styling or values outside the selected template's tokens."
+    prd_section: "Issue #75 Locked constants; Issue #78 Goal and Example of done"
+    source_issues:
+      - "#75"
+      - "#78"
+    priority: "must"
+    type: "ai-assisted-security"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The agent can list the named theme presets available for the selected template."
+      - "Applying a preset changes the site to that preset through a reviewable editor diff."
+      - "Only fields and token values defined by the template preset are changed."
+      - "A request for arbitrary CSS, unsupported style fields, or non-token values is refused."
+      - "Rejecting or discarding a preset diff leaves the current theme unchanged."
+      - "Applying a preset to one tenant cannot affect another tenant's site or preset state."
+    assumptions:
+      - "Operator-authored presets and uploaded stylesheets are out of scope."
+    open_questions:
+      - "What are the exact preset names for each shipped template?"
+    related_requirements:
+      - "REQ-BUILDER-006"
+      - "REQ-BUILDER-007"
+      - "REQ-THEME-004"
+      - "REQ-THEME-005"
+
+  - id: "REQ-BUILDER-013"
+    title: "Builder assistant composer supports image attachment lifecycle"
+    description: "An operator must be able to attach or paste one or more images, preview thumbnails, remove attachments, and send an image with or without text."
+    prd_section: "Issue #87 Acceptance criteria; Issue #89 Goal and Example of done"
+    source_issues:
+      - "#87"
+      - "#89"
+    priority: "must"
+    type: "functional-ui"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "The composer provides an image attachment control."
+      - "Selecting one or more supported images shows a thumbnail for each attachment before send."
+      - "Pasting an image from the clipboard attaches it through the same lifecycle."
+      - "An attachment can be removed before send without deleting the uploaded asset from the operator's library."
+      - "A message can be sent with only an image and no text."
+      - "After send, the operator message displays the images attached to that turn."
+      - "The assistant can use the attached asset URL to place the image in an allowed site section through a reviewable change."
+    assumptions:
+      - "Audience-facing chat attachments and non-image files are out of scope."
+    open_questions: []
+    related_requirements:
+      - "REQ-BUILDER-006"
+      - "REQ-BUILDER-011"
+      - "REQ-BUILDER-014"
+
+  - id: "REQ-BUILDER-014"
+    title: "Builder image attachments reuse asset validation and complete upload before send"
+    description: "Composer attachments must upload into the existing asset library, enforce the same type and size limits, and never be dropped from a sent turn because upload was incomplete."
+    prd_section: "Issue #87 Locked constants; Issue #89 Agent instructions"
+    source_issues:
+      - "#87"
+      - "#89"
+    priority: "must"
+    type: "data-integrity-security"
+    status: "regression_baseline_draft"
+    acceptance_criteria:
+      - "Accepted attachment types are PNG, JPEG, WebP, and GIF."
+      - "Each attachment must be no larger than 10 MiB."
+      - "Unsupported or oversized files are rejected in the composer with a clear reason and are never uploaded."
+      - "Sending is disabled or held while any included attachment is still uploading."
+      - "After upload completes, the turn references the permanent asset-library URL and does not create a separate attachment store."
+      - "Existing asset deduplication and operator/tenant access controls still apply."
+      - "Upload failure leaves the turn unsent or clearly excludes the failed attachment only after explicit operator action."
+    assumptions:
+      - "The composer reuses the image asset API defined by issue #74."
+    open_questions:
+      - "What retry/cancel behavior is expected for a failed attachment upload?"
+    related_requirements:
+      - "REQ-BUILDER-013"
+      - "REQ-PUBLIC-007"
+      - "REQ-PUBLIC-008"
+      - "REQ-TENANT-001"
+
+  - id: "REQ-BUILDER-015"
+    title: "Builder agent can inspect attached image content within conversation and tenant boundaries"
+    description: "For the V1.1 vision flow, the builder agent must be able to reason about an attached image, act consistently with its contents, and refuse to invent visual observations when the image cannot be read."
+    prd_section: "Issue #88 Mechanic, Acceptance criteria, and Locked constants"
+    source_issues:
+      - "#88"
+    priority: "should"
+    type: "ai-validation-security"
+    status: "needs_confirmation"
+    acceptance_criteria:
+      - "An answer to a question about an attached image demonstrably reflects controlled visual details from that image."
+      - "A requested site change based on an attached reference image is consistent with the approved visual golden fixture."
+      - "The agent cannot read an image that was not attached to the current conversation."
+      - "The agent cannot read another tenant's image through guessed IDs, URLs, prompts, or tool calls."
+      - "Existing image-placement behavior from issue #87 continues to work."
+      - "When image content cannot be read, the agent states that limitation and does not fabricate a description."
+    assumptions:
+      - "Images remain in the existing asset library and are read through a tenant-scoped per-turn capability."
+    open_questions:
+      - "What API or agent tool transports image bytes to the text-only builder-agent runtime?"
+      - "What response field, tool log, or trace proves that the model read the attachment?"
+      - "Which model and deterministic visual fixture set should QA use for repeatable evaluation?"
+    related_requirements:
+      - "REQ-BUILDER-013"
+      - "REQ-BUILDER-014"
+      - "REQ-TENANT-001"
+      - "REQ-TENANT-002"
+
+  - id: "REQ-ONBOARD-004"
+    title: "New tenant receives a data-driven getting-started checklist on Home"
+    description: "A new tenant with zero sources must receive a non-blocking three-step checklist driven by real source, crawl/riff, and site state, with dismissal stored per operator and tenant."
+    prd_section: "Issue #85 Acceptance criteria and Locked constants; Issue #86 Goal and Example of done"
+    source_issues:
+      - "#85"
+      - "#86"
+    priority: "should"
+    type: "functional-ui-data-integrity"
+    status: "draft"
+    acceptance_criteria:
+      - "A tenant with zero sources sees the checklist auto-open on Home."
+      - "The checklist orders the steps as Connect a source, Turn videos into riffs, and Edit your site, with the current step clearly identified."
+      - "Each step derives completion from the active tenant's real data rather than from clicking its action."
+      - "A queued crawl satisfies the second step immediately through lastRunAt or equivalent state; the user does not wait for a ready riff."
+      - "Each step routes to the existing Sources, video selection/crawl, or site editor workflow."
+      - "The operator can dismiss and reopen the checklist."
+      - "After all three steps are complete, the checklist no longer auto-opens."
+      - "Dismissal is stored per operator and per tenant, so another empty tenant remains eligible."
+      - "Checklist dismissal/completion does not change screen-tour consent, seen state, or replay behavior."
+      - "The checklist reuses the existing Home snapshot and does not introduce a new polling loop."
+    assumptions:
+      - "A source exists, Source.lastRunAt or any riff exists, and a site exists are the three completion signals."
+    open_questions:
+      - "What exact control reopens a dismissed checklist on Home?"
+    related_requirements:
+      - "REQ-CONSOLE-002"
+      - "REQ-ONBOARD-001"
+      - "REQ-ONBOARD-003"
+
 review_notes:
   status: "draft"
   recommended_reviewers:
@@ -261,3 +572,7 @@ review_notes:
     - "Confirm publish host suffix per environment."
     - "Confirm supported site-editor Assistant edit operations and generated-diff pass/fail oracle."
     - "Confirm where onboarding consent state is persisted."
+    - "Confirm the two shipped template IDs/names and exact named theme presets."
+    - "Confirm editor versus public visual-diff tolerance and supported editor widths."
+    - "Confirm attachment upload failure behavior and image-read transport for issue #88."
+    - "Confirm the Home control used to reopen the getting-started checklist."

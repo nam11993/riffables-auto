@@ -11,6 +11,7 @@ qa-ai-workflow/automation/auth-negative-password-flow.md
 qa-ai-workflow/automation/auth-session-security-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
+qa-ai-workflow/automation/home-dynamic-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
 qa-ai-workflow/automation/a11y-baseline-flow.md
 qa-ai-workflow/automation/source-flow.md
@@ -99,8 +100,62 @@ The first smoke flow covers:
 | `TC-CONSOLE-024` | Home Overview summary modules navigate to Sources, Content, Content, and Sites. |
 | `TC-CONSOLE-025` | Home Next step CTA routes to the recommended Sources workflow. |
 | `TC-CONSOLE-026` | Home How it works sequence explains connect, extract, and publish. |
+| `TC-CONSOLE-027` | A real new workspace shows an honest zero-data Home state and no Recent content. |
+| `TC-CONSOLE-030` | Baohan crawled-content state promotes review and shows current progress. |
+| `TC-CONSOLE-032` | Home no-site state routes to site setup and remains unchanged. |
+| `TC-CONSOLE-034` | Published Home state matches Baohan Sites and its live URL. |
+| `TC-CONSOLE-035` | Home metrics match Sources, total Content rows, Articles, and Sites after refresh. |
+| `TC-CONSOLE-036` | Recent content matches the top Content rows, metadata order, and navigation. |
+| `TC-CONSOLE-038` | Expected-fail: secondary workspace still displays primary Baohan Home data. |
 | `TC-A11Y-005` | Dashboard screens have one visible `h1` and ordered headings. |
 | `TC-ONBOARD-007` | First authenticated Home visit asks whether the user is new. |
+
+## Current Onboarding Scope
+
+Run all onboarding cases:
+
+```powershell
+pnpm run test:onboarding
+```
+
+Latest staging result on `2026-07-28`:
+
+```text
+20 tests
+11 actual pass
+5 expected-fail
+4 skipped/fixture-blocked
+0 unexpected failed
+```
+
+Pass: `TC-ONBOARD-001`, `004`, `007`, `009`, `010`, `012`, `013`, `014`, `017`, `018`, `020`.
+
+Expected-fail: `TC-ONBOARD-002`, `003`, `005`, `006` because tour seen/completion state is not persisted; `TC-ONBOARD-008` because consent/new-user immediate Home tour is not stable after the zero-source checklist.
+
+Fixture-blocked: `TC-ONBOARD-011` needs a historical completed-tour browser fixture; `TC-ONBOARD-015`, `016`, `019` need controlled transition, fresh queued-crawl, and multi-operator/multi-tenant fixtures.
+
+Detailed mapping: `qa-ai-workflow/automation/onboarding-flow.md`.
+
+## Current Home Dynamic Scope
+
+Run the controlled Home state suite:
+
+```powershell
+npm run test:home:dynamic
+```
+
+Latest staging result on `2026-07-28`:
+
+```text
+7 Playwright tests
+6 actual pass
+1 expected-fail
+0 unexpected failed
+```
+
+The passing cases are `TC-CONSOLE-027`, `030`, `032`, `034`, `035`, and `036`. `TC-CONSOLE-038` is an expected product failure: selecting the secondary `Auto Workspace` changes the workspace label but leaves the primary Baohan metrics, public-site identity, and Recent content visible.
+
+Detailed mapping: `qa-ai-workflow/automation/home-dynamic-flow.md`.
 
 ## Current A11Y Baseline Scope
 
@@ -244,6 +299,11 @@ SOURCE_MANUAL_SCHEDULE_GAP
 A11Y_TARGET_SIZE_GAP
 A11Y_ACCESSIBLE_NAME_GAP
 A11Y_FOCUS_INDICATOR_GAP
+HOME_DYNAMIC_EMAIL
+HOME_DYNAMIC_PASSWORD
+HOME_DYNAMIC_PUBLIC_HOST
+HOME_DYNAMIC_SECONDARY_WORKSPACE
+HOME_WORKSPACE_ISOLATION_EXPECTED_XFAIL
 ```
 
 The sign-in page also has a `Continue with Google` option, but this smoke suite prioritizes the direct email/password form submit. If a future account is routed through Google OAuth, Playwright may be blocked by Google's browser automation protections. In that case the authenticated smoke tests are skipped with an explicit reason. To run that OAuth variant, provide one of these:
@@ -289,6 +349,12 @@ Auth account flows:
 
 ```powershell
 npm run test:auth
+```
+
+Home dynamic workspace states:
+
+```powershell
+npm run test:home:dynamic
 ```
 
 Auth negative/password focused run:

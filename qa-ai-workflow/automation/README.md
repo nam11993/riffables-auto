@@ -43,6 +43,13 @@ TC-CONSOLE-023
 TC-CONSOLE-024
 TC-CONSOLE-025
 TC-CONSOLE-026
+TC-CONSOLE-027
+TC-CONSOLE-030
+TC-CONSOLE-032
+TC-CONSOLE-034
+TC-CONSOLE-035
+TC-CONSOLE-036
+TC-CONSOLE-038
 TC-SOURCE-001
 TC-SOURCE-003
 TC-SOURCE-007
@@ -140,7 +147,26 @@ TC-A11Y-009
 TC-A11Y-010
 TC-A11Y-011
 TC-A11Y-012
+TC-ONBOARD-001
+TC-ONBOARD-002
+TC-ONBOARD-003
+TC-ONBOARD-004
+TC-ONBOARD-005
+TC-ONBOARD-006
 TC-ONBOARD-007
+TC-ONBOARD-008
+TC-ONBOARD-009
+TC-ONBOARD-010
+TC-ONBOARD-011
+TC-ONBOARD-012
+TC-ONBOARD-013
+TC-ONBOARD-014
+TC-ONBOARD-015
+TC-ONBOARD-016
+TC-ONBOARD-017
+TC-ONBOARD-018
+TC-ONBOARD-019
+TC-ONBOARD-020
 ```
 
 Latest full staging run:
@@ -337,6 +363,8 @@ qa-ai-workflow/automation/auth-negative-password-flow.md
 qa-ai-workflow/automation/auth-session-security-flow.md
 qa-ai-workflow/automation/setup-organization-flow.md
 qa-ai-workflow/automation/home-flow.md
+qa-ai-workflow/automation/home-dynamic-flow.md
+qa-ai-workflow/automation/onboarding-flow.md
 qa-ai-workflow/automation/workspace-account-flow.md
 qa-ai-workflow/automation/a11y-baseline-flow.md
 qa-ai-workflow/automation/source-flow.md

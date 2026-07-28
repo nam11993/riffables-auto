@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Feature | `riffables-master` |
-| Audit date | `2026-07-23` |
+| Audit date | `2026-07-28` |
 | Test plan | `qa-ai-workflow/test-plans/riffables-master.test-plan.md` |
 | Test cases | `qa-ai-workflow/test-cases/riffables-master.test-cases.md` |
 | Requirements | `qa-ai-workflow/requirements/riffables-master.requirements.yaml` |
@@ -13,17 +13,17 @@
 
 ## Executive Verdict
 
-The current test case suite is functionally covered enough for QA review after the 2026-07-23 PRD intake/update for password reset, Google OAuth state changes, site-editor Assistant status, and operator image asset library scope.
+The current test case suite is functionally covered enough for QA review after the 2026-07-28 PRD intake/update for two-template sites, template integrity, section styling, FAQ/podcast links, image picker, first-run checklist, builder image attachments/vision, and Google OAuth issue-state changes.
 
 It covers all included requirement IDs and all major functional modules listed in the master test plan. It should not be marked approved-complete yet because some test data, environment constants, automation decisions, and open Product/Engineering decisions are still unresolved.
 
 | Checkpoint | Result | Notes |
 | --- | --- | --- |
-| Included requirement ID coverage | Pass | `78/78` included requirements are referenced by at least one test case. |
+| Included requirement ID coverage | Pass | `88/88` included requirements are referenced by at least one test case. |
 | Test plan module coverage | Pass | All P0/P1/P2 modules in the test plan have matching test case groups. |
 | Scenario depth | Pass for draft review | Positive, negative, boundary, security, integration, AI validation, accessibility, and regression cases are present. |
 | AI-heavy coverage | Strong draft coverage | AI quote grounding, hallucination, malformed output, speaker attribution, citation timestamp, re-extraction, and batch limit are covered. |
-| Execution readiness | Pass for draft execution | All `418` test cases expose `Workflow`, `Test Data`, `Automation Candidate`, and per-case `Status`. |
+| Execution readiness | Pass for draft execution | All `466` test cases expose `Workflow`, `Test Data`, `Automation Candidate`, and per-case `Status`. |
 | Approval readiness | Not complete | Golden datasets, constants, environment details, and several open policies still need confirmation. |
 
 ## Test Case Count By Group
@@ -31,7 +31,7 @@ It covers all included requirement IDs and all major functional modules listed i
 | Test Case Group | Count | Test Plan Area |
 | --- | ---: | --- |
 | `TC-AUTH-*` | 60 | Foundation authentication, Google OAuth, password controls, and reset-link flows |
-| `TC-SOURCE-*` | 50 | Foundation source connection |
+| `TC-SOURCE-*` | 46 | Foundation source connection |
 | `TC-TENANT-*` | 16 | Tenant security |
 | `TC-INGEST-*` | 20 | Ingestion pipeline |
 | `TC-INGEST-MODE-*` | 17 | Controlled ingestion mode |
@@ -43,16 +43,16 @@ It covers all included requirement IDs and all major functional modules listed i
 | `TC-CONSOLE-*` | 48 | Creator console, Home, Sites, lifecycle, and backend API wiring |
 | `TC-THEME-*` | 14 | Theme customization |
 | `TC-A11Y-*` | 12 | Accessibility and UX |
-| `TC-BUILDER-*` | 46 | Site builder regression, Baohan editor/publish flow, editor controls, and Assistant diff coverage |
-| `TC-ONBOARD-*` | 12 | Onboarding regression and consent flow |
-| Total | 418 | Full suite draft |
+| `TC-BUILDER-*` | 86 | Site builder regression, two-template flow, editor/public parity, section styling, image picker, Assistant diff, attachment, and image-vision coverage |
+| `TC-ONBOARD-*` | 20 | Onboarding tours/consent and data-driven getting-started checklist |
+| Total | 466 | Full suite draft |
 
 ## Module Coverage Matrix
 
 | Test Plan Module | Requirement Scope | Test Case Coverage | Coverage Status |
 | --- | --- | --- | --- |
 | Foundation Authentication | `REQ-CONSOLE-001`, `REQ-CONSOLE-008` to `REQ-CONSOLE-013`, `REQ-TENANT-*` | `TC-AUTH-001` to `TC-AUTH-060` | Covered with execution-level flows, reset-link cases, and blocked markers for full Google OAuth/email-token round trips where environment is not confirmed |
-| Foundation Source Connection | `REQ-INGEST-001`, `REQ-INGEST-MODE-*`, `REQ-CATALOG-001` | `TC-SOURCE-001` to `TC-SOURCE-012` | Covered with execution-level flows |
+| Foundation Source Connection | `REQ-INGEST-001`, `REQ-INGEST-MODE-*`, `REQ-CATALOG-001` | `TC-SOURCE-001` to `TC-SOURCE-046` | Covered with execution-level flows and continuous numbering |
 | Tenant Security | `REQ-TENANT-001` to `REQ-TENANT-004` | `TC-TENANT-001` to `TC-TENANT-016` | Covered with execution-level flows |
 | Ingestion Pipeline | `REQ-INGEST-001` to `REQ-INGEST-006` | `TC-INGEST-001` to `TC-INGEST-020` | Covered with data dependencies |
 | Controlled Ingestion Mode | `REQ-INGEST-MODE-001` to `REQ-INGEST-MODE-006` | `TC-INGEST-MODE-001` to `TC-INGEST-MODE-017` | Covered with execution-level flows |
@@ -64,8 +64,8 @@ It covers all included requirement IDs and all major functional modules listed i
 | Creator Console | `REQ-CONSOLE-001` to `REQ-CONSOLE-013` | `TC-CONSOLE-001` to `TC-CONSOLE-048`, `TC-AUTH-013` to `TC-AUTH-060` | Covered, including Sites empty state, lifecycle, Home site states, backend wiring, auth reset-link states, and Settings sign-in-method detection |
 | Theme Customization | `REQ-THEME-001` to `REQ-THEME-005` | `TC-THEME-001` to `TC-THEME-014` | Covered |
 | Accessibility And UX | `REQ-A11Y-001` to `REQ-A11Y-005` | `TC-A11Y-001` to `TC-A11Y-012` | Covered with scope/tooling dependency |
-| Site Builder Regression | `REQ-BUILDER-001` to `REQ-BUILDER-006` | `TC-BUILDER-001` to `TC-BUILDER-046` | Covered with Baohan editor/publish flow, editor controls, media panel baseline, and Assistant diff clarification dependency |
-| Onboarding Regression | `REQ-ONBOARD-001` to `REQ-ONBOARD-003` | `TC-ONBOARD-001` to `TC-ONBOARD-012` | Covered |
+| Site Builder Regression | `REQ-BUILDER-001` to `REQ-BUILDER-015` | `TC-BUILDER-001` to `TC-BUILDER-086` | Covered with Baohan editor/publish flow, two templates, template integrity, FAQ/podcast, preview navigation, section styling, image picker, preset constraints, attachments, and image-vision transport dependency |
+| Onboarding Regression | `REQ-ONBOARD-001` to `REQ-ONBOARD-004` | `TC-ONBOARD-001` to `TC-ONBOARD-020` | Covered with tours/consent and checklist real-state progression/isolation |
 
 ## 2026-07-16 PRD Update Coverage
 
@@ -87,10 +87,25 @@ It covers all included requirement IDs and all major functional modules listed i
 | Issue(s) | Requirement IDs | Test Case Coverage | Notes |
 | --- | --- | --- | --- |
 | `#66` | `REQ-BUILDER-006` | Existing `TC-BUILDER-012` to `TC-BUILDER-019`, `TC-BUILDER-030`, `TC-BUILDER-041` | Issue is now closed and tracked as regression baseline. No new behavior was added; the existing Assistant diff/security cases remain the coverage set. |
-| `#70` | `REQ-CONSOLE-011` | Existing `TC-AUTH-016` to `TC-AUTH-022`, plus `TC-AUTH-059` for trusted-origin reset behavior | Issue is open again, so full Google OAuth round-trip remains environment-gated until callback/origin readiness is confirmed. |
+| `#70` | `REQ-CONSOLE-011` | Existing `TC-AUTH-016` to `TC-AUTH-022`, plus `TC-AUTH-059` for trusted-origin reset behavior | Superseded by the 2026-07-28 intake: issue is now closed and becomes regression baseline; execution still needs a configured OAuth QA environment. |
 | `#71` | `REQ-CONSOLE-010` | Existing `TC-AUTH-016` to `TC-AUTH-022` | Backend Google provider issue is now closed and should be protected as regression baseline, while full E2E still depends on #70. |
 | `#73` | `REQ-CONSOLE-013` | `TC-AUTH-053` to `TC-AUTH-060` | Covers Google-only Add password, existing-password Change password, reset token completion, invalid token, sign-in-only Forgot password, trusted origins, and no forced Google password. |
 | `#74` | `REQ-PUBLIC-007` to `REQ-PUBLIC-009` | `TC-PUBLIC-025` to `TC-PUBLIC-034` | Covers supported uploads, public URLs, embed use, oversize/type rejection, duplicate upload, library listing, labels/alt text, pagination, soft remove, and cross-operator isolation. |
+
+## 2026-07-28 PRD Update Coverage
+
+| Issue(s) | Requirement IDs | Test Case Coverage | Notes |
+| --- | --- | --- | --- |
+| `#70` | `REQ-CONSOLE-009` to `REQ-CONSOLE-011` | Existing `TC-AUTH-016` to `TC-AUTH-022` | Google callback/provider/frontend issues are closed and tracked as regression baseline. Full flow still requires the configured OAuth QA environment; issue closure alone is not a test pass. |
+| `#75`, `#77` | `REQ-BUILDER-007` | `TC-BUILDER-047` to `TC-BUILDER-051` | Covers exactly two rendered previews, each template's editor schema, persistence, and second-template publish parity. |
+| `#75`, `#79`, `#81` | `REQ-BUILDER-008` | `TC-BUILDER-051` to `TC-BUILDER-055`, `TC-BUILDER-060` to `TC-BUILDER-063` | Covers editor/public parity, links/CTAs, real catalog data, working controls, internal/missing/external preview navigation, and Edit-mode selection. |
+| `#80` | `REQ-BUILDER-009` | `TC-BUILDER-056` to `TC-BUILDER-059` | Covers FAQ pair configuration, one-open accordion behavior, per-track links, and empty/malformed/unsafe link handling. |
+| `#76`, `#82`, `#83` | `REQ-BUILDER-010` | `TC-BUILDER-055`, `TC-BUILDER-064` to `TC-BUILDER-069` | Covers role-specific controls, current-value prefill, section isolation, button colors, full labels, and token boundaries. |
+| `#74`, `#84` | `REQ-BUILDER-011` | `TC-BUILDER-070` to `TC-BUILDER-071`, existing `TC-PUBLIC-025` to `TC-PUBLIC-034` | Links the operator asset library to the editor image picker without manual URL entry. |
+| `#75`, `#78` | `REQ-BUILDER-012` | `TC-BUILDER-069`, `TC-BUILDER-072` to `TC-BUILDER-074` | Covers named preset list/apply, reject/discard, token-only styling, and free-form/unsafe refusal. |
+| `#87`, `#89` | `REQ-BUILDER-013`, `REQ-BUILDER-014` | `TC-BUILDER-075` to `TC-BUILDER-082` | Covers file attach, clipboard paste, thumbnails, remove, image-only send, validation, slow/failing upload, sent-message persistence, permanent assets, and reviewable placement. |
+| `#88` | `REQ-BUILDER-015` | `TC-BUILDER-083` to `TC-BUILDER-086` | Covers image-grounded answer/action, unattached/cross-tenant denial, honest unreadable-image behavior, and URL-placement regression. Full execution is blocked pending image-read transport/oracle. |
+| `#85`, `#86` | `REQ-ONBOARD-004` | `TC-ONBOARD-013` to `TC-ONBOARD-020` | Covers zero-source auto-open, ordered steps, real-state progression, queued-crawl completion, dismiss/reopen, completion retirement, user/tenant isolation, tour independence, and no extra polling. |
 
 ## Test Strategy Coverage Matrix
 
@@ -124,6 +139,10 @@ These are not missing product functions. They are approval/execution gaps that n
 | Password reset-link email capture is unresolved | Token-completion cases for add/change/forgot password need mailbox access | Confirm deployed mailbox, email-capture service, or approved manual token fixture |
 | Image asset API and ownership rule are unresolved | #74 tests need stable route names and isolation oracle | Confirm upload/list/update/remove routes, public URL pattern, and whether ownership is per operator, per tenant, or both |
 | Site-editor Assistant diff oracle is unresolved | AI-generated edit correctness needs stable pass/fail criteria | Confirm supported edit operations and allowed diff fields for `REQ-BUILDER-006` |
+| Two-template manifest and preset fixtures are not versioned for QA | Template/preset regression can fail ambiguously when names or sections change | Record the two template IDs, expected section/field manifests, and named preset token maps with each tested build |
+| Editor/public visual tolerance is unresolved | Style-parity cases need to separate real drift from browser raster differences | Approve structural assertions, target viewports, and screenshot-diff tolerance |
+| Checklist reopen/storage contract is unresolved | Dismiss/reopen and per-user-per-tenant cases need stable selectors and key semantics | Confirm the Home reopen control and localStorage key contract |
+| Builder image-read transport/oracle is unresolved | `REQ-BUILDER-015` cannot prove that the agent saw the image | Confirm image-read API/tool, trace/log evidence, model, visual golden fixtures, and cross-tenant denial fixture |
 | Public label and audience chat oracle is unresolved | Data correctness and chat tests need backend source fields and expected response shape | Confirm label fields and chat real-agent QA oracle |
 
 ## Conclusion

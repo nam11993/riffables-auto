@@ -7,14 +7,14 @@
 | Feature | `riffables-master` |
 | PRD | `https://github.com/speedrun-labs/riffables-prd/issues` |
 | Requirement source | `qa-ai-workflow/requirements/riffables-master.requirements.yaml` |
-| Version/Commit | `github-issues-read-2026-07-23` |
+| Version/Commit | `github-issues-read-2026-07-28` |
 | Owner | `QA` |
 | Status | `Draft` |
-| Last updated | `2026-07-23` |
+| Last updated | `2026-07-28` |
 
 ## Objective
 
-Validate the Riffables product behavior described by the curated master requirements before release. This plan covers tenant isolation, ingestion, controlled ingestion, AI extraction and citation verification, public search/site behavior, operator image asset library behavior, creator console flows, password and Google OAuth authentication, console backend API wiring, site-editor Assistant diffs, theme customization, accessibility hardening, and regression coverage for closed site builder/onboarding issues.
+Validate the Riffables product behavior described by the curated master requirements before release. This plan covers tenant isolation, ingestion, controlled ingestion, AI extraction and citation verification, public search/site behavior, operator image asset library behavior, creator console flows, password and Google OAuth authentication, console backend API wiring, two-template site creation, template integrity, FAQ and podcast links, section-level styling, site-editor Assistant diffs and image attachments, first-run checklist behavior, theme customization, accessibility hardening, and regression coverage for closed site builder/onboarding issues.
 
 This test plan is the bridge between:
 
@@ -37,14 +37,14 @@ Detailed acceptance criteria remain in the module requirement files under `qa-ai
 
 ### In Scope
 
-- 34 release-scope requirements from the master catalog.
-- 44 regression-baseline requirements from closed PRD issues and delivered behavior that must remain protected.
+- 35 release-scope requirements from the master catalog.
+- 53 regression-baseline requirements from closed PRD issues and delivered behavior that must remain protected.
 - P0 validation for tenant security, ingestion pipeline, controlled ingestion, AI citation, and public search/site.
 - P0 validation for password visibility, add/change/forgot password reset-link flows, Google OAuth start/provider/callback readiness, and auth security boundaries.
-- P1 validation for creator console, console backend API wiring, site-editor Assistant diffs, theme customization, and accessibility/UX hardening.
-- P2 regression validation for site builder live catalog binding and guided onboarding where behavior is lower-risk.
+- P1 validation for creator console, console backend API wiring, two-template sites, template/editor/public parity, section styling, site-editor Assistant diffs and image attachments, getting-started checklist, theme customization, and accessibility/UX hardening.
+- P2 regression validation for site builder live catalog binding and lower-risk guided onboarding behavior.
 - Manual, API, UI, integration, negative, data integrity, accessibility, and regression testing.
-- Test data and golden dataset planning for AI citation, search relevance, speaker separation, tenant isolation, reset-link email, and image asset upload/library behavior.
+- Test data and golden dataset planning for AI citation, search relevance, speaker separation, tenant isolation, reset-link email, image asset upload/library behavior, two site templates, checklist states, attachment upload lifecycle, and deterministic visual understanding.
 - PRD change impact handling before final QA approval.
 
 ### Out of Scope
@@ -69,7 +69,7 @@ Detailed acceptance criteria remain in the module requirement files under `qa-ai
 | P1 | Creator console | Mixed | `REQ-CONSOLE-001` to `REQ-CONSOLE-013` | `TC-CONSOLE-*`, `TC-AUTH-*` |
 | P1 | Theme customization | Release | `REQ-THEME-001` to `REQ-THEME-005` | `TC-THEME-*` |
 | P1 | Accessibility/UX | Regression | `REQ-A11Y-001` to `REQ-A11Y-005` | `TC-A11Y-*` |
-| P1/P2 | Site builder/onboarding | Mixed | `REQ-BUILDER-001` to `REQ-BUILDER-006`, `REQ-ONBOARD-001` to `REQ-ONBOARD-003` | `TC-BUILDER-*`, `TC-ONBOARD-*` |
+| P1/P2 | Site builder/onboarding | Mixed | `REQ-BUILDER-001` to `REQ-BUILDER-015`, `REQ-ONBOARD-001` to `REQ-ONBOARD-004` | `TC-BUILDER-*`, `TC-ONBOARD-*` |
 
 `REQ-GLOBAL-*` is not used as a direct test case source. It is used for coverage governance and exit criteria.
 
@@ -84,10 +84,10 @@ Detailed acceptance criteria remain in the module requirement files under `qa-ai
 | Boundary | Validate max import duration strategy, batch size, catalog ceiling, max search results, batch extraction limit, and retry boundaries once constants are confirmed. |
 | Data Integrity | Check that catalog metadata does not create Riffs, selected video ingestion only queues selected IDs, re-extraction avoids duplicates, duplicate image uploads re-use the same asset URL, and tenant-scoped data never leaks. |
 | AI Validation | Use golden transcript and negative AI output datasets to verify quote grounding, hallucination rejection, and citation timestamp behavior. |
-| AI-Assisted Editing | Validate site-editor Assistant prompt handling, previewable diff generation, accept/reject behavior, unsupported requests, and unsafe prompt refusal. |
+| AI-Assisted Editing | Validate site-editor Assistant prompt handling, previewable diff generation, accept/reject behavior, named theme presets, image attachment lifecycle, image-grounded responses, unsupported requests, and unsafe prompt refusal. |
 | Search Relevance | Use a golden search dataset to validate keyword, exact quoted, semantic, and fused result ranking behavior. |
 | Accessibility | Validate tap target size, heading structure, accessible names, landmarks, contrast baseline, alt text, and alert semantics on scoped screens. |
-| Regression | Re-run controlled ingestion, site builder binding, publish subdomain, guided tours, auth password controls/reset-link states, Google OAuth start/error states, pipeline card layout, public labels, image asset soft-remove behavior, console navigation, public site load, and known passing accessibility baseline. |
+| Regression | Re-run controlled ingestion, site builder binding, two-template selection, editor/public parity, section styling, publish subdomain, guided tours/checklist, auth password controls/reset-link states, Google OAuth full-flow environment checks, pipeline card layout, public labels, image asset soft-remove behavior, console navigation, public site load, and known passing accessibility baseline. |
 | Automation | Prioritize stable P0/P1 smoke and regression paths for automation after manual expectations are reviewed. |
 
 ## Test Levels
@@ -98,7 +98,7 @@ Detailed acceptance criteria remain in the module requirement files under `qa-ai
 | Feature | Validate acceptance criteria for each requirement. | Ingestion, catalog, AI citation, search, curation, theme customization. |
 | Integration | Validate cross-module workflows. | Source -> ingest -> extract -> curate -> publish -> public search -> citation playback. |
 | Security | Validate isolation and authorization. | Tenant scoping, direct ID tampering, role actions, unsafe theme prompt rejection. |
-| Regression | Protect previously closed PRD behaviors. | Site builder, guided tours, publish subdomain, public site baseline. |
+| Regression | Protect previously closed PRD behaviors. | Two-template site builder, section styling, attachment composer, guided tours, publish subdomain, public site baseline. |
 
 ## Execution Order
 
@@ -110,10 +110,12 @@ Detailed acceptance criteria remain in the module requirement files under `qa-ai
 6. AI extraction and citation P0 checks.
 7. Search, public site, and operator image asset library P0 checks, including real public labels.
 8. Creator console P1 checks, including pipeline visibility and backend API wiring.
-9. Site-editor Assistant P1 checks for previewable diffs.
-10. Theme customization P1 checks.
-11. Accessibility and UX P1 regression checks.
-12. Site builder and onboarding P2 regression checks, including onboarding consent.
+9. Site builder P1 checks for two-template selection, template integrity, editor/public parity, FAQ/podcast links, section styling, and image picker.
+10. Site-editor Assistant P1 checks for previewable diffs, named presets, attachment lifecycle, and image-grounded behavior when the transport is available.
+11. Getting-started checklist and onboarding consent P1 checks.
+12. Theme customization P1 checks.
+13. Accessibility and UX P1 regression checks.
+14. Lower-risk site builder and guided-tour P2 regression checks.
 
 This order intentionally tests tenant/security foundations first because failures there can invalidate results from other modules.
 
@@ -252,7 +254,7 @@ Open dependencies:
 - Editable fields in curation UI.
 - Crawl feedback data contract.
 - Standard desktop viewport for pipeline visibility.
-- Google OAuth environment readiness because #71 is closed while #70 callback/environment readiness is open in the latest intake.
+- Confirmed Google OAuth QA host, callback URI, credentials, trusted origins, and disposable accounts for regression now that #70, #71, and #72 are closed.
 - Exact UI ownership of job/queue status and schedule editing for #51.
 - Reset-link email capture or deployed-mailbox access for #73.
 
@@ -305,13 +307,23 @@ Validate closed site builder and onboarding issues as regression baseline, and v
 | `REQ-BUILDER-004` | Selecting a section in layers scrolls the editor canvas to it. |
 | `REQ-BUILDER-005` | Publish host uses fixed platform suffix and tenant subdomain format. |
 | `REQ-BUILDER-006` | Site-editor Assistant accepts supported natural-language edit requests, proposes previewable diffs, supports accept/reject, and refuses unsafe or unsupported edits. |
+| `REQ-BUILDER-007` | Starting a site shows two rendered template previews; the chosen template drives the editor schema and persists across reopen/refresh. |
+| `REQ-BUILDER-008` | Template navigation, live data, inspector controls, and editor/public rendering remain valid and consistent. |
+| `REQ-BUILDER-009` | FAQ entries expose question/answer interaction and podcast tracks support independent links without broken empty actions. |
+| `REQ-BUILDER-010` | Section-level color, size, weight, and button controls are pre-filled, fully labelled, token-bound, and isolated to the selected section. |
+| `REQ-BUILDER-011` | Section image fields use an operator-scoped upload-and-pick workflow instead of manual asset URLs. |
+| `REQ-BUILDER-012` | Builder-agent restyling lists/applies named presets and refuses free-form styling outside template tokens. |
+| `REQ-BUILDER-013` | Builder composer supports attach, paste, thumbnail, remove, image-only send, sent-message display, and reviewable image placement. |
+| `REQ-BUILDER-014` | Attachment upload enforces PNG/JPEG/WebP/GIF and 10 MiB limits, waits before send, reuses asset storage/dedup, and handles failure safely. |
+| `REQ-BUILDER-015` | Builder agent grounds responses/actions in attached image content while enforcing conversation/tenant isolation and honest unreadable-image handling. |
 | `REQ-ONBOARD-001` | Main console screen tours start once, can be closed, and can be replayed. |
 | `REQ-ONBOARD-002` | Site editor tour introduces editor regions and can be replayed. |
 | `REQ-ONBOARD-003` | First authenticated visit asks whether the user is new before auto-running tours; no/dismiss/grandfathered flows are explicit. |
+| `REQ-ONBOARD-004` | A zero-source tenant receives a three-step data-driven checklist with queued-crawl progression, dismiss/reopen, completion retirement, and per-user-per-tenant state. |
 
 Regression note:
 
-Builder/onboarding regression cases should run after P0/P1 release checks unless a release specifically touches site builder, publishing, or onboarding. `REQ-BUILDER-006` should run earlier with P1 AI-assisted editing because it is a new open PRD item and needs Product/Engineering clarification on supported edit operations.
+Closed behaviors from `#75` to `#84`, `#87`, and `#89` are regression baseline but should run at P1 when a release touches templates, editor, public rendering, or builder chat. Open checklist behavior (`#85`, `#86`) is P1 release scope. `REQ-BUILDER-015` is V1.1 and its full automation remains gated until Engineering confirms the image-read transport and QA oracle.
 
 ## Environment
 
@@ -341,6 +353,12 @@ Builder/onboarding regression cases should run after P0/P1 release checks unless
 | Public label dataset | Tenants with real creator/show labels, tenants with missing label fields, and cross-tenant label controls. |
 | Audience chat dataset | Golden audience prompts, expected non-Echo response shape, tenant-scoped creator content, and unsupported/rate-limited prompt examples. |
 | Image asset dataset | Small PNG/JPEG/WebP/GIF fixtures, >10 MiB image, non-image file, SVG file, byte-identical duplicate image, many-image pagination set, and cross-tenant/operator asset IDs. |
+| Site template dataset | Disposable sites created from both shipped templates, expected section/field/theme manifests, valid and missing internal pages, external links, live catalog values, and editor/public screenshot baselines. |
+| Section styling dataset | Sections containing heading, eyebrow, link, number, body, and button roles; known rendered defaults; named template tokens; long configured labels; and another section/theme used as a negative isolation oracle. |
+| FAQ and podcast dataset | Zero/one/many FAQ pairs, duplicate and long question/answer values, podcast tracks with valid, missing, malformed, internal, and external links. |
+| Getting-started checklist dataset | Empty tenant, source-only tenant, queued-crawl tenant, ready-riff tenant, site-complete tenant, two operators in one tenant, and one operator across two tenants. |
+| Builder attachment dataset | Small PNG/JPEG/WebP/GIF files, multiple images, clipboard image, unsupported file, >10 MiB image, slow upload, failed upload, duplicate asset, and cross-tenant asset identifiers. |
+| Visual golden dataset | Simple deterministic images with unique text, color, object, and layout facts; matching and conflicting prompts; unreadable/broken asset; unattached and cross-tenant images. |
 | Site-editor Assistant prompt dataset | Supported edit prompts, ambiguous prompts, unsupported edit prompts, malicious prompt-injection samples, and expected diff constraints. |
 | Onboarding consent dataset | New user, returning user, dismissed consent, grandfathered completed-home-tour user, and cleared-browser-storage scenarios. |
 | Theme prompt dataset | Supported style prompts, unsupported variable prompts, malicious script prompts. |
@@ -352,6 +370,8 @@ Builder/onboarding regression cases should run after P0/P1 release checks unless
 - `qa-ai-workflow/requirements/riffables-master.requirements.yaml` has been reviewed enough to start draft test design.
 - Test environment URL and app build are known.
 - Required test users, tenants, and role assignments are available.
+- Both shipped template IDs/manifests and approved named preset list are available for template regression.
+- Full `REQ-BUILDER-015` execution requires a confirmed image-read transport and observable agent/tool oracle.
 - QA has access to necessary APIs, logs, or job state views for backend-heavy scenarios.
 - Golden datasets are available or open dataset gaps are accepted as test risks.
 - PRD sync has been run or intentionally skipped with the decision recorded.
@@ -396,10 +416,15 @@ Testing can resume when:
 | Long media tests are expensive or slow | Execution time increases | Use a mix of real media, synthetic media, and mocked worker duration. |
 | Theme assistant behavior is model-dependent | Test results may be inconsistent | Use fixed prompt set and validate saved config, not only natural-language response. |
 | Public site domain differs by environment | Published site tests may fail due config | Document QA domain pattern before execution. |
-| Google OAuth infra and backend are not aligned | Full Google sign-in may be blocked even when the button works | Split tests into frontend start/error-state, backend provider, callback/env readiness, and full round-trip; mark round-trip blocked until #70 callback/environment readiness is confirmed. |
+| Google OAuth differs by QA environment | Closed issue #70 does not guarantee every environment has the same callback URI, secrets, and trusted origins | Keep frontend/backend/config checks separate and run full round-trip only against the confirmed OAuth regression environment. |
 | Password reset-link email cannot be captured | Add/change/forgot password can only be partially executed | Use deployed-origin mailbox capture or mark token-completion cases blocked while keeping request/invalid-token cases executable. |
 | Image asset API routes or ownership rule are not exposed to QA | #74 backend/library tests may be ambiguous | Confirm API route names, public URL base, storage fixture strategy, and whether ownership is per operator, per tenant, or both. |
 | Site-editor Assistant has unclear supported edit scope | AI diff tests may have no stable oracle | Confirm supported edit operations and allowed diff fields before approving `REQ-BUILDER-006` cases. |
+| Template manifests or preset names change without fixture versioning | Two-template and token-only preset tests may produce false failures | Record both template IDs, manifest versions, expected section fields, and named presets with the tested build. |
+| Editor/public visual parity has no tolerance | Minor browser rendering differences may be confused with real style drift | Approve structural assertions and screenshot-diff tolerance per viewport before execution. |
+| Getting-started checklist state is stored locally per operator and tenant | Reused browser state can hide auto-open or leak dismissal between fixtures | Clear/seed only the target checklist key and test user/tenant switching explicitly. |
+| Attachment upload leaves disposable assets | Repeated automation can pollute the operator library and affect dedup assertions | Use uniquely named fixtures, record asset IDs, and clean up or soft-remove assets after guarded runs. |
+| Builder image-understanding transport is undefined | `REQ-BUILDER-015` cannot prove the model saw an image | Require a documented image-read API/tool trace and deterministic visual golden dataset before full automation. |
 | Public label fields are not finalized | Label correctness tests may reject acceptable omitted labels | Confirm source fields and allowed omitted-label behavior before execution. |
 
 ## Defect Management
@@ -439,11 +464,17 @@ Severity guidance:
 | High | Public site loads and search is tenant-scoped. |
 | High | Password reset entrypoints and invalid-token states. |
 | High | Image asset upload validation, duplicate detection, tenant isolation, and soft-remove URL persistence through API tests. |
+| High | Two-template selection/persistence and second-template editor/public publish parity with disposable site fixtures. |
+| High | Builder attachment type/size validation, send-wait behavior, sent-message thumbnails, and tenant-scoped asset references. |
+| High | Builder-agent free-form style refusal and cross-tenant image-read denial. |
 | High | Theme assistant rejects malicious script prompts by saved-config assertion. |
 | Medium | Ingestion state transitions with mocked worker/job state. |
 | Medium | Citation timestamp links using golden content. |
 | Medium | Accessibility heading and accessible-name checks. |
 | Medium | Site builder publish subdomain regression. |
+| Medium | Internal/missing/external editor-preview navigation and FAQ/podcast-link behavior. |
+| Medium | Section style prefill, isolated mutation, full labels, and image-picker draft cleanup. |
+| Medium | Getting-started checklist progression using seeded/intercepted Home snapshot and per-user-per-tenant storage. |
 | Low | Guided tour replay/seen-state behavior. |
 
 Automation rule:

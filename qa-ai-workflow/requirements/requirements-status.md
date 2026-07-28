@@ -1,7 +1,7 @@
 # Requirements Status
 
 Created: 2026-07-09
-Last updated: 2026-07-21
+Last updated: 2026-07-28
 
 ## Current State
 
@@ -39,12 +39,13 @@ qa-ai-workflow/test-cases/riffables-master.test-cases.md
 
 Current coverage status:
 
-- 74/74 included requirement IDs have test case mapping.
-- 400 draft test cases.
+- 88/88 included requirement IDs have test case mapping.
+- 466 draft test cases.
 - Foundation smoke cases now explicitly cover authentication, protected routes, workspace context, password visibility, Google OAuth start/error states, and YouTube source connection.
 - All 400 cases now use the same execution-level schema with `Workflow`, `Test Data`, `Automation Candidate`, and `Status`.
 - Acceptance-criteria execution cases cover areas that were thin in the first draft.
 - The 2026-07-21 update added focused Baohan site/editor/publish coverage on top of the earlier site-editor Assistant, onboarding consent, console backend API wiring, public labels, and audience chat coverage.
+- The 2026-07-28 update added issues #75-#89 for two-template sites, template integrity, FAQ/podcast links, section styling, image picker, first-run checklist, builder image attachments, and image-understanding security.
 
 Module requirement files remain the detailed source for `acceptance_criteria`, `assumptions`, `open_questions`, and `related_requirements`.
 

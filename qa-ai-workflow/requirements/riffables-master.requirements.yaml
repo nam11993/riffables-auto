@@ -3,8 +3,8 @@ source_prd:
   title: "Riffables PRD issue set"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues"
-  version_or_commit: "github-issues-read-2026-07-23"
-  last_reviewed_at: "2026-07-23"
+  version_or_commit: "github-issues-read-2026-07-28"
+  last_reviewed_at: "2026-07-28"
 
 purpose: "Curated master requirement set used as the input for test plan and test case generation."
 status: "draft_for_qa_review"
@@ -39,14 +39,15 @@ test_plan_generation_order:
   - "accessibility-ux"
 
 scope_summary:
-  total_included_requirements: 78
+  total_included_requirements: 88
   excluded_governance_requirements: 4
-  release_scope_requirements: 34
-  regression_baseline_requirements: 44
+  release_scope_requirements: 35
+  regression_baseline_requirements: 53
   notes:
     - "Closed PRD issues are kept as regression baseline when they describe behavior already delivered or previously fixed."
     - "Open PRD issues are treated as release scope unless the item is explicitly marked could/deferred by priority."
     - "The 2026-07-16 PRD intake added issues #66-#72 and moved #18-#32, #34, #45, #51, and #59 into regression baseline or updated release risk."
+    - "The 2026-07-28 PRD intake added issues #75-#89, expanding site template, section styling, checklist, and builder-image coverage; issue #70 moved to regression baseline."
     - "This master file is an index and curation layer; detailed acceptance criteria remain in the module requirement files."
 
 modules:
@@ -381,7 +382,7 @@ modules:
         title: "Google OAuth callback and environment configuration support deployed sign-in"
         priority: "must"
         type: "integration"
-        test_design_action: "include_environment_readiness_check"
+        test_design_action: "include_oauth_round_trip_regression_with_environment_readiness_check"
       - id: "REQ-CONSOLE-012"
         title: "Console UI wires implemented backend APIs for search, schedules, site lifecycle, article editing, and job status"
         priority: "must"
@@ -396,7 +397,7 @@ modules:
   - key: "site-builder-onboarding"
     name: "Visual site builder and guided onboarding"
     source_file: "qa-ai-workflow/requirements/site-builder-onboarding.requirements.yaml"
-    source_issues: ["#35", "#36", "#37", "#38", "#39", "#40", "#41", "#43", "#44", "#66", "#68"]
+    source_issues: ["#35", "#36", "#37", "#38", "#39", "#40", "#41", "#43", "#44", "#66", "#68", "#74", "#75", "#76", "#77", "#78", "#79", "#80", "#81", "#82", "#83", "#84", "#85", "#86", "#87", "#88", "#89"]
     test_scope: "mixed_release_and_regression"
     qa_priority: "P1"
     requirements:
@@ -430,6 +431,51 @@ modules:
         priority: "must"
         type: "ai-assisted-functional"
         test_design_action: "include_ai_validation_security_and_diff_review"
+      - id: "REQ-BUILDER-007"
+        title: "Operator can choose and retain one of two rendered site templates"
+        priority: "must"
+        type: "functional"
+        test_design_action: "include_two_template_regression"
+      - id: "REQ-BUILDER-008"
+        title: "Editor preview and public site preserve template data, links, and rendering parity"
+        priority: "must"
+        type: "integration-data-integrity"
+        test_design_action: "include_editor_public_parity_and_link_regression"
+      - id: "REQ-BUILDER-009"
+        title: "Template supports interactive FAQ entries and per-track podcast links"
+        priority: "should"
+        type: "functional-ui"
+        test_design_action: "include_faq_and_podcast_link_regression"
+      - id: "REQ-BUILDER-010"
+        title: "Section styling controls are scoped, pre-filled, and fully labelled"
+        priority: "should"
+        type: "ui-data-integrity"
+        test_design_action: "include_section_style_regression"
+      - id: "REQ-BUILDER-011"
+        title: "Operator can choose an uploaded image directly from a section image field"
+        priority: "should"
+        type: "functional-integration"
+        test_design_action: "include_asset_picker_regression"
+      - id: "REQ-BUILDER-012"
+        title: "Builder agent restyles sites only through named template presets and tokens"
+        priority: "must"
+        type: "ai-assisted-security"
+        test_design_action: "include_preset_and_free_form_refusal_tests"
+      - id: "REQ-BUILDER-013"
+        title: "Builder assistant composer supports image attachment lifecycle"
+        priority: "must"
+        type: "functional-ui"
+        test_design_action: "include_attachment_composer_regression"
+      - id: "REQ-BUILDER-014"
+        title: "Builder image attachments reuse asset validation and complete upload before send"
+        priority: "must"
+        type: "data-integrity-security"
+        test_design_action: "include_attachment_upload_boundary_and_transport_tests"
+      - id: "REQ-BUILDER-015"
+        title: "Builder agent can inspect attached image content within conversation and tenant boundaries"
+        priority: "should"
+        type: "ai-validation-security"
+        test_design_action: "include_golden_image_and_tenant_isolation_tests_after_transport_confirmation"
       - id: "REQ-ONBOARD-001"
         title: "Main console screens provide first-visit guided tours"
         priority: "could"
@@ -445,6 +491,11 @@ modules:
         priority: "should"
         type: "ui"
         test_design_action: "include_onboarding_consent_regression"
+      - id: "REQ-ONBOARD-004"
+        title: "New tenant receives a data-driven getting-started checklist on Home"
+        priority: "should"
+        type: "functional-ui-data-integrity"
+        test_design_action: "include_checklist_state_and_tenant_isolation_tests"
 
   - key: "theme-customization"
     name: "Conversational widget theme customization"
@@ -538,7 +589,7 @@ open_questions_to_resolve_before_approval:
     questions:
       - "What is the final list of top-level console routes for V1?"
       - "Which curation fields are editable?"
-      - "Is Google OAuth fully testable in QA while issue #70 callback/environment readiness is open, or should full round-trip remain blocked?"
+      - "Which configured QA environment and disposable accounts should run full Google OAuth regression now that #70, #71, and #72 are closed?"
       - "What environment host and callback URI should QA use for deployed Google OAuth validation?"
       - "What exact backend API routes should be exposed in the console for #51 acceptance?"
       - "Which QA mailbox or email-capture service should be used for full add/change/forgot password reset-link execution?"
@@ -546,6 +597,10 @@ open_questions_to_resolve_before_approval:
     questions:
       - "Which natural-language edit operations are supported by the site-editor Assistant for issue #66?"
       - "What is the QA oracle for accepting or rejecting an AI-generated previewable diff?"
+      - "What are the exact IDs/manifests and named presets for both shipped templates?"
+      - "What screenshot tolerance and editor widths define editor/public parity?"
+      - "What Home control and localStorage key contract reopen/store checklist state?"
+      - "What API/tool and trace prove the builder agent read an attached image for issue #88?"
   - module: "theme-customization"
     questions:
       - "What exact style variable names are allowed?"

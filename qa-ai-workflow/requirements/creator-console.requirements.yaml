@@ -3,8 +3,8 @@ source_prd:
   title: "Creator Console Dashboard and Curation UI"
   source_type: "github-issues"
   url: "https://github.com/speedrun-labs/riffables-prd/issues/15"
-  version_or_commit: "github-issues-read-2026-07-23"
-  last_reviewed_at: "2026-07-23"
+  version_or_commit: "github-issues-read-2026-07-28"
+  last_reviewed_at: "2026-07-28"
   related_issues:
     - id: "#15"
       title: "Vision: Creator Console Dashboard"
@@ -228,9 +228,9 @@ requirements:
       - "If the social route is unavailable or config is missing, the UI shows an inline error instead of silently failing."
       - "The Google sign-in start flow does not expose protected console data before a valid session exists."
     assumptions:
-      - "Full end-to-end Google round-trip depends on backend provider and redirect URI readiness; issue #71 is closed in the 2026-07-23 intake, while issue #70 is open again."
+      - "Issues #70, #71, and #72 are closed in the 2026-07-28 intake and are tracked as regression baseline."
     open_questions:
-      - "Should QA treat full Google round-trip as blocked until #70 callback/environment readiness is confirmed?"
+      - "Which QA environment currently has a valid callback URI, Google OAuth credentials, and trusted origins for full round-trip regression?"
     related_requirements:
       - "REQ-CONSOLE-010"
       - "REQ-CONSOLE-011"
@@ -269,7 +269,7 @@ requirements:
       - "#72"
     priority: "must"
     type: "integration"
-    status: "needs_confirmation"
+    status: "regression_baseline_draft"
     acceptance_criteria:
       - "The Google OAuth app includes the deployed BetterAuth callback URI used by the current service-api host."
       - "The QA or deployed environment contains GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET where service-api can read them."
@@ -277,10 +277,10 @@ requirements:
       - "A brand-new Google account is routed to organization setup after successful login."
       - "An existing operator email can sign in through Google without creating a duplicate tenant/operator identity."
     assumptions:
-      - "Issue #71 is closed in the 2026-07-23 intake, but issue #70 is open again; callback/environment readiness still gates full OAuth round-trip testing."
+      - "Issues #70, #71, and #72 are closed in the 2026-07-28 intake and are tracked as regression baseline; each QA environment still requires valid deployed configuration."
     open_questions:
       - "Is the current callback host api-riffables.speedrunlabs.ai or api.riffables.com for the QA environment?"
-      - "Can QA execute full Google OAuth round-trip now, or should it remain a blocked test until #70 callback/environment readiness is confirmed?"
+      - "Which QA account and environment should be used for the full Google OAuth round-trip regression?"
     related_requirements:
       - "REQ-CONSOLE-009"
       - "REQ-CONSOLE-010"
@@ -351,6 +351,6 @@ review_notes:
     - "Confirm console route/module names."
     - "Confirm curation editable fields."
     - "Confirm crawl feedback data contract."
-    - "Confirm Google OAuth readiness because #71 is closed while #70 callback/environment readiness is open in the latest PRD intake."
+    - "Confirm the QA environment for full Google OAuth regression now that #70, #71, and #72 are closed."
     - "Confirm password reset mailbox/test origin strategy for #73."
     - "Confirm console API wiring acceptance paths for #51."
