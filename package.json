@@ -25,7 +25,8 @@
     "test:site": "playwright test automation/tests/console/sites-editor.spec.ts --workers=1",
     "source:oauth:manual": "powershell -ExecutionPolicy Bypass -File scripts/open-source-oauth-manual.ps1",
     "test:debug": "playwright test automation/tests/smoke --debug",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "export:testcases:vi": "powershell -ExecutionPolicy Bypass -File scripts/export-testcases-excel-vi.ps1"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0",
